@@ -7,26 +7,15 @@
     <link rel="stylesheet" href="../StyleSheets/main.css">
     <link rel = "icon" href = "../Images/Assets/Osama.png">
     <script src="../Scripts/main.js" defer></script>
+    <script src="../Scripts/inject.js"></script>
 </head>
 <body>
     <section class="header"></section>
-    <div class = "nav-wrap">
-        <div class = "nav-border-glow"></div>
-        <!-- Navigation bar -->
-        <nav class="nav-bar">
-            <a class="nav-button logo" href="#"><div class = "logo-container">Poker Hub</div></a>
+    <!-- Injected nav content goes here -->
+    <div id="navbar"></div>
 
-            <!-- Navigation links -->
-            <a class="nav-button nav-link" href="main.html"><img src="../Images/Icons/home-icon.png">Home</a>
-            <a class="nav-button nav-link" href="learn.html"><img src="../Images/Icons/learn.png">Learn</a>
-            <a class="nav-button nav-link" href="news.html"><img src="../Images/Icons/news.png">News</a>
-
-            <!-- Login -->
-            <a class="nav-button login-button" href="login.html"><img src="../Images/Icons/profile.png"></a>
-
-            <!-- Hover background effect -->
-            <div class="hover-back"></div>
-        </nav>
-    </div>
+    <script>
+        loadComponent("navbar", "navbar.html");
+    </script>
 </body>
 </html>

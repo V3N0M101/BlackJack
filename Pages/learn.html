@@ -5,8 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rules</title>
     <link rel="stylesheet" href="../StyleSheets/learn.css">
+    <link rel="stylesheet" href="../StyleSheets/main.css">
+    <script src="../Scripts/inject.js"></script>
 </head>
 <body>
-    
+    <!-- Injected nav content goes here -->
+    <div id="navbar"></div>
+
+    <script>
+        loadComponent("navbar", "navbar.html");
+    </script>
 </body>
 </html>

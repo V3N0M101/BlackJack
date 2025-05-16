@@ -66,7 +66,10 @@
     --angle: 0deg;
   }
   to {
-    --angle: 360deg;
+    --angle: 90deg;
+  }
+  to {
+    --angle: 270deg;
   }
 }
 
@@ -83,6 +86,7 @@
   z-index: 10;
   padding-top: 0;
   margin-top: 0;
+  display: flex;
 }
 
 
@@ -128,7 +132,7 @@
   margin: 0 auto;
   position: relative;
   z-index: 2;
-  background: linear-gradient(90deg, #272727, #797878, #818181);
+  background: linear-gradient(90deg, #272727,#818181, #797878, #818181);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
 
 }
@@ -187,6 +191,7 @@
   transition: width 0.4s ease, left 0.4s ease;
   z-index: 1;
   animation: gradientShift 5s ease infinite;
+  pointer-events: none;
 }
 
 @keyframes gradientShift {
@@ -209,13 +214,46 @@
   height: 33.5px;
   cursor: pointer;
   transition: transform 0.3s ease;
+  position: relative;
+  color: #fff;
+  text-shadow: 0 0 10px #00ffee, 0 0 12px #ff00ff;
 }
 
 .login-button:hover {
-  transform: scale(1.4);
+  transform: scale(1.1);
   filter: brightness(2);
 }
 
+.logo-container {
+  position: relative;
+  border-radius: 5px;
+  z-index: 1;
+  display: inline-block;
+  margin-left: -10px;
+  flex: 1;
+}
+
+.login-container::before,
+.login-container::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 0px;
+  right: -15px;
+  bottom: -5px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--angle2, 0deg), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(10px);
+  opacity: 10;
+  z-index: -1;
+  animation: spin-border 5s linear infinite;
+}
+
+@property --angle2 {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
 
 /* Body */
 

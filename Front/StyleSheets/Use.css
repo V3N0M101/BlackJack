@@ -1,0 +1,349 @@
+/* ===== RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #161616;
+}
+
+/* ===== HEADER ===== */
+.header {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(rgba(4, 9, 30, 0.7), rgba(4, 9, 30, 0.7)), url("Images/Trippy.png") no-repeat center center/cover;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== NAVIGATION BAR STRUCTURE ===== */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #333;
+  color: white;
+  padding: 6.7px 13.4px; /* scaled down by 0.67 */
+}
+
+/* ===== LOGO WITH ANIMATED GLOW ===== */
+.logo-container {
+  position: relative;
+  padding: 8px 14px;
+  border-radius: 5px;
+  z-index: 1;
+}
+
+.logo {
+  font-size: 36px; /* made bigger */
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-shadow: 0 0 8px #00ffee, 0 0 12px #ff00ff;
+}
+
+.logo-container::before,
+.logo-container::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--angle, 0deg), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(10px);
+  opacity: 0.6;
+  z-index: 0;
+  animation: spin-border 5s linear infinite;
+}
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes spin-border {
+  from { --angle: 0deg; }
+  to { --angle: 360deg; }
+}
+
+/* ===== NAV BAR MENU ===== */
+nav {
+  position: relative;
+  background: #222;
+  padding: 6.7px 10px; /* scaled */
+  border-radius: 10px;
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  z-index: 2;
+}
+
+nav a {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6.7px 13.4px;
+  font-weight: 500;
+  text-decoration: none;
+  color: #fff;
+  z-index: 2;
+  font-size: 0.67rem; /* scaled */
+  cursor: pointer;
+}
+
+nav a img {
+  width: 13.4px;
+  height: 13.4px;
+  margin-right: 5px;
+}
+
+nav .hover-bg {
+  position: absolute;
+  top: 0;
+  left: 127px;
+  width: 127px;
+  height: 100%;
+  background: linear-gradient(45deg, #4f1919, #ff3333);
+  border-radius: 8px;
+  transition: 0.5s;
+  z-index: 1;
+}
+
+nav a:nth-child(1):hover ~ .hover-bg {
+  left: 0;
+  width: 127px;
+}
+nav a:nth-child(2):hover ~ .hover-bg {
+  left: 127px;
+  width: 130px;
+}
+nav a:nth-child(3):hover ~ .hover-bg {
+  left: 254px;
+  width: 127px;
+}
+
+/* ===== PROFILE ICON ===== */
+.profile .icon {
+  width: 33.5px;
+  height: 33.5px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.profile .icon:hover {
+  transform: scale(1.2);
+  filter: brightness(1.3);
+}
+
+/* ===== TABLE CONTAINER ===== */
+.table-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  overflow: visible;
+}
+
+.table {
+  position: relative;
+  width: 700px;
+  height: 500px;
+  background: url("Images/poker-table.png") center/contain no-repeat;
+  border-radius: 50% / 40%;
+  z-index: 2;
+  transition: box-shadow 0.3s ease;
+}
+
+.table:hover {
+  box-shadow: 0 0 45px rgba(0, 255, 255, 0.3), 0 0 60px rgba(255, 0, 255, 0.3);
+}
+
+.table::before,
+.table::after {
+  display: none;
+}
+
+/* ===== PLAY BUTTON ===== */
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  padding: 14px 32px;
+  border-radius: 50px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  text-shadow:
+    0 0 5px #00f0ff,
+    0 0 10px #ff00ff;
+  transition: all 0.3s ease;
+  z-index: 3;
+}
+
+.table:hover .play-button {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow:
+    0 0 10px #00f0ff,
+    0 0 20px #ff00ff;
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 10px #00f0ff, 0 0 20px #ff00ff;
+  }
+  50% {
+    box-shadow: 0 0 15px #00f0ff, 0 0 30px #ff00ff;
+  }
+  100% {
+    box-shadow: 0 0 10px #00f0ff, 0 0 20px #ff00ff;
+  }
+}
+
+.play-button {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+
+
+/* ===== CHAIR POSITIONS + FIXES ===== */
+/* Chair Base */
+.seat {
+  width: 50px;
+  height: 50px;
+  background-image: url("Images/chair.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  position: absolute;
+  opacity: 0;
+}
+
+/* Chair entrance */
+@keyframes seat-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) rotate(var(--angle));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--angle));
+  }
+}
+
+.seat:hover {
+  transform: scale(1.1);
+}
+
+.seat.top {
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  --angle: 180deg;
+  animation: seat-in 0.5s ease forwards;
+}
+.seat.bottom {
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  --angle: 0deg;
+  animation: seat-in 0.5s ease forwards 0.1s;
+}
+.seat.left {
+  left: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+  --angle: 90deg;
+  animation: seat-in 0.5s ease forwards 0.2s;
+}
+.seat.right {
+  right: -60px;
+  top: 50%;
+  transform: translateY(-50%);
+  --angle: 270deg;
+  animation: seat-in 0.5s ease forwards 0.3s;
+}
+
+
+/* ===== GLOW TEXT (LIKE THE "READY" TEXT) ===== */
+.glow-text {
+  font-size: 2em;
+  font-weight: 900;
+  color: #fff;
+  text-align: center;
+  text-shadow:
+    0 0 5px #00d0ff,
+    0 0 10px #00d0ff,
+    0 0 20px #9e00ff,
+    0 0 30px #9e00ff;
+}
+.glow-text:hover {
+  text-shadow:
+    0 0 10px #00d0ff,
+    0 0 20px #00d0ff,
+    0 0 30px #9e00ff,
+    0 0 40px #9e00ff;
+}
+
+.nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  text-decoration: none;
+  font-weight: bold;
+  color: #fff;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 0;
+  height: 2px;
+  background-color: #00d0ff;
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+  left: 0;
+}
+
+.play-button {
+  padding: 16px 32px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  text-shadow: 0 0 8px #00ffee, 0 0 12px #ff00ff;
+  transition: all 0.3s ease;
+}
+
+.play-button:hover {
+  scale: 1.05;
+  box-shadow: 0 0 20px #00ffee, 0 0 30px #ff00ff;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  position: relative;
+  z-index: 2;
+}

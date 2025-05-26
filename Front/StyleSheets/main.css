@@ -1,0 +1,270 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Head */
+
+.header {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(rgba(4, 9, 30, 0.7), rgba(4, 9, 30, 0.7)), 
+              url("../Images/Backgrounds/Trippy.png") no-repeat center center / cover;
+  position: relative;
+  display: flex; 
+  flex-direction: column;
+  justify-content: center;
+  display: block
+}
+
+
+/* Logo */
+
+.logo-container {
+  position: relative;
+  border-radius: 5px;
+  z-index: 1;
+  display: inline-block;
+  margin-left: -20px;
+  flex: 1;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  position: relative;
+  z-index: 2;
+  color: #fff;
+  text-shadow: 0 0 10px #00ffee, 0 0 12px #ff00ff;
+}
+
+.logo-container::before,
+.logo-container::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--angle, 0deg), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(10px);
+  opacity: 10;
+  z-index: -1;
+  animation: spin-border 5s linear infinite;
+}
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes spin-border {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 90deg;
+  }
+  to {
+    --angle: 270deg;
+  }
+}
+
+
+/* NAV DESIGN */
+
+.nav-wrap {
+  position: absolute;
+  top: 10px; 
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  padding-top: 0;
+  margin-top: 0;
+  display: flex;
+}
+
+
+.nav-border-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 15px;
+  background: conic-gradient(from var(--angle), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(15px);
+  z-index: 1;
+  animation: spin-border 6s linear infinite;
+  pointer-events: none;
+}
+
+
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes spin-border {
+  from {
+    --angle: 0deg;
+  }
+  to {
+    --angle: 360deg;
+  }
+}
+
+/* NAV BAR */
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 30px;
+  border-radius: 12px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(90deg, #272727,#818181, #797878, #818181);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+
+}
+
+
+
+.nav-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  font-weight: bold;
+  text-decoration: none;
+  color: white;
+  font-size: 24px;
+  z-index: 2;
+  cursor: pointer;
+  text-shadow: 0 0 5px black;
+}
+
+.nav-bar a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+}
+
+
+.nav-bar .nav-button img {
+  width: 30px;
+  height: 30px;
+  margin-right: 6px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+}
+
+.login-button {
+    margin-left: auto;
+}
+
+.hover-back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(-45deg, #2c0092, #3900be, #4116ff, #0d25ff);
+  background-size: 400% 400%;
+  border-radius: 7.5px;
+  transition: width 0.4s ease, left 0.4s ease;
+  z-index: 1;
+  animation: gradientShift 5s ease infinite;
+  pointer-events: none;
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+
+/* Login */
+
+.login-button {
+  width: 33.5px;
+  height: 33.5px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  position: relative;
+  color: #fff;
+  text-shadow: 0 0 10px #00ffee, 0 0 12px #ff00ff;
+}
+
+.login-button:hover {
+  transform: scale(1.1);
+  filter: brightness(2);
+}
+
+.logo-container {
+  position: relative;
+  border-radius: 5px;
+  z-index: 1;
+  display: inline-block;
+  margin-left: -10px;
+  flex: 1;
+}
+
+.login-container::before,
+.login-container::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 0px;
+  right: -15px;
+  bottom: -5px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--angle2, 0deg), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(10px);
+  opacity: 10;
+  z-index: -1;
+  animation: spin-border 5s linear infinite;
+}
+
+@property --angle2 {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Body */
+
+body {
+  background-color: #2e2e2e;
+  font-family: 'Courier New', Courier, monospace, sans-serif;
+  margin: 0;
+}
+
+
+
+
+
+

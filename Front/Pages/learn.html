@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rules</title>
-    <link rel="stylesheet" href="../StyleSheets/main.css">
-    <link rel="stylesheet" href="../StyleSheets/learn.css">
-    <script src="../Scripts/inject.js"></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" /> <!-- This is for Boomers-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rules</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../StyleSheets/main.css" />
+  <link rel="stylesheet" href="../StyleSheets/learn.css" />
+  <link rel="stylesheet" href="../StyleSheets/transition.css" />
+
+  <!-- Scripts -->
+  <script src="../Scripts/inject.js"></script>
+  <script src="../Scripts/transition.js" defer></script>
 </head>
 <body>
-    <!-- Injected nav content goes here -->
-    <div id="navbar"></div>
+  <!-- Overlay Transition -->
+  <div class="overlay-transition"></div>
 
-    <script>
-        loadComponent("navbar", "navbar.html");
-    </script>
-    <!-- Vertical sidebar nav -->
+  <!-- Page Wrapper -->
+  <div id="navbar"></div>
+  <div class="page-transition">
+    <!-- Navbar Placeholder -->
+    <div class = "layout">
+    <!-- Sidebar Nav -->
     <nav class="side-nav">
-    <ul>
+      <ul>
         <li><a href="#section1">Intro</a></li>
         <li><a href="#section2">Rules</a></li>
         <li><a href="#section3">Examples</a></li>
         <li><a href="#section4">Tips</a></li>
-    </ul>
+      </ul>
     </nav>
 
-    <!-- Page content -->
+    <!-- Page Content -->
     <div class="page-content">
-    <section id="section1">
-        <h2>Introduction</h2>
-        <p>...</p>
-    </section>
-
-    <section id="section2">
-        <h2>Rules</h2>
-        <p>...</p>
-    </section>
-
-    <section id="section3">
-        <h2>Examples</h2>
-        <p>...</p>
-    </section>
-
-    <section id="section4">
-        <h2>Tips</h2>
-        <p>...</p>
-    </section>
+      <section id="section1"><h2>Introduction</h2><p>...</p></section>
+      <section id="section2"><h2>Rules</h2><p>...</p></section>
+      <section id="section3"><h2>Examples</h2><p>...</p></section>
+      <section id="section4"><h2>Tips</h2><p>...</p></section>
     </div>
+  </div>
+  </div>
+  <!-- Run navbar injection after page is ready -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      loadComponent("navbar", "navbar.html");
+    });
+  </script>
 </body>
 </html>

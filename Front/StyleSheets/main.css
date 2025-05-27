@@ -15,7 +15,6 @@
   display: flex; 
   flex-direction: column;
   justify-content: center;
-  display: block
 }
 
 
@@ -50,7 +49,7 @@
   border-radius: 8px;
   background: conic-gradient(from var(--angle, 0deg), #9e00ff, #00d0ff, #9e00ff);
   filter: blur(10px);
-  opacity: 10;
+  opacity: 1;
   z-index: -1;
   animation: spin-border 5s linear infinite;
 }
@@ -134,10 +133,9 @@
   z-index: 2;
   background: linear-gradient(90deg, #272727,#818181, #797878, #818181);
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
 
 }
-
-
 
 .nav-button {
   position: relative;
@@ -224,15 +222,6 @@
   filter: brightness(2);
 }
 
-.logo-container {
-  position: relative;
-  border-radius: 5px;
-  z-index: 1;
-  display: inline-block;
-  margin-left: -10px;
-  flex: 1;
-}
-
 .login-container::before,
 .login-container::after {
   content: "";
@@ -244,7 +233,7 @@
   border-radius: 8px;
   background: conic-gradient(from var(--angle2, 0deg), #9e00ff, #00d0ff, #9e00ff);
   filter: blur(10px);
-  opacity: 10;
+  opacity: 1;
   z-index: -1;
   animation: spin-border 5s linear infinite;
 }

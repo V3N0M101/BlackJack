@@ -2,20 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge"> <!-- this is for boomers -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    <link rel="stylesheet" href="../StyleSheets/main.css">
-    <link rel = "icon" href = "../Images/Assets/Osama.png">
+    <!-- Stylesheets (transition first, then base styles) -->
+    <link rel="stylesheet" href="../StyleSheets/transition.css" />
+    <link rel="stylesheet" href="../StyleSheets/main.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" href="../Images/Assets/Osama.png" />
+
+    <!-- Scripts -->
     <script src="../Scripts/main.js" defer></script>
-    <script src="../Scripts/inject.js"></script>
+    <script src="../Scripts/inject.js" defer></script>
 </head>
 <body>
-    <section class="header"></section>
-    <!-- Injected nav content goes here -->
-    <div id="navbar"></div>
-
+    <div class="overlay-transition"></div>
+    <div class = "page-transition">
+        <section class="header"></section>
+        <!-- Injected nav content goes here -->
+        <div id="navbar"></div>
+    </div>
     <script>
-        loadComponent("navbar", "navbar.html");
+            loadComponent("navbar", "navbar.html");
+    </script>
+    <script src = "../Scripts/transition.js"></script>
+    <script>
+    window.addEventListener("DOMContentLoaded", () => {
+    loadComponent("navbar", "navbar.html"); 
+    });
     </script>
 </body>
 </html>

@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>News</title>
-    <link rel="stylesheet" href="../StyleSheets/news.css">
-    <link rel="stylesheet" href="../StyleSheets/main.css">
-    <script src="../Scripts/inject.js"></script>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News</title>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../StyleSheets/news.css" />
+  <link rel="stylesheet" href="../StyleSheets/main.css" />
+  <link rel="stylesheet" href="../StyleSheets/transition.css" />
+
+  <!-- Scripts -->
+  <script src="../Scripts/inject.js" defer></script>
+  <script src="../Scripts/transition.js" defer></script>
 </head>
 <body>
-    <!-- Injected nav content goes here -->
+  <!-- Overlay for transition -->
+  <div class="overlay-transition"></div>
+
+  <!-- Animated page wrapper -->
+  <div class="page-transition">
+    <!-- Dynamic Navbar -->
     <div id="navbar"></div>
 
-    <script>
-        loadComponent("navbar", "navbar.html");
-    </script>
+    <!-- Page content -->
+    <main class="news-content">
+      <!--Add News-->
+    </main>
+  </div>
+
+  <!-- Navbar injection -->
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      loadComponent("navbar", "navbar.html");
+    });
+  </script>
 </body>
 </html>

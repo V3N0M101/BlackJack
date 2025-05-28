@@ -9,7 +9,6 @@ game = BlackjackGame()
 @app.route('/')
 def home():
     return render_template('main.html')
-
 @app.route('/blackjack')
 def blackjack():
     return render_template('game.html')

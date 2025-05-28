@@ -22,6 +22,7 @@
   filter: brightness(0) invert(1);
 }
 
+
 .home-btn {
   position: absolute;
   top: 24px;
@@ -100,3 +101,15 @@
   filter: brightness(0) invert(1);
 }
 
+.Discard img, .Draw img{
+  width:100%;
+  height:auto;
+}
+
+.Discard {
+  width: 150px;
+}
+
+.Draw {
+  width: 150px;
+}

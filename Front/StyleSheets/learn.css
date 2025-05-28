@@ -65,4 +65,37 @@ section {
   padding-top: 40px;         
 }
 
+.centered-image {
+  display: block;
+  margin: 2rem auto;
+  width: 80%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 
+section {
+  padding: 2rem 1.5rem;
+  line-height: 1.6;
+}
+
+section h2 {
+  margin-bottom: 1rem;
+  color: #ffffff;
+}
+
+.side-nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.side-nav ul li a {
+  display: block;
+  padding: 0.5rem;
+  text-decoration: none;
+  color: #007acc;
+}
+
+.side-nav ul li a:hover {
+  text-decoration: underline;
+}

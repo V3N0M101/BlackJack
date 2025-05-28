@@ -7,7 +7,7 @@ function suggestPassword() {
     return;
   }
 
-  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+~";
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$_";
   let password = "";
   for (let i = 0; i < Number(length); i++) {
     const char = charset[Math.floor(Math.random() * charset.length)];

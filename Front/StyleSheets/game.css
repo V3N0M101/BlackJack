@@ -100,5 +100,6 @@
   filter: brightness(0) invert(1);
 }
 
-
-
+p {
+  padding: 10px;
+}

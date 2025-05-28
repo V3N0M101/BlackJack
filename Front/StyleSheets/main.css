@@ -295,12 +295,13 @@ body, html {
 }
 
 .game-frame {
-  width: 1500px;
-  height: 650px;
+  width: 88.125vw;        /* 1500px of 1920px */
+  height: 70.185vh;       /* 650px of 1080px */
   border-radius: 20px;
   display: block;
   background: transparent;
 }
+
 
 
 

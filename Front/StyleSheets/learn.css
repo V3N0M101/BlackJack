@@ -10,12 +10,17 @@ body {
 }
 
 .side-nav {
+  min-height: 100vh;
   width: var(--sidenav-width);
   background: linear-gradient(45deg, #2E8B57 0%, #50C878 100%);
   padding: 10px;
   border-radius: 20px;
   color: white;
-  height: fill;
+  /* fix height */
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 80px);
+  overflow-y: auto;
 }
 
 .side-nav ul {
@@ -42,15 +47,14 @@ body {
 .layout {
   display: flex;
   gap: 10px;
-  margin-top: 80px; /* Adjust if there's a top nav */
-  padding: 0 10px;   /* Optional side padding */
-  height: calc(100vh - 80px - 30px);
+  margin-top: 80px;
+  padding: 0 10px;
 }
 
 .page-content {
-  flex: 1; 
+  flex: 1;
   background-color: #2E8B57;
-  padding: 0 0 0 20px;
+  padding: 20px; /* more padding all around */
   border-radius: 20px;
   color: white;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
@@ -60,5 +64,4 @@ section {
   scroll-margin-top: 100px;
   padding-top: 40px;         
 }
-
 

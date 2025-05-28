@@ -2,6 +2,9 @@
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 0.4s ease, transform 0.4s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-transition.loaded {
@@ -28,7 +31,4 @@
   z-index: 9999;
 }
 
-.overlay-transition.active {
-  opacity: 1;
-  pointer-events: all;
-}
+

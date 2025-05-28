@@ -1,39 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
 
-  <!-- CSS Files -->
-  <link rel="stylesheet" href="../StyleSheets/transition.css" />
-  <link rel="stylesheet" href="../StyleSheets/login.css" />
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../StyleSheets/transition.css" />
+    <link rel="stylesheet" href="../StyleSheets/login.css" />
+
+    <!-- Scripts -->
+    <script src="../Scripts/transition.js"></script>
+    <script src="../Scripts/register.js"></script>
+
 </head>
 <body>
     <div class="overlay-transition"></div>
     <div class = "Hover_Back_Wrap">
-        <a href="main.html" onclick="history.back();" class="back-arrow">
+        <a href="main.html" class="back-arrow">
             <img src="../Images/Icons/home-icon.png" class = "Homer"> 
             <span>Home</span>
         </a>
     </div>
     <div class = "page-transition">
+        <div class="center-container">
         <div class = "wrapper">
-            <form action="">
+            <form id = "login-form" action="">
                 <h1> Login </h1>
                 <div class = "Input-here"> 
                     <input type="text" placeholder="Username" required> 
                     <img class = "L-img" src="../Images/Icons/user.png" style="width: 24px">
                 </div>
-                <div class = "Input-here"> 
-                    <input class = "PP" type="password" placeholder="Password" required> 
-                    <img class = "P-img" src="../Images/Icons/Password.png" style="width: 24px">
+                <div class="Input-here password-suggest-wrap"> 
+                    <input id="password" class="PP" type="password" placeholder="Password" required> 
+                    <img class="P-img" src="../Images/Icons/Password.png" style="width: 24px">
                 </div>
-                <div class = "remember-forgot"> 
-                    <label class = "checker"><input type="checkbox"><span class="checkmark"></span> Remember Me</label>
-                    <a href = "forgot.html">Forgot Password?</a>
+
+                <div class="remember-forgot"> 
+                    <label class="checker">
+                    <input type="checkbox" onclick="togglePasswordVisibility()">
+                    <span class="checkmark"></span> Show Password
+                    </label>
+                    <a href="forgot.html">Forgot Password?</a>
                 </div>
+
 
                 <button type="submit" class="Btn"> Login </button>
 
@@ -42,9 +53,8 @@
                 </div>
             </form>
         </div>
+        </div>
     </div>
-    <!-- JS to handle fade transition -->
-    <script src = "../Scripts/transition.js"></script>
     <script>
     window.addEventListener("DOMContentLoaded", () => {
     loadComponent("navbar", "navbar.html"); 

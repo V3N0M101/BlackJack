@@ -1,0 +1,55 @@
+.verify-wrapper {
+  width: 420px;
+  color: white;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  box-shadow: 0 10px 10px 0 #333 transparent(0.2);
+  position: relative;
+  padding: 30px 40px;
+  text-align: center;
+}
+
+.verification-title {
+  font-weight: 900;
+  font-size: 36px;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.verification-boxes {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  gap: 12px; 
+  margin: 0 auto; 
+}
+
+
+.verification-boxes input {
+  width: 50px;
+  height: 60px;
+  font-size: 28px;
+  text-align: center;
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  outline: none;
+}
+
+.verification-boxes input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.verification-message {
+  font-size: 14px;
+  text-align: center;
+  color: #ffffff;
+  margin: -10px 0 20px 0;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+}
+

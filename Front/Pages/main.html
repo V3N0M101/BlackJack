@@ -5,9 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge"> <!-- this is for boomers -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+
     <!-- Stylesheets (transition first, then base styles) -->
     <link rel="stylesheet" href="../StyleSheets/transition.css" />
     <link rel="stylesheet" href="../StyleSheets/main.css" />
+    <link rel="stylesheet" href="../StyleSheets/game.css">
 
     <!-- Favicon -->
     <link rel="icon" href="../Images/Assets/Osama.png" />
@@ -15,22 +17,40 @@
     <!-- Scripts -->
     <script src="../Scripts/main.js" defer></script>
     <script src="../Scripts/inject.js" defer></script>
+    
 </head>
 <body>
     <div class="overlay-transition"></div>
-    <div class = "page-transition">
+    <div class="page-transition">
         <section class="header"></section>
+
         <!-- Injected nav content goes here -->
         <div id="navbar"></div>
+
+        <!-- Game Preview Section below navbar -->
+        <div class="game-preview-outer">
+        <div class="game-preview-inner">
+            <iframe src="game.html" class="game-frame" id="game-preview"></iframe>
+            <!-- Maximize button OVERLAY, not inside iframe! -->
+            <button class="fullscreen-icon" onclick="jumpAndRedirect('game.html');" title="Fullscreen">
+                <img src="../Images/Icons/maxx.png" alt="Fullscreen" />
+            </button>
+
+        </div>
+        </div>
+
+
     </div>
+    <!--Body Scripts -->
+    <script src="../Scripts/transition.js"></script>
     <script>
+        window.addEventListener("DOMContentLoaded", () => {
             loadComponent("navbar", "navbar.html");
-    </script>
-    <script src = "../Scripts/transition.js"></script>
-    <script>
-    window.addEventListener("DOMContentLoaded", () => {
-    loadComponent("navbar", "navbar.html"); 
-    });
+        });
+
+        function enterFullGame() {
+            window.location.href = "game.html";
+        }
     </script>
 </body>
 </html>

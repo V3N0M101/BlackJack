@@ -1,12 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel = "stylesheet" href="../StyleSheets/transition.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forgot</title>
+    <link rel="stylesheet" href="../StyleSheets/transition.css" />
+    <link rel="stylesheet" href="../StyleSheets/login.css" />
+    <link rel="stylesheet" href="../StyleSheets/forgot.css" />
+    <script src="../Scripts/forgot.js" defer></script>
 </head>
 <body>
-    
+    <div class="overlay-transition"></div>
+    <!-- Home Button -->
+    <div class="Hover_Back_Wrap">
+    <a href="main.html" onclick="history.back();" class="back-arrow">
+        <img src="../Images/Icons/home-icon.png" class="Homer" />
+        <span>Home</span>
+    </a>
+    </div>
+    <div class="page-transition">
+        <div class = "center-container">
+        <div class="verify-wrapper">
+        <div class="verification-title">Verification</div>
+        <p class="verification-message">
+            A verification code has been sent to your email. If it is valid, please check your mailbox.
+        </p>
+            <div class="verification-boxes">
+                <!-- yes i chat-gpted these i aint writing this over and over-->
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus>
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+                <input type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
+            </div>
+            <br>
+            <button type="button" class="Btn" onclick="submitVerificationCode()">Submit</button>
+        </div>
+        </div>
+    </div>
+    <script src="../Scripts/transition.js"></script>
 </body>
 </html>

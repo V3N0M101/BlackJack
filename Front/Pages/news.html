@@ -13,39 +13,15 @@
 
   <!-- Scripts -->
   <script src="../Scripts/inject.js" defer></script>
-  <script src="../Scripts/transition.js" defer></script>
-
-  <style>
-    .square-card {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .card-body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .card-body img {
-      margin-top: 1rem;
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-    }
-  </style>
 </head>
 <body>
   <!-- Overlay for transition -->
   <div class="overlay-transition"></div>
-
+  <div id="navbar"></div>
   <!-- Animated page wrapper -->
   <div class="page-transition">
     <!-- Dynamic Navbar -->
-    <div id="navbar"></div>
+    
 
     <!-- Page content -->
     <main class="news-content">
@@ -156,10 +132,15 @@
   </div>
 
   <!-- Navbar injection -->
+  <script src="../Scripts/transition.js"></script>
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      loadComponent("navbar", "navbar.html");
-    });
+      window.addEventListener("DOMContentLoaded", () => {
+          loadComponent("navbar", "navbar.html");
+      });
+
+      function enterFullGame() {
+          window.location.href = "game.html";
+      }
   </script>
 </body>
 </html>

@@ -1,12 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel = "stylesheet" href="../StyleSheets/transition.css">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../StyleSheets/transition.css" />
+    <link rel="stylesheet" href="../StyleSheets/login.css" />
+    <link rel="stylesheet" href="../StyleSheets/register.css" />
+    <!-- JS Files -->
+    <script src="../Scripts/transition.js"></script>
+    <script src="../Scripts/register.js"></script>
 </head>
 <body>
-    
+  <div class="overlay-transition"></div>
+  <div class="Hover_Back_Wrap">
+    <a href="main.html" onclick="history.back();" class="back-arrow">
+      <img src="../Images/Icons/home-icon.png" class="Homer">
+      <span>Home</span>
+    </a>
+  </div>
+  <div class="page-transition">
+    <div class = "center-container">
+    <div class="wrapper">
+      <form id = "register-form" action="">
+        <h1> Register </h1>
+
+        <!-- Email -->
+        <div class="Input-here">
+          <input type="email" placeholder="Email" required>
+          <img class="L-img" src="../Images/Icons/email.png" style="width: 24px">
+        </div>
+
+        <!-- Username -->
+        <div class="Input-here">
+          <input type="text" placeholder="Username" required>
+          <img class="L-img" src="../Images/Icons/user.png" style="width: 24px">
+        </div>
+
+        <!-- Password -->
+        <div class="Input-here password-suggest-wrap">
+            <input id="password" class="PP" type="password" placeholder="Password" required>
+            <img class="P-img" src="../Images/Icons/Password.png" style="width: 24px">
+            <button type="button" class="suggest-btn" onclick="suggestPassword()">Suggest</button>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="Input-here">
+            <input id="confirm-password" class="PP" type="password" placeholder="Confirm Password" required>
+            <img class="P-img" src="../Images/Icons/Password.png" style="width: 24px">
+        </div>
+
+        <div class="remember-forgot">
+        <label class="checker">
+            <input type="checkbox" onclick="togglePasswordVisibility()">
+            <span class="checkmark"></span> Show Password
+        </label>
+        <a href="forgot.html">Forgot Password?</a>
+        </div>
+
+
+        <button type="submit" class="Btn"> Register </button>
+
+        <div class="register">
+          <p>Already have an account?<a href="login.html"> Login</a></p>
+        </div>
+      </form>
+    </div>
+  </div>
+  </div>
 </body>
 </html>

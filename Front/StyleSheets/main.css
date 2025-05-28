@@ -5,21 +5,17 @@
 }
 
 /* Head */
-
 .header {
-  min-height: 100vh;
-  width: 100%;
-  background: linear-gradient(rgba(4, 9, 30, 0.7), rgba(4, 9, 30, 0.7)), 
-              url("../Images/Backgrounds/Trippy.png") no-repeat center center / cover;
-  position: relative;
-  display: flex; 
-  flex-direction: column;
-  justify-content: center;
+  min-height: 0;
+  height: 0;
+  padding: 0;
+  margin: 10px;
+  border: none;
+  background: none;
 }
 
 
 /* Logo */
-
 .logo-container {
   position: relative;
   border-radius: 5px;
@@ -247,12 +243,64 @@
 /* Body */
 
 body {
-  background-color: #2e2e2e;
+  min-height: 100vh;
+  background: linear-gradient(rgba(4, 9, 30, 0.7), rgba(4, 9, 30, 0.7)), 
+              url("../Images/Backgrounds/Trippy.png") repeat center center / cover;
   font-family: 'Courier New', Courier, monospace, sans-serif;
-  margin: 0;
 }
 
 
+body, html {
+  margin: 0;
+  padding: 0;
+  height:100%;
+}
+
+.game-preview-outer {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;     
+  width: 100%;
+  margin-top: 50px;
+}
+
+.game-preview-inner {
+  position: relative;
+}
+
+.fullscreen-icon {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(20,20,20,0.7);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1002;
+}
+.fullscreen-icon:hover {
+  background: #b97cff;
+}
+.fullscreen-icon img {
+  width: 26px;
+  height: 26px;
+  filter: brightness(0) invert(1);
+}
+
+.game-frame {
+  width: 1500px;
+  height: 650px;
+  border-radius: 20px;
+  display: block;
+  background: transparent;
+}
 
 
 

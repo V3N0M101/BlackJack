@@ -24,3 +24,17 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+function jumpAndRedirect(url) {
+  const page = document.querySelector('.page-transition');
+  if (page) {
+    page.classList.add('jumping');
+    setTimeout(() => {
+      window.location.href = url;
+    }, 350); // match animation duration (0.35s)
+  } else {
+    window.location.href = url;
+  }
+}
+
+

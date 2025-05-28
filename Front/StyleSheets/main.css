@@ -295,8 +295,8 @@ body, html {
 }
 
 .game-frame {
-  width: 88.125vw;        /* 1500px of 1920px */
-  height: 70.185vh;       /* 650px of 1080px */
+  width: 88vw;        
+  height: 70vh;      
   border-radius: 20px;
   display: block;
   background: transparent;

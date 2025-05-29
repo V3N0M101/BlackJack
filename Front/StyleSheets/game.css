@@ -113,3 +113,178 @@
 .Draw {
   width: 150px;
 }
+
+.chips button {
+  background-color: transparent; /* no background */
+  border: none;                  /* no border */
+  padding: 0;                   /* remove default padding */
+  margin: 0;                    /* remove default margin */
+  cursor: pointer;             /* keep pointer cursor for UX */
+}
+
+.chips button img {
+  width: 60px;   /* adjust as needed */
+  height: auto;  /* keep aspect ratio */
+  display: block; /* keep this to avoid inline spacing */
+}
+
+body {
+  color: #ffffff; /*, change to any color you like */
+}
+
+.Game-Container {
+  background-color: #308434; 
+  /* optionally add padding, border-radius, or shadow */
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(185, 124, 255, 0.6);
+}
+
+.Game-Container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;      /* Full viewport height */
+  background-color: #121212;  /* Dark background to separate from main.html */
+  color: white;       /* Default text color */
+  font-family: Arial, sans-serif;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.Game-head, .foot {
+  flex: 0 0 auto;
+  padding: 10px 20px;
+  background: #222;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.Game-head {
+  /* Split header into 3 areas horizontally */
+  display: flex;
+  justify-content: space-between;
+}
+
+.head-left, .head-center, .head-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.head-center {
+  flex-grow: 1;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.table {
+  flex: 1 1 auto; /* take all leftover space */
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+}
+
+.player {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+}
+
+.Player-Area {
+  background: #333;
+  padding: 12px;
+  border-radius: 8px;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #eee;
+}
+
+.combo-area {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-start;
+}
+
+.cards {
+  background: #222;
+  border-radius: 6px;
+  height: 120px; /* example height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Add scroll or wrap if many cards */
+  overflow-x: auto;
+}
+
+.foot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.status-item {
+  background: #444;
+  padding: 8px 16px;
+  border-radius: 6px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chips {
+  display: flex;
+  gap: 10px;
+}
+
+.chips button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 50px;
+  height: 50px;
+}
+
+.chips button img {
+  width: 100%;
+  height: auto;
+}
+
+.actions button {
+  background: #b97cff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background 0.3s ease;
+}
+
+.actions button:hover {
+  background: #ff009d;
+}

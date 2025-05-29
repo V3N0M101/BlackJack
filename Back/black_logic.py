@@ -1,5 +1,5 @@
-from deck import Deck
-from player import Player
+from Back.deck import Deck
+from Back.player import Player
 
 def card_value(card):
     rank = card.rank

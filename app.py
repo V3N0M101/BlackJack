@@ -1,32 +1,31 @@
-from flask import Flask, render_template, request, jsonify
-from Back.Game.black_logic import BlackjackGame
+import os, sys
+from flask import Flask, render_template
 
-app = Flask(__name__, template_folder='Front/Pages', static_folder='Front')
+# so you can `import deck, player, Black_logic` directly
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))
 
-# Create one game instance
-game = BlackjackGame()
+app = Flask(
+    __name__,
+    static_folder='Front',                # serve all sub-dirs (images/, scripts/, stylesheets/) as “static”
+    static_url_path='',
+    template_folder=os.path.join('Front','pages')
+)
 
 @app.route('/')
 def home():
     return render_template('main.html')
-@app.route('/blackjack')
-def blackjack():
+
+@app.route('/game')
+def game():
     return render_template('game.html')
 
-@app.route('/deal', methods=['POST'])
-def deal():
-    result = game.deal()
-    return jsonify(result)
+@app.route('/learn')
+def learn():
+    return render_template('learn.html')
 
-@app.route('/hit', methods=['POST'])
-def hit():
-    result = game.hit()
-    return jsonify(result)
-
-@app.route('/stand', methods=['POST'])
-def stand():
-    result = game.stand()
-    return jsonify(result)
+@app.route('/navbar')
+def navbar():
+    return render_template('navbar.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

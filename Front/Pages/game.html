@@ -1,77 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jack Black</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jack Black</title>
 
-    <!-- External Styles -->
-    <link rel="stylesheet" href="../StyleSheets/main.css">
-    <link rel="stylesheet" href="../StyleSheets/game.css">
-    <link rel="stylesheet" href="../StyleSheets/transition.css">   
+  <!-- External Styles -->
+  <link rel="stylesheet" href="../StyleSheets/transition.css" />
+  <link rel="stylesheet" href="../StyleSheets/main.css" />
+  <link rel="stylesheet" href="../StyleSheets/game.css" />
 </head>
 <body>
-    <div class="overlay-transition"></div>
-    <!-- Max/Min button (icon changes via JS) -->
-    <button class="fs-icon" id="fsBtn" title="Minimize" onclick="jumpAndRedirect('main.html')">
-        <img src="../Images/Icons/minn.png" id="fsImg" alt="Minimize"/>
-    </button>
-    <script src="../Scripts/max.js"></script>
-    <!--Game-->
-    <div class = "Game-Container">
-        <header class = "Game-head">
-            <div class = "head-left">
-                <button class = "vol"><img src="../Images/Icons/vol.png"></button>
-            <div class="Discard">
-                <img src="../Images/Assets/discard.png">
-            </div>
-            </div>
-            <div class = "head-center">
-                <div class = "min-max">
-                    <div class = "min">MIN:500</div>
-                    <div class = "max">MAX:500000</div>
-                </div>
-                <div class = "Logo">BLACK HUB</div>
-            </div>
-            <div class = "head-right">
-                <div class = "Game-Info">
-                    <h2 id = "Black">BLACKJACK 3:2</h2>
-                    <h2 id="Insure">INSURANCE 2:1</h2>
-                    <p>Dealer must hit on soft 17<br>Dealer must stand at 17</p>
-                </div>
-                <div class = "Draw">
-                     <img src="../Images/Assets/draw.png">
-                </div>
-            </div>
-        </header>
-        <div class="table">
-            <div class = "Player">
-                <div class = "Player-Area" id="P1"><!--P1 Image--></div>
-                <div class = "Player-Area" id="P2"><!--P2 Image--></div>
-                <div class = "Player-Area" id="P3"><!--P3 Image--></div>
-            </div>
-            <div class = "controls">
-                <div class = "chips">
-                    <button><img src="../Images/chips/">100</button>
-                    <button><img src="../Images/chips/">500</button>
-                    <button><img src="../Images/chips/">1000</button>
-                    <button><img src="../Images/chips/">5000</button>
-                    <button><img src="../Images/chips/">25000</button>
-                    <button><img src="../Images/chips/">100000</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script src="../Scripts/transition.js"></script>
-    <script>
-        window.addEventListener("DOMContentLoaded", () => {
-            loadComponent("navbar", "navbar.html");
-        });
+  <div class="overlay-transition"></div>
 
-        function enterFullGame() {
-            window.location.href = "game.html";
-        }
+  <!-- Minimize Button (hide if inside iframe) -->
+  <button class="fs-icon" id="fsBtn" title="Minimize" onclick="jumpAndRedirect('main.html')">
+    <img src="../Images/Icons/minn.png" id="fsImg" alt="Minimize" />
+  </button>
+
+  <!-- External Scripts -->
+  <script src="../Scripts/max.js"></script>
+  <script src="../Scripts/transition.js"></script>
+
+  <!-- Hide fs-icon when embedded in iframe -->
+  <script>
+    if (window.self !== window.top) {
+      const btn = document.getElementById('fsBtn');
+      if (btn) btn.style.display = 'none';
+    }
+  </script>
+
+  <!-- Game Container -->
+  <div class="Game-Container">
+    <header class="Game-head">
+      <div class="head-left">
+        <button class="vol"><img src="../Images/Icons/vol.png" alt="Volume" /></button>
+        <div class="Discard"><img src="../Images/Assets/discard.png" alt="Discard" /></div>
+      </div>
+      <div class="head-center">
+        <div class="min-max">
+          <div class="min">MIN: 500</div>
+          <div class="max">MAX: 500000</div>
+        </div>
+        <div class="Logo">BLACK HUB</div>
+      </div>
+      <div class="head-right">
+        <div class="Game-Info">
+          <h2 id="Black">BLACKJACK 3:2</h2>
+          <h2 id="Insure">INSURANCE 2:1</h2>
+          <p>Dealer must hit on soft 17<br />Dealer must stand at 17</p>
+        </div>
+        <div class="Draw"><img src="../Images/Assets/draw.png" alt="Draw Deck" /></div>
+      </div>
+    </header>
+
+    <div class="table">
+      <div class="player">
+        <!-- Player 1 -->
+        <div class="Player-Area" id="P1">
+          <div class="combo-area">
+            <div class="combo-circle pp">PP</div>
+            <div class="combo-circle twentyone-three">21+3</div>
+          </div>
+          <div class="cards" id="cards-P1"><!-- cards go here --></div>
+        </div>
+        <!-- Player 2 -->
+        <div class="Player-Area" id="P2">
+          <div class="combo-area">
+            <div class="combo-circle pp">PP</div>
+            <div class="combo-circle twentyone-three">21+3</div>
+          </div>
+          <div class="cards" id="cards-P2"><!-- cards go here --></div>
+        </div>
+        <!-- Player 3 -->
+        <div class="Player-Area" id="P3">
+          <div class="combo-area">
+            <div class="combo-circle pp">PP</div>
+            <div class="combo-circle twentyone-three">21+3</div>
+          </div>
+          <div class="cards" id="cards-P3"><!-- cards go here --></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div class="status">
+        <div class="status-item balance">Balance: $0</div>
+        <div class="status-item bet">Bet: $0</div>
+        <div class="status-item paid">Paid: $0</div>
+        <div class="status-item insurance">Insurance: $0</div>
+      </div>
+      <div class="controls">
+        <div class="chips">
+          <button><img src="../Images/chips/100-Chip.png" alt="100" /></button>
+          <button><img src="../Images/chips/500-Chip.png" alt="500" /></button>
+          <button><img src="../Images/chips/1000-Chip.png" alt="1000" /></button>
+          <button><img src="../Images/chips/5000-Chip.png" alt="5000" /></button>
+          <button><img src="../Images/chips/25000-Chip.png" alt="25000" /></button>
+          <button><img src="../Images/chips/100000-Chip.png" alt="100000" /></button>
+        </div>
+        <div class="actions">
+          <button class="btn-clear">Clear</button>
+          <button class="btn-re-bet">Re-bet</button>
+          <button class="btn-deal">Deal</button>
+          <button class="btn-hit">Hit</button>
+          <button class="btn-double">Double</button>
+          <button class="btn-stand">Stand</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- External Game Logic -->
+    <script src="../Scripts/game.js"></script>
+    <script>
+      // Load navbar
+      window.addEventListener("DOMContentLoaded", () => {
+        loadComponent("navbar", "navbar.html");
+      });
     </script>
+  </div>
 </body>
 </html>
+

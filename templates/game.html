@@ -6,14 +6,14 @@
   <title>Jack Black</title>
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="../StyleSheets/transition.css" />
-  <link rel="stylesheet" href="../StyleSheets/main.css" />
-  <link rel="stylesheet" href="../StyleSheets/game.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/main.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/game.css" />
 </head>
 <body>
   <div class="overlay-transition"></div>
-  <button class="fs-icon" id="fsBtn" title="Minimize" onclick="jumpAndRedirect('main.html')">
-    <img src="../Images/Icons/minn.png" id="fsImg" alt="Minimize" />
+  <button class="fs-icon" id="fsBtn" title="Minimize" onclick="window.location.href='/'">
+    <img src="/static/Images/Icons/minn.png" id="fsImg" alt="Minimize" />
   </button>
   <script>
     if (window.self !== window.top) {
@@ -33,25 +33,25 @@
                 <button id="collectBtn" class="btn btn-collect">Collect</button>
             </div>
             <button class="vol">
-                <img src="../Images/Icons/vol.png" alt="Volume" />
+                <img src="/static/Images/Icons/vol.png" alt="Volume" />
             </button>
         </div>
       </div>
 
       <div class="head-center">
         <div class = "Discard">
-            <img src="../Images/Assets/discard.png" />
+            <img src="/static/Images/Assets/discard.png" />
         </div>
       </div>
       <div class = "Dealer_mid">
         <div class="cards" id="cards-D">
-            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
+            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
       </div>
       <div class="head-right">
         <div class="Draw">
-          <img src="../Images/Assets/draw.png" alt="Draw Deck" />
+          <img src="/static/Images/Assets/draw.png" alt="Draw Deck" />
         </div>
         <div class="rules-box">
           <h2 id="Black">BLACKJACK 3:2</h2>
@@ -66,8 +66,8 @@
       <div class="player">
         <div class="Player-Area" id="P1">
           <div class="cards" id="cards-P1">
-            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
+            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
           <div class = "Zone">
             <div class = "PP">PP</div>
@@ -77,8 +77,8 @@
         </div>
         <div class="Player-Area" id="P2">
           <div class="cards" id="cards-P2">
-            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
+            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
           <div class = "Zone">
             <div class = "PP">PP</div>
@@ -88,8 +88,8 @@
         </div>
         <div class="Player-Area" id="P3">
           <div class="cards" id="cards-P3">
-            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
+            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
           <div class = "Zone">
             <div class = "PP">PP</div>
@@ -110,47 +110,47 @@
       </div>
       <div class="controls">
         <div class="chips">
-          <button><img src="../Images/chips/100-Chip.png" alt="100" /></button>
-          <button><img src="../Images/chips/500-Chip.png" alt="500" /></button>
-          <button><img src="../Images/chips/1000-Chip.png" alt="1000" /></button>
-          <button><img src="../Images/chips/5000-Chip.png" alt="5000" /></button>
-          <button><img src="../Images/chips/25000-Chip.png" alt="25000" /></button>
-          <button><img src="../Images/chips/100000-Chip.png" alt="100000" /></button>
+          <button><img src="/static/Images/chips/100-Chip.png" alt="100" /></button>
+          <button><img src="/static/Images/chips/500-Chip.png" alt="500" /></button>
+          <button><img src="/static/Images/chips/1000-Chip.png" alt="1000" /></button>
+          <button><img src="/static/Images/chips/5000-Chip.png" alt="5000" /></button>
+          <button><img src="/static/Images/chips/25000-Chip.png" alt="25000" /></button>
+          <button><img src="/static/Images/chips/100000-Chip.png" alt="100000" /></button>
         </div>
         <div class="actions">
           <button class="btn-clear">
             <span class="icon-bg clear-bg">
-              <img src="../Images/Assets/Clear.png" alt="Clear" />
+              <img src="/static/Images/Assets/Clear.png" alt="Clear" />
             </span>
           </button>
           <button class="btn-re-bet">
             <span class="icon-bg re-bet-bg">
-              <img src="../Images/Assets/Re-bet.png" alt="Re-bet" />
+              <img src="/static/Images/Assets/Re-bet.png" alt="Re-bet" />
             </span>
           </button>
           <button class="btn-deal">
             <span class="icon-bg deal-bg">
-              <img src="../Images/Assets/Deal.png" alt="Deal" />
+              <img src="/static/Images/Assets/Deal.png" alt="Deal" />
             </span>
           </button>
           <button class="btn-hit">
             <span class="icon-bg hit-bg">
-              <img src="../Images/Assets/Hit.png" alt="Hit" />
+              <img src="/static/Images/Assets/Hit.png" alt="Hit" />
             </span>
           </button>
           <button class="btn-double">
             <span class="icon-bg double-bg">
-              <img src="../Images/Assets/Double.png" alt="Double" />
+              <img src="/static/Images/Assets/Double.png" alt="Double" />
             </span>
           </button>
           <button class="btn-stand">
             <span class="icon-bg stand-bg">
-              <img src="../Images/Assets/Stand.png" alt="Stand" />
+              <img src="/static/Images/Assets/Stand.png" alt="Stand" />
             </span>
           </button>
           <button class="btn-split">
             <span class="icon-bg split-bg">
-              <img src="../Images/Assets/Split.png" alt="Split" />
+              <img src="/static/Images/Assets/Split.png" alt="Split" />
             </span>
           </button>
 
@@ -159,9 +159,9 @@
     </div>
   </div>
   
-  <script src="../Scripts/max.js"></script>
-  <script src="../Scripts/transition.js"></script>
-  <script src="../Scripts/game.js"></script>
+  <script src="/static/Scripts/max.js"></script>
+  <script src="/static/Scripts/transition.js"></script>
+  <script src="/static/Scripts/game.js"></script>
   <script>
     window.addEventListener("DOMContentLoaded", () => {
       loadComponent("navbar", "navbar.html");

@@ -7,18 +7,18 @@
     <title>Register</title>
 
     <!-- CSS Files -->
-    <link rel="stylesheet" href="../StyleSheets/transition.css" />
-    <link rel="stylesheet" href="../StyleSheets/login.css" />
-    <link rel="stylesheet" href="../StyleSheets/register.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/login.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/register.css" />
     <!-- JS Files -->
-    <script src="../Scripts/transition.js"></script>
-    <script src="../Scripts/register.js"></script>
+    <script src="/static/Scripts/transition.js"></script>
+    <script src="/static/Scripts/register.js"></script>
 </head>
 <body>
   <div class="overlay-transition"></div>
   <div class="Hover_Back_Wrap">
-    <a href="main.html" onclick="history.back();" class="back-arrow">
-      <img src="../Images/Icons/home-icon.png" class="Homer">
+    <a href="/" onclick="history.back();" class="back-arrow">
+      <img src="/static/Images/Icons/home-icon.png" class="Homer">
       <span>Home</span>
     </a>
   </div>
@@ -31,26 +31,26 @@
         <!-- Email -->
         <div class="Input-here">
           <input type="email" placeholder="Email" required>
-          <img class="L-img" src="../Images/Icons/email.png" style="width: 24px">
+          <img class="L-img" src="/static/Images/Icons/email.png" style="width: 24px">
         </div>
 
         <!-- Username -->
         <div class="Input-here">
           <input type="text" placeholder="Username" required>
-          <img class="L-img" src="../Images/Icons/user.png" style="width: 24px">
+          <img class="L-img" src="/static/Images/Icons/user.png" style="width: 24px">
         </div>
 
         <!-- Password -->
         <div class="Input-here password-suggest-wrap">
             <input id="password" class="PP" type="password" placeholder="Password" required>
-            <img class="P-img" src="../Images/Icons/Password.png" style="width: 24px">
+            <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
             <button type="button" class="suggest-btn" onclick="suggestPassword()">Suggest</button>
         </div>
 
         <!-- Confirm Password -->
         <div class="Input-here">
             <input id="confirm-password" class="PP" type="password" placeholder="Confirm Password" required>
-            <img class="P-img" src="../Images/Icons/Password.png" style="width: 24px">
+            <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
         </div>
 
         <div class="remember-forgot">
@@ -64,7 +64,7 @@
         <button type="submit" class="Btn"> Register </button>
 
         <div class="register">
-          <p>Already have an account?<a href="login.html"> Login</a></p>
+          <p>Already have an account?<a href="/login"> Login</a></p>
         </div>
       </form>
     </div>

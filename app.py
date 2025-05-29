@@ -4,12 +4,7 @@ from flask import Flask, render_template
 # so you can `import deck, player, Black_logic` directly
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))
 
-app = Flask(
-    __name__,
-    static_folder='Front',                # serve all sub-dirs (images/, scripts/, stylesheets/) as “static”
-    static_url_path='',
-    template_folder=os.path.join('Front','pages')
-)
+app = Flask(__name__)
 
 # Define routes for your HTML pages
 @app.route("/")

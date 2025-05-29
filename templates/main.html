@@ -6,17 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
 
+    {% include 'navbar.html' %}
+
     <!-- Stylesheets (transition first, then base styles) -->
-    <link rel="stylesheet" href="../StyleSheets/transition.css" />
-    <link rel="stylesheet" href="../StyleSheets/main.css" />
-    <link rel="stylesheet" href="../StyleSheets/game.css">
+    <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/main.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/StyleSheets/game.css">
 
     <!-- Favicon -->
-    <link rel="icon" href="../Images/Assets/Osama.png" />
+    <link rel="icon" href="/static/Images/Assets/Osama.png" />
 
     <!-- Scripts -->
-    <script src="../Scripts/main.js" defer></script>
-    <script src="../Scripts/inject.js" defer></script>
+    <script src="/static/Scripts/main.js" defer></script>
+    <script src="/static/Scripts/inject.js" defer></script>
     
 </head>
 <body>
@@ -30,10 +32,10 @@
         <!-- Game Preview Section below navbar -->
         <div class="game-preview-outer">
         <div class="game-preview-inner">
-            <iframe src="game.html" class="game-frame" id="game-preview" allowfullscreen></iframe>
+            <iframe src="/game" class="game-frame" id="game-preview" allowfullscreen></iframe>
             <!-- Maximize button OVERLAY, not inside iframe! -->
             <button class="fullscreen-icon" onclick="toggleFullscreen();" title="Fullscreen">
-                <img src="../Images/Icons/maxx.png" alt="Fullscreen" />
+                <img src="/static/Images/Icons/maxx.png" alt="Fullscreen" />
             </button>
         </div>
         </div>
@@ -41,7 +43,7 @@
 
     </div>
     <!--Body Scripts -->
-    <script src="../Scripts/transition.js"></script>
+    <script src="/static/Scripts/transition.js"></script>
     <script>
     window.addEventListener("DOMContentLoaded", () => {
         loadComponent("navbar", "navbar.html");

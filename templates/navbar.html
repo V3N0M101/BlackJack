@@ -3,16 +3,31 @@
   <div class="nav-border-glow"></div>
 
   <nav class="nav-bar">
+    <!-- Logo on the left -->
     <a class="nav-button logo" href="#"><div class="logo-container">Black Hub</div></a>
 
-    <a class="nav-button nav-link" href="/"><img src="/static/Images/Icons/home-icon.png">Home</a>
-    <a class="nav-button nav-link" href="/learn"><img src="/static/Images/Icons/learn.png">Learn</a>
-    <a class="nav-button nav-link" href="/news"><img src="/static/Images/Icons/news.png">News</a>
+    <!-- Centered nav links -->
+    <div class="nav-links-center">
+      <a class="nav-button nav-link" href="/"><img src="/static/Images/Icons/home-icon.png">Home</a>
+      <a class="nav-button nav-link" href="/learn"><img src="/static/Images/Icons/learn.png">Learn</a>
+      <a class="nav-button nav-link" href="/news"><img src="/static/Images/Icons/news.png">News</a>
+    </div>
 
-    <a class="nav-button login-button" href="/login">
-      <div class="login-container"><img src="/static/Images/Icons/profile.png"></div>
-    </a>
+    <!-- Login or Logout button on the right -->
+    {% if logged_in %}
+      <form action="/logout" method="get" style="display:inline;">
+        <button type="submit" class="nav-button login-button" style="background:none; border:none; cursor:pointer; padding:0;">
+          <div class="login-container">
+            <img src="/static/Images/Icons/logout.png" alt="Logout" />
+          </div>
+        </button>
+      </form>
+    {% else %}
+      <a class="nav-button login-button" href="/login">
+        <div class="login-container"><img src="/static/Images/Icons/profile.png" alt="Login"></div>
+      </a>
+    {% endif %}
 
-    <div class="hover-back"></div>
+    
   </nav>
 </div>

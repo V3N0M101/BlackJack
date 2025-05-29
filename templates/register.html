@@ -23,61 +23,71 @@
     </a>
   </div>
   <div class="page-transition">
-    <div class = "center-container">
-    <div class="wrapper">
-      <form id = "register-form" action="">
-        <h1> Register </h1>
+    <div class="center-container">
+      <div class="wrapper">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <p style="color: red;">{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
 
-        <!-- Email -->
-        <div class="Input-here">
-          <input type="email" placeholder="Email" required>
-          <img class="L-img" src="/static/Images/Icons/email.png" style="width: 24px">
-        </div>
+        <form id="register-form" method="POST" action="/register">
+          <h1> Register </h1>
 
-        <!-- Username -->
-        <div class="Input-here">
-          <input type="text" placeholder="Username" required>
-          <img class="L-img" src="/static/Images/Icons/user.png" style="width: 24px">
-        </div>
+          <!-- Email -->
+          <div class="Input-here">
+            <input type="email" name="email" placeholder="Email" required>
+            <img class="L-img" src="/static/Images/Icons/email.png" style="width: 24px">
+          </div>
 
-        <!-- Password -->
-        <div class="Input-here password-suggest-wrap">
-            <input id="password" class="PP" type="password" placeholder="Password" required>
-            <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
-            <button type="button" class="suggest-btn" onclick="suggestPassword()">Suggest</button>
-        </div>
+          <!-- Username -->
+          <div class="Input-here">
+            <input type="text" name="username" placeholder="Username" required>
+            <img class="L-img" src="/static/Images/Icons/user.png" style="width: 24px">
+          </div>
 
-        <!-- Confirm Password -->
-        <div class="Input-here">
-            <input id="confirm-password" class="PP" type="password" placeholder="Confirm Password" required>
-            <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
-        </div>
+          <!-- Password -->
+          <div class="Input-here password-suggest-wrap">
+              <input id="password" name="password" class="PP" type="password" placeholder="Password" required>
+              <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
+              <button type="button" class="suggest-btn" onclick="suggestPassword()">Suggest</button>
+          </div>
 
-        <div class="remember-forgot">
-        <label class="checker">
-            <input type="checkbox" onclick="togglePasswordVisibility()">
-            <span class="checkmark"></span> Show Password
-        </label>
-        </div>
+          <!-- Confirm Password -->
+          <div class="Input-here">
+              <input id="confirm-password" name="confirm_password" class="PP" type="password" placeholder="Confirm Password" required>
+              <img class="P-img" src="/static/Images/Icons/Password.png" style="width: 24px">
+          </div>
 
+          <div class="remember-forgot">
+            <label class="checker">
+              <input type="checkbox" onclick="togglePasswordVisibility()">
+              <span class="checkmark"></span> Show Password
+            </label>
+          </div>
 
-        <button type="submit" class="Btn"> Register </button>
+          <button type="submit" class="Btn"> Register </button>
 
-        <div class="register">
-          <p>Already have an account?<a href="/login"> Login</a></p>
-        </div>
-      </form>
+          <div class="register">
+            <p>Already have an account?<a href="/login"> Login</a></p>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
   </div>
 
   <script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
         // Page was loaded from back/forward cache — reload it
         window.location.reload();
-    }
-});
-</script>
+      }
+    });
+  </script>
 </body>
 </html>

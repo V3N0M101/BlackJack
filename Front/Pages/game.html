@@ -2,90 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jack Black</title>
 
-  <!-- External Styles -->
+  <!-- Stylesheets -->
   <link rel="stylesheet" href="../StyleSheets/transition.css" />
   <link rel="stylesheet" href="../StyleSheets/main.css" />
   <link rel="stylesheet" href="../StyleSheets/game.css" />
 </head>
 <body>
   <div class="overlay-transition"></div>
-
-  <!-- Minimize Button (hide if inside iframe) -->
   <button class="fs-icon" id="fsBtn" title="Minimize" onclick="jumpAndRedirect('main.html')">
     <img src="../Images/Icons/minn.png" id="fsImg" alt="Minimize" />
   </button>
-
-  <!-- External Scripts -->
-  <script src="../Scripts/max.js"></script>
-  <script src="../Scripts/transition.js"></script>
-
-  <!-- Hide fs-icon when embedded in iframe -->
   <script>
     if (window.self !== window.top) {
-      const btn = document.getElementById('fsBtn');
-      if (btn) btn.style.display = 'none';
+      document.getElementById('fsBtn')?.style.setProperty('display', 'none');
     }
   </script>
-
-  <!-- Game Container -->
   <div class="Game-Container">
     <header class="Game-head">
       <div class="head-left">
-        <button class="vol"><img src="../Images/Icons/vol.png" alt="Volume" /></button>
-        <div class="Discard"><img src="../Images/Assets/discard.png" alt="Discard" /></div>
-      </div>
-      <div class="head-center">
-        <div class="min-max">
+        <div class="Logo">BLACK HUB</div> <!--Top left-->
+        <div class="min-max-box"> <!--Middle-Top Left -->
           <div class="min">MIN: 500</div>
           <div class="max">MAX: 500000</div>
         </div>
-        <div class="Logo">BLACK HUB</div>
+        <div class = "left-bottom">
+            <div class="Collect">
+                <button id="collectBtn" class="btn btn-collect">Collect</button>
+            </div>
+            <button class="vol">
+                <img src="../Images/Icons/vol.png" alt="Volume" />
+            </button>
+        </div>
       </div>
+
+      <div class="head-center">
+        <div class = "Discard">
+            <img src="../Images/Assets/discard.png" />
+        </div>
+      </div>
+
       <div class="head-right">
-        <div class="Game-Info">
+        <div class="Draw">
+          <img src="../Images/Assets/draw.png" alt="Draw Deck" />
+        </div>
+        <div class="rules-box">
           <h2 id="Black">BLACKJACK 3:2</h2>
           <h2 id="Insure">INSURANCE 2:1</h2>
-          <p>Dealer must hit on soft 17<br />Dealer must stand at 17</p>
+          <p>Dealer must hit on soft 17</p>
+          <p>Dealer must stand at 17</p>
         </div>
-        <div class="Draw"><img src="../Images/Assets/draw.png" alt="Draw Deck" /></div>
       </div>
     </header>
 
     <div class="table">
       <div class="player">
-        <!-- Player 1 -->
         <div class="Player-Area" id="P1">
-          <div class="combo-area">
-            <div class="combo-circle pp">PP</div>
-            <div class="combo-circle twentyone-three">21+3</div>
+          <div class="cards" id="cards-P1">
+            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class="cards" id="cards-P1"><!-- cards go here --></div>
+          <div class = "Zone">
+            <div class = "PP">PP</div>
+            <div class = "MAIN">Main</div>
+            <div class = "TWENTYONE">21+3</div>
+          </div>
         </div>
-        <!-- Player 2 -->
         <div class="Player-Area" id="P2">
-          <div class="combo-area">
-            <div class="combo-circle pp">PP</div>
-            <div class="combo-circle twentyone-three">21+3</div>
+          <div class="cards" id="cards-P2">
+            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class="cards" id="cards-P2"><!-- cards go here --></div>
+          <div class = "Zone">
+            <div class = "PP">PP</div>
+            <div class = "MAIN">Main</div>
+            <div class = "TWENTYONE">21+3</div>
+          </div>
         </div>
-        <!-- Player 3 -->
         <div class="Player-Area" id="P3">
-          <div class="combo-area">
-            <div class="combo-circle pp">PP</div>
-            <div class="combo-circle twentyone-three">21+3</div>
+          <div class="cards" id="cards-P3">
+            <img src="../Images/cards/2-H.png" alt="2H" class="card" />
+            <img src="../Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class="cards" id="cards-P3"><!-- cards go here --></div>
+          <div class = "Zone">
+            <div class = "PP">PP</div>
+            <div class = "MAIN">Main</div>
+            <div class = "TWENTYONE">21+3</div>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="foot">
       <div class="status">
+        <!--Add Variables instead-->
         <div class="status-item balance">Balance: $0</div>
         <div class="status-item bet">Bet: $0</div>
         <div class="status-item paid">Paid: $0</div>
@@ -110,16 +122,17 @@
         </div>
       </div>
     </div>
-
-    <!-- External Game Logic -->
-    <script src="../Scripts/game.js"></script>
-    <script>
-      // Load navbar
-      window.addEventListener("DOMContentLoaded", () => {
-        loadComponent("navbar", "navbar.html");
-      });
-    </script>
   </div>
+  
+  
+  
+  <script src="../Scripts/max.js"></script>
+  <script src="../Scripts/transition.js"></script>
+  <script src="../Scripts/game.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      loadComponent("navbar", "navbar.html");
+    });
+  </script>
 </body>
 </html>
-

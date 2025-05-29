@@ -1,5 +1,5 @@
-from Back.deck import Deck
-from Back.player import Player
+from deck import Deck
+from player import Player
 
 def card_value(card):
     rank = card.rank
@@ -253,6 +253,133 @@ class BlackjackGame:
 
         print(f"\nGame over! You have {self.player.chips} chips remaining.")
 
+class BlackjackMultiGame:
+    def __init__(self, player_name="You", num_games=3):
+        self.deck = Deck()
+        self.deck.generate_deck()
+        self.deck.shuffle()
+
+        self.dealer = Player("Dealer", is_Bot=True)
+        self.num_games = num_games
+
+        # Create multiple hands for the player
+        self.games = [
+            {
+                "player": Player(f"{player_name} - Hand {i+1}"),
+                "hand": [],
+                "bet": 0,
+                "side_21_3": 0,
+                "side_pp": 0,
+                "side_bets": {},
+                "blackjack": False,
+                "finished": False
+            }
+            for i in range(num_games)
+        ]
+
+    def place_bets(self):
+        for idx, game in enumerate(self.games):
+            print(f"\n--- Placing bets for Game {idx + 1} ---")
+            while True:
+                try:
+                    game["bet"] = int(input(f"Enter main bet for Hand {idx+1}: "))
+                    break
+                except ValueError:
+                    print("Invalid bet.")
+
+            def get_side_bet(name):
+                while True:
+                    try:
+                        return int(input(f"Side bet for {name} (0 to skip): "))
+                    except ValueError:
+                        print("Invalid input.")
+
+            game["side_21_3"] = get_side_bet("21+3")
+            game["side_pp"] = get_side_bet("Perfect Pair")
+
+    def deal_initial_cards(self):
+        # Deal to dealer
+        self.dealer.receive_cards(self.deck.dealCards(2))
+
+        # Deal to each player hand
+        for game in self.games:
+            cards = self.deck.dealCards(2)
+            game["hand"] = cards
+            game["player"].hand = cards
+
+            # Evaluate side bets
+            game["side_bets"] = evaluate_side_bets(game["hand"], self.dealer.hand[0])
+
+            # Apply side bet payouts
+            sb = game["side_bets"]
+            payout_21 = sb["21+3"]["payout"] * game["side_21_3"]
+            payout_pp = sb["Perfect Pair"]["payout"] * game["side_pp"]
+            game["player"].chips += payout_21 + payout_pp
+
+            # Blackjack check
+            game["blackjack"] = is_blackjack(game["hand"])
+
+    def play_hand(self, idx, game):
+        print(f"\n--- Playing Hand {idx + 1} ---")
+        player = game["player"]
+
+        if game["blackjack"]:
+            print("Blackjack!")
+            player.chips += int(game["bet"] * 2.5)
+            game["finished"] = True
+            return
+
+        while not game["finished"]:
+            print(f"\nYour hand: {', '.join(str(c) for c in game['hand'])} (Total: {hand_value(game['hand'])})")
+            choice = input("Hit or Stand? (h/s): ").lower()
+            if choice == "h":
+                game["hand"].append(self.deck.dealCards(1)[0])
+                if hand_value(game["hand"]) > 21:
+                    print("Busted!")
+                    game["finished"] = True
+            elif choice == "s":
+                game["finished"] = True
+            else:
+                print("Invalid input.")
+
+    def resolve_dealer(self):
+        print("\n--- Dealer's Turn ---")
+        while hand_value(self.dealer.hand) < 17:
+            self.dealer.hand.append(self.deck.dealCards(1)[0])
+        print(f"Dealer's hand: {', '.join(str(c) for c in self.dealer.hand)} (Total: {hand_value(self.dealer.hand)})")
+
+    def settle_bets(self):
+        dealer_total = hand_value(self.dealer.hand)
+        for idx, game in enumerate(self.games):
+            if game["blackjack"]:
+                continue  # Already settled
+            player_total = hand_value(game["hand"])
+            print(f"\n--- Result for Hand {idx + 1} ---")
+            if player_total > 21:
+                print("You busted.")
+            elif dealer_total > 21 or player_total > dealer_total:
+                print("You win!")
+                game["player"].chips += game["bet"] * 2
+            elif player_total == dealer_total:
+                print("Push.")
+                game["player"].chips += game["bet"]
+            else:
+                print("Dealer wins.")
+
+    def play(self):
+        self.place_bets()
+        self.deal_initial_cards()
+
+        for idx, game in enumerate(self.games):
+            self.play_hand(idx, game)
+
+        self.resolve_dealer()
+        self.settle_bets()
+
+        print("\n--- Final Results ---")
+        for idx, game in enumerate(self.games):
+            print(f"Hand {idx+1} chips: {game['player'].chips}")
+
 if __name__ == "__main__":
-    game = BlackjackGame(player_name="Tester")
+    game = BlackjackMultiGame()
     game.play()

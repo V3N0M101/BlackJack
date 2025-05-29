@@ -260,12 +260,13 @@ class BlackjackMultiGame:
         self.deck.shuffle()
 
         self.dealer = Player("Dealer", is_Bot=True)
+        self.player = Player(player_name)  # Add a single main player instance here
+
         self.num_games = num_games
 
-        # Create multiple hands for the player
         self.games = [
             {
-                "player": Player(f"{player_name} - Hand {i+1}"),
+                "player": self.player,
                 "hand": [],
                 "bet": 0,
                 "side_21_3": 0,
@@ -277,22 +278,37 @@ class BlackjackMultiGame:
             for i in range(num_games)
         ]
 
-    def place_bets(self):
+    def place_bets(self, player):
         for idx, game in enumerate(self.games):
             print(f"\n--- Placing bets for Game {idx + 1} ---")
+            
+            # MAIN BET
             while True:
                 try:
-                    game["bet"] = int(input(f"Enter main bet for Hand {idx+1}: "))
-                    break
+                    main_bet = int(input(f"Enter main bet for Hand {idx + 1} (chips available: {player.chips}): "))
+                    if main_bet <= player.chips:
+                        game["bet"] = main_bet
+                        player.chips -= main_bet
+                        break
+                    else:
+                        print("Not enough chips for that bet.")
                 except ValueError:
-                    print("Invalid bet.")
+                    print("Invalid bet. Please enter a number.")
 
+            # SIDE BET FUNCTION
             def get_side_bet(name):
                 while True:
                     try:
-                        return int(input(f"Side bet for {name} (0 to skip): "))
+                        amount = int(input(f"Side bet for {name} (0 to skip, chips available: {player.chips}): "))
+                        if amount == 0:
+                            return 0
+                        elif amount <= player.chips:
+                            player.chips -= amount
+                            return amount
+                        else:
+                            print("Not enough chips for that side bet.")
                     except ValueError:
-                        print("Invalid input.")
+                        print("Invalid input. Please enter a number.")
 
             game["side_21_3"] = get_side_bet("21+3")
             game["side_pp"] = get_side_bet("Perfect Pair")
@@ -367,8 +383,17 @@ class BlackjackMultiGame:
                 print("Dealer wins.")
 
     def play(self):
-        self.place_bets()
+        self.place_bets(self.player)
         self.deal_initial_cards()
+
+        # Show dealer's upcard before player decisions
+        print("\nDealer's upcard is:", self.dealer.hand[0])
+
+        # List to store chip count before each hand
+        chips_before_hand = []
+
+        # Store chip count before first hand
+        chips_before_hand.append(self.player.chips)
 
         for idx, game in enumerate(self.games):
             self.play_hand(idx, game)
@@ -376,9 +401,8 @@ class BlackjackMultiGame:
         self.resolve_dealer()
         self.settle_bets()
 
-        print("\n--- Final Results ---")
-        for idx, game in enumerate(self.games):
-            print(f"Hand {idx+1} chips: {game['player'].chips}")
+        print("\n--- Round Results ---")
+        print(f"\nFinal chip count: {self.player.chips}")
 
 if __name__ == "__main__":
     game = BlackjackMultiGame()

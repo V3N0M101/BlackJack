@@ -199,7 +199,7 @@ body {
   padding: 6px;
 }
 .cards img {
-  width: 10vh;
+  width: 5vw;
   height: auto;
 }
 
@@ -213,7 +213,7 @@ body {
 
 .Zone {
   position: relative;    /* allow absolute children */
-  height: 60px;          /* match the BIG chip height */
+  height: 6vh;          /* match the BIG chip height */
   width: 100%;           /* or shrink-wrap via width: max-content */
   margin: 0 auto;        /* center if needed */
 }

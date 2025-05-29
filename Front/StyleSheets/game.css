@@ -125,7 +125,7 @@ body {
   height: 100vh;
   padding: 12px 20px;
   box-sizing: border-box;
-  background: #310041;
+  background: none;
   box-shadow: 0 0 15px rgba(185, 124, 255, 0.6);
 }
 
@@ -185,7 +185,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: #333;
+  background: #fac7ff49;
   padding: 12px;
   border-radius: 8px;
   color: #eee;
@@ -203,19 +203,86 @@ body {
   height: auto;
 }
 
-/* === ZONE (Betting Zones) === */
-.Zone {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
+.Dealer_mid {
+  background-color: red;
 }
+
+/* ——————————————————————— */
+/*  OVERLAP “ZONE” DIVS AS CHIPS  */
+/* ——————————————————————— */
+
+.Zone {
+  position: relative;    /* allow absolute children */
+  height: 60px;          /* match the BIG chip height */
+  width: 100%;           /* or shrink-wrap via width: max-content */
+  margin: 0 auto;        /* center if needed */
+}
+
+/* reset old padding/border-radius */
 .Zone > div {
-  padding: 4px 8px;
-  background: #444;
-  color: #fff;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  text-align: center;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+}
+
+/* shared chip styles */
+.Zone .PP,
+.Zone .MAIN,
+.Zone .TWENTYONE {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* center “Main” chip */
+.Zone .MAIN {
+  width: 7.5vw;
+  height: 15vh;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #a2d5c6;    /* tweak to taste */
+  border: 3px solid #6ba;
+  z-index: 1;
+}
+
+/* side chips */
+.Zone .PP,
+.Zone .TWENTYONE {
+  width: 3.75vw;
+  height: 7.5vh;
+  top: 2.75vh;             /* vertically center beside MAIN */
+  background: #9fc;       /* tweak to taste */
+  border: 3px solid #6a9;
+  z-index: 2;
+}
+
+/* position the two small chips */
+.Zone .PP {
+  left: calc(50% - 6vw); /* 50% − (main-half + small-half) */
+}
+.Zone .TWENTYONE {
+  left: calc(50% + 2.5vw); /* 50% + (main-half − small-half) */
+}
+
+/* hover “pop” effect */
+.Zone .PP:hover,
+.Zone .MAIN:hover,
+.Zone .TWENTYONE:hover {
+  transform: scale(1.1) translateY(-5px);
+  box-shadow:
+    0 4px 12px rgba(0,0,0,0.3),
+    0 0 8px rgba(255,255,255,0.6);
+}
+
+.Zone .MAIN:hover {
+  transform: translateX(-50%);
 }
 
 /* === STATUS BAR === */
@@ -242,36 +309,53 @@ body {
   display: flex;
   gap: 10px;
 }
+
 .chips button {
   background: none;
   border: none;
+  padding: 0;
   width: 50px;
   height: 50px;
   cursor: pointer;
-}
-.chips button img {
-  width: 100%;
-  height: auto;
-  display: block;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
+.chips button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter 0.2s ease;
+}
+
+.chips button:hover {
+  transform: scale(1.15);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.25),   /* subtle drop shadow */
+    0 0 8px rgba(255, 215, 0, 0.8);    /* golden glow */
+  z-index: 1;
+}
+
+.chips button:hover img {
+  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
+}
 /* === ACTION BUTTONS === */
 .actions {
   display: flex;
   gap: 10px;
+  border-radius: 8px;
 }
 .actions button {
   padding: 10px 16px;
   background: #b97cff;
-  border: none;
-  border-radius: 6px;
   color: #fff;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.3s;
 }
 .actions button:hover {
-  background: #ff009d;
+  background: #6200ff;
+  transform: scale(1.2);
+  border-radius: 8px;
+  z-index: 10002;
 }
 
 /* === HEADER LAYOUT OVERRIDES === */
@@ -299,5 +383,68 @@ body {
 /* push the right-hand “rules” box all the way to the right */
 .head-right {
   margin-left: auto;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.actions button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+
+.icon-bg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+/* size the icons */
+.icon-bg img {
+  display: block;
+  width: 36px;
+  height: 36px;
+}
+
+
+.clear-bg   { background-color: rgba(157, 216, 255, 0.74); }
+.re-bet-bg  { background-color: #ffd7a8bd; } 
+.deal-bg    { background-color: rgba(106, 255, 168, 0.829); } 
+.hit-bg     { background-color: #ecc0fff3; }
+.double-bg  { background-color: rgb(255, 241, 185); }
+.stand-bg   { background-color: rgba(255, 255, 255, 0.74); } 
+.split-bg   { background-color: rgba(255, 198, 198, 0.74); } 
+
+.Game-Container {
+  position: relative;
+}
+
+.actions {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 4px;   
+  margin-bottom: 5px;           
+}
+
+.actions button {
+  border-radius: 0;       
+}
+.actions button:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.actions button:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
 }
 

@@ -346,5 +346,23 @@ body, html {
   margin-right: 1rem;
 }
 
+.logout-container::before,
+.logout-container::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 0px;
+  right: -15px;
+  bottom: -5px;
+  border-radius: 8px;
+  background: conic-gradient(from var(--angle2, 0deg), #9e00ff, #00d0ff, #9e00ff);
+  filter: blur(10px);
+  opacity: 1;
+  z-index: -1;
+  animation: spin-border 5s linear infinite;
+}
 
+.logout-container img {
+  margin-left:0.6vw;
+}
 

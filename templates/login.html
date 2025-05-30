@@ -42,7 +42,7 @@
                     <input type="checkbox" onclick="togglePasswordVisibility()">
                     <span class="checkmark"></span> Show Password
                     </label>
-                    <a href="/email">Forgot Password?</a>
+                    <a href="/forgot">Forgot Password?</a>
                 </div>
                 <button type="submit" class="Btn"> Login </button>
 
@@ -65,7 +65,12 @@ window.addEventListener('pageshow', function (event) {
         // Page was loaded from back/forward cache — reload it
         window.location.reload();
     }
-});
+});    
 </script>
+  {% if login_in_alert %}
+    <script>
+      alert("Logged in successfully.");
+    </script>
+  {% endif %}
 </body>
 </html>

@@ -13,7 +13,6 @@
   justify-content: center;
   cursor: pointer;
   z-index: 1002;
-  transition: background 0.3s ease;
 }
 .fs-icon:hover {
   background: #b97cff;
@@ -56,9 +55,10 @@
 .btn-collect:hover {
   background: #1c6d34;
 }
-.btn-collect:click {
-  scale: 0.9
+.btn-collect:active {
+  transform: scale(0.9);
 }
+
 .btn-collect:disabled {
   background: #94d3a2;
   cursor: not-allowed;
@@ -120,7 +120,9 @@ body {
   padding: 0;
   color: #fff;
   font-family: Arial, sans-serif;
+  background-color: #333;
 }
+
 .Game-Container {
   display: flex;
   flex-direction: column;
@@ -161,18 +163,9 @@ body {
   text-align: center;
 }
 
-/* === TABLE & PLAYERS === */
-.table {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  background: #666;
-  border-radius: 8px;
-  padding: 20px;
-  overflow-x: auto;
-  margin-bottom: 10px;
-}
+
+/* normal layout stays untouched */
+
 .player {
   display: flex;
   gap: 24px;
@@ -214,21 +207,21 @@ body {
 /* ——————————————————————— */
 
 .Zone {
-  position: relative;    /* allow absolute children */
-  height: 6vh;          /* match the BIG chip height */
-  width: 100%;           /* or shrink-wrap via width: max-content */
-  margin: 0 auto;        /* center if needed */
+  position: relative;
+  height: 150px; /* fixed height for consistency */
+  width: 100%;
+  margin: 0 auto;
 }
 
-/* reset old padding/border-radius */
-.Zone > div {
+/* Reset any buttons inside the zone */
+.Zone button {
+  border: none;
   padding: 0;
-  border-radius: 0;
   background: none;
-  color: inherit;
+  cursor: pointer;
 }
 
-/* shared chip styles */
+/* Shared styles */
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
@@ -238,54 +231,57 @@ body {
   justify-content: center;
   border-radius: 50%;
   font-weight: bold;
-  cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: #000;
 }
 
-/* center “Main” chip */
+/* Main Chip in Center */
 .Zone .MAIN {
-  width: 7.5vw;
-  height: 15vh;
-  top: 0;
+  width: 100px;
+  height: 100px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  background: #a2d5c6;    /* tweak to taste */
+  transform: translate(-50%, -50%);
+  background: #a2d5c6;
   border: 3px solid #6ba;
   z-index: 1;
 }
 
-/* side chips */
+/* Side Chips (PP and 21+3) */
 .Zone .PP,
 .Zone .TWENTYONE {
-  width: 3.75vw;
-  height: 7.5vh;
-  top: 2.75vh;             /* vertically center beside MAIN */
-  background: #9fc;       /* tweak to taste */
+  width: 50px;
+  height: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #9fc;
   border: 3px solid #6a9;
   z-index: 2;
 }
 
-/* position the two small chips */
+/* Position side chips relative to center */
 .Zone .PP {
-  left: calc(50% - 6vw); /* 50% − (main-half + small-half) */
-}
-.Zone .TWENTYONE {
-  left: calc(50% + 2.5vw); /* 50% + (main-half − small-half) */
+  left: calc(50% - 75px); /* half of MAIN + half of PP + gap */
 }
 
-/* hover “pop” effect */
+.Zone .TWENTYONE {
+  left: calc(50% + 25px); /* half of MAIN - half of PP */
+}
+
+/* Hover effects */
 .Zone .PP:hover,
 .Zone .MAIN:hover,
 .Zone .TWENTYONE:hover {
-  transform: scale(1.1) translateY(-5px);
+  transform: translateY(-50%) scale(1.1);
   box-shadow:
     0 4px 12px rgba(0,0,0,0.3),
     0 0 8px rgba(255,255,255,0.6);
 }
 
 .Zone .MAIN:hover {
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%) scale(1.1);
 }
+
 
 /* === STATUS BAR === */
 .status {
@@ -450,3 +446,48 @@ body {
   border-bottom-right-radius: 6px;
 }
 
+/* Default windowed dimensions */
+
+.table {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  background: #666;
+  border-radius: 8px;
+  padding: 20px;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.table-windowed .Zone .MAIN {
+  width: 7vw;
+  height: 14vh;
+}
+.table-windowed .Zone .PP,
+.table-windowed .Zone .TWENTYONE {
+  width: 3.5vw;
+  height: 7vh;
+  top: 3.5vh;
+}
+
+/* Fullscreen dimensions */
+.table-fullscreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  height: 70vh;
+}
+
+.table-fullscreen .Zone .MAIN {
+  width: 10vw;
+  height: 18vh;
+}
+.table-fullscreen .Zone .PP,
+.table-fullscreen .Zone .TWENTYONE {
+  width: 5vw;
+  height: 9vh;
+  top: 4.5vh;
+}

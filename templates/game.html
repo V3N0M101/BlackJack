@@ -62,17 +62,18 @@
       </div>
     </header>
 
-    <div class="table">
+    <div class="table {% if fullscreen %}table-fullscreen{% else %}table-windowed{% endif %}">
+      <!--<div class="table {% if center_cards %}centered-table{% endif %}"></div>-->
       <div class="player">
         <div class="Player-Area" id="P1">
           <div class="cards" id="cards-P1">
             <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
             <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class = "Zone">
-            <div class = "PP">PP</div>
-            <div class = "MAIN">Main</div>
-            <div class = "TWENTYONE">21+3</div>
+          <div class="Zone">
+            <button class="PP">PP</button>
+            <button class="MAIN"></button>
+            <button class="TWENTYONE">21+3</button>
           </div>
         </div>
         <div class="Player-Area" id="P2">
@@ -80,10 +81,10 @@
             <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
             <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class = "Zone">
-            <div class = "PP">PP</div>
-            <div class = "MAIN">Main</div>
-            <div class = "TWENTYONE">21+3</div>
+          <div class="Zone">
+            <button class="PP">PP</button>
+            <button class="MAIN"></button>
+            <button class="TWENTYONE">21+3</button>
           </div>
         </div>
         <div class="Player-Area" id="P3">
@@ -91,10 +92,10 @@
             <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
             <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
           </div>
-          <div class = "Zone">
-            <div class = "PP">PP</div>
-            <div class = "MAIN">Main</div>
-            <div class = "TWENTYONE">21+3</div>
+          <div class="Zone">
+            <button class="PP">PP</button>
+            <button class="MAIN"></button>
+            <button class="TWENTYONE">21+3</button>
           </div>
         </div>
       </div>

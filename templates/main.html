@@ -32,11 +32,15 @@
         <!-- Game Preview Section below navbar -->
         <div class="game-preview-outer">
         <div class="game-preview-inner">
-            <iframe src="/game" class="game-frame" id="game-preview" allowfullscreen></iframe>
-            <!-- Maximize button OVERLAY, not inside iframe! -->
-            <button class="fullscreen-icon" onclick="toggleFullscreen();" title="Fullscreen">
-                <img src="/static/Images/Icons/maxx.png" alt="Fullscreen" />
-            </button>
+        <iframe
+        src="/game"
+        class="game-frame"
+        id="game-preview"
+        allowfullscreen
+        ></iframe>
+        <button class="fullscreen-icon" onclick="toggleFullscreen();" title="Fullscreen">
+        <img src="/static/Images/Icons/maxx.png" alt="Fullscreen" />
+        </button>
         </div>
         </div>
 
@@ -44,22 +48,6 @@
     </div>
     <!--Body Scripts -->
     <script src="/static/Scripts/transition.js"></script>
-    <script>
-    window.addEventListener("DOMContentLoaded", () => {
-        loadComponent("navbar", "navbar.html");
-    });
-
-    function toggleFullscreen() {
-        const iframe = document.getElementById("game-preview");
-        if (iframe.requestFullscreen) {
-            iframe.requestFullscreen();
-        } else if (iframe.webkitRequestFullscreen) { // Safari
-            iframe.webkitRequestFullscreen();
-        } else if (iframe.msRequestFullscreen) { // IE11
-            iframe.msRequestFullscreen();
-        }
-    }
-</script>
 <script>
 window.addEventListener('pageshow', function (event) {
     if (event.persisted) {

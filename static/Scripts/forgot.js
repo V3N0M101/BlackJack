@@ -25,23 +25,6 @@ input.addEventListener('keydown', (e) => {
 });
 });
 
-function submitVerificationCode() {
-  const inputs = document.querySelectorAll(".verification-boxes input");
-  let code = "";
-
-  inputs.forEach(input => {
-    code += input.value;
-  });
-
-  if (code.length !== 6 || !/^\d{6}$/.test(code)) {
-    alert("Please enter a valid 6-digit numeric code.");
-    return;
-  }
-
-  // Handle code submission
-  alert("Verification code entered: " + code);
-  // alert("Invalid Verification Code")
-}
 
 // Only allow 0-9 in each box
 document.querySelectorAll('.verification-boxes input').forEach(input => {
@@ -58,7 +41,24 @@ document.querySelectorAll('.verification-boxes input').forEach(input => {
 });
 
 
+function submitVerificationCode() {
+    let inputs = document.querySelectorAll(".verification-boxes input");
+    let code = Array.from(inputs).map(input => input.value).join("");
 
+    fetch('/verify-code', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ code: code })
+    })
+    .then(res => {
+        if (res.ok) {
+            // Verification success — redirect to reset page
+            window.location.href = "/reset-password";
+        } else {
+            alert("Invalid code, please try again.");
+        }
+    });
+}
 
 
 

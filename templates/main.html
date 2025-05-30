@@ -56,5 +56,10 @@ window.addEventListener('pageshow', function (event) {
     }
 });
 </script>
+{% if login_in_alert %}
+    <script>
+        alert("You have successfully logged in!");
+    </script>
+{% endif %}
 </body>
 </html>

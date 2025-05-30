@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Jack Black</title>
 
-  <!-- Stylesheets -->
   <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
   <link rel="stylesheet" href="/static/StyleSheets/main.css" />
   <link rel="stylesheet" href="/static/StyleSheets/game.css" />
@@ -23,31 +22,29 @@
   <div class="Game-Container">
     <header class="Game-head">
       <div class="head-left">
-        <div class="Logo">BLACK HUB</div> <!--Top left-->
-        <div class="min-max-box"> <!--Middle-Top Left -->
-          <div class="min">MIN: 500</div>
+        <div class="Logo">BLACK HUB</div> <div class="min-max-box"> <div class="min">MIN: 500</div>
           <div class="max">MAX: 500000</div>
         </div>
         <div class = "left-bottom">
-            <div class="Collect">
-                <button id="collectBtn" class="btn btn-collect">Collect</button>
-            </div>
-            <button class="vol">
-                <img src="/static/Images/Icons/vol.png" alt="Volume" />
-            </button>
+          <div class="Collect">
+            <button id="collectBtn" class="btn btn-collect">Collect</button>
+          </div>
+          <button class="vol">
+            <img src="/static/Images/Icons/vol.png" alt="Volume" />
+          </button>
         </div>
       </div>
 
       <div class="head-center">
         <div class = "Discard">
-            <img src="/static/Images/Assets/discard.png" />
+          <img src="/static/Images/Assets/discard.png" />
         </div>
       </div>
       <div class = "Dealer_mid">
-        <div class="cards" id="cards-D">
-            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
-          </div>
+        <div class="cards" id="dealer-cards">
+          {# Dealer cards will be loaded dynamically by JavaScript #}
+        </div>
+        <div class="dealer-total" id="dealer-total">Dealer: 0</div>
       </div>
       <div class="head-right">
         <div class="Draw">
@@ -63,110 +60,96 @@
     </header>
 
     <div class="table {% if fullscreen %}table-fullscreen{% else %}table-windowed{% endif %}">
-      <!--<div class="table {% if center_cards %}centered-table{% endif %}"></div>-->
       <div class="player">
-        <div class="Player-Area" id="P1">
-          <div class="cards" id="cards-P1">
-            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
+        {% for i in range(game_state.num_hands) %}
+        <div class="Player-Area" id="hand-{{ i }}">
+          <div class="cards" id="cards-hand-{{ i }}">
+            {# Player hand cards for this hand will be loaded dynamically by JavaScript #}
+          </div>
+          <div class="hand-info">
+            <span class="hand-total" id="total-hand-{{ i }}">Total: 0</span>
+            <span class="hand-message" id="message-hand-{{ i }}"></span>
           </div>
           <div class="Zone">
-            <button class="PP">PP</button>
-            <button class="MAIN"></button>
-            <button class="TWENTYONE">21+3</button>
+            <button class="PP" id="pp-bet-{{ i }}">PP</button>
+            <span class="main-bet-display" id="main-bet-{{ i }}">0</span>
+            <button class="MAIN bet-area" data-hand-index="{{ i }}"></button> <button class="TWENTYONE" id="213-bet-{{ i }}">21+3</button>
+          </div>
+          <div class="bet-input-container">
+            <input type="number" class="main-bet-input" id="main-bet-input-{{ i }}" placeholder="Main Bet" value="500" min="500" step="500">
+            <input type="number" class="side-bet-input" id="213-bet-input-{{ i }}" placeholder="21+3" value="0" min="0" step="100">
+            <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">
           </div>
         </div>
-        <div class="Player-Area" id="P2">
-          <div class="cards" id="cards-P2">
-            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
-          </div>
-          <div class="Zone">
-            <button class="PP">PP</button>
-            <button class="MAIN"></button>
-            <button class="TWENTYONE">21+3</button>
-          </div>
-        </div>
-        <div class="Player-Area" id="P3">
-          <div class="cards" id="cards-P3">
-            <img src="/static/Images/cards/2-H.png" alt="2H" class="card" />
-            <img src="/static/Images/Cards/K-D.png" alt="KD" class="card" />
-          </div>
-          <div class="Zone">
-            <button class="PP">PP</button>
-            <button class="MAIN"></button>
-            <button class="TWENTYONE">21+3</button>
-          </div>
-        </div>
+        {% endfor %}
       </div>
     </div>
 
     <div class="foot">
       <div class="status">
-        <!--Add Variables instead-->
-        <div class="status-item balance">Balance: $0</div>
-        <div class="status-item bet">Bet: $0</div>
-        <div class="status-item paid">Paid: $0</div>
-        <div class="status-item insurance">Insurance: $0</div>
+        {# HERE'S THE FIX: Use Jinja to display the initial player chips #}
+        <div class="status-item balance" id="player-chips">Balance: ${{ game_state.player_chips | default(0) }}</div>
+        <div class="status-item bet" id="total-bet-display">Total Bet: $0</div>
+        <div class="status-item game-message" id="game-message">{{ game_state.game_message | default('Welcome!') }}</div>
       </div>
       <div class="controls">
         <div class="chips">
-          <button><img src="/static/Images/chips/100-Chip.png" alt="100" /></button>
-          <button><img src="/static/Images/chips/500-Chip.png" alt="500" /></button>
-          <button><img src="/static/Images/chips/1000-Chip.png" alt="1000" /></button>
-          <button><img src="/static/Images/chips/5000-Chip.png" alt="5000" /></button>
-          <button><img src="/static/Images/chips/25000-Chip.png" alt="25000" /></button>
-          <button><img src="/static/Images/chips/100000-Chip.png" alt="100000" /></button>
+          <button data-chip-value="100"><img src="/static/Images/chips/100-Chip.png" alt="100" /></button>
+          <button data-chip-value="500"><img src="/static/Images/chips/500-Chip.png" alt="500" /></button>
+          <button data-chip-value="1000"><img src="/static/Images/chips/1000-Chip.png" alt="1000" /></button>
+          <button data-chip-value="5000"><img src="/static/Images/chips/5000-Chip.png" alt="5000" /></button>
+          <button data-chip-value="25000"><img src="/static/Images/chips/25000-Chip.png" alt="25000" /></button>
+          <button data-chip-value="100000"><img src="/static/Images/chips/100000-Chip.png" alt="100000" /></button>
         </div>
         <div class="actions">
-          <button class="btn-clear">
+          <button class="btn-clear" id="clearBetsBtn">
             <span class="icon-bg clear-bg">
               <img src="/static/Images/Assets/Clear.png" alt="Clear" />
             </span>
           </button>
-          <button class="btn-re-bet">
+          <button class="btn-re-bet" id="reBetBtn">
             <span class="icon-bg re-bet-bg">
               <img src="/static/Images/Assets/Re-bet.png" alt="Re-bet" />
             </span>
           </button>
-          <button class="btn-deal">
+          <button class="btn-deal" id="dealBtn">
             <span class="icon-bg deal-bg">
               <img src="/static/Images/Assets/Deal.png" alt="Deal" />
             </span>
           </button>
-          <button class="btn-hit">
+          <button class="btn-hit" id="hitBtn">
             <span class="icon-bg hit-bg">
               <img src="/static/Images/Assets/Hit.png" alt="Hit" />
             </span>
           </button>
-          <button class="btn-double">
+          <button class="btn-double" id="doubleBtn">
             <span class="icon-bg double-bg">
               <img src="/static/Images/Assets/Double.png" alt="Double" />
             </span>
           </button>
-          <button class="btn-stand">
+          <button class="btn-stand" id="standBtn">
             <span class="icon-bg stand-bg">
               <img src="/static/Images/Assets/Stand.png" alt="Stand" />
             </span>
           </button>
-          <button class="btn-split">
-            <span class="icon-bg split-bg">
+          <button class="btn-split" id="splitBtn" disabled> <span class="icon-bg split-bg">
               <img src="/static/Images/Assets/Split.png" alt="Split" />
             </span>
           </button>
-
         </div>
       </div>
     </div>
   </div>
-  
+
   <script src="/static/Scripts/max.js"></script>
   <script src="/static/Scripts/transition.js"></script>
   <script src="/static/Scripts/game.js"></script>
   <script>
-    window.addEventListener("DOMContentLoaded", () => {
-      loadComponent("navbar", "navbar.html");
-    });
+    // This part should be in your main.js or a global script if it's for all pages
+    // Assuming loadComponent loads the navbar for demonstration purposes.
+    // window.addEventListener("DOMContentLoaded", () => {
+    //   loadComponent("navbar", "navbar.html");
+    // });
   </script>
 </body>
 </html>

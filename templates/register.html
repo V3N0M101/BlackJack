@@ -77,6 +77,11 @@
             <p>Already have an account?<a href="/login"> Login</a></p>
           </div>
         </form>
+        {% if register_alert %}
+          <script>
+            alert("{{ alert_message }}");
+          </script>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -89,5 +94,10 @@
       }
     });
   </script>
+{% if alert_message %}
+<script>
+    alert("{{ alert_message }}");
+</script>
+{% endif %}
 </body>
 </html>

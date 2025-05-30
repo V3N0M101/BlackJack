@@ -50,6 +50,11 @@
                     <p>Don't have an account?<a href = "/register"> Register</a></p>
                 </div>
             </form>
+            {% if success_message %}
+                <script>
+                    alert("{{ success_message }}");
+                </script>
+            {% endif %}
         </div>
         </div>
     </div>
@@ -67,10 +72,25 @@ window.addEventListener('pageshow', function (event) {
     }
 });    
 </script>
-  {% if login_in_alert %}
+{% if login_in_alert %}
     <script>
-      alert("Logged in successfully.");
+        alert("Logged in successfully.");
     </script>
-  {% endif %}
+{% endif %}
+{% if logout_alert %}
+    <script>
+        alert("You have successfully logged out!");
+    </script>
+{% endif %}
+{% if register_alert %}
+<script>
+    alert("You have successfully registered! You can now log in.");
+</script>
+{% endif %}
+{% if alert_message %}
+<script>
+    alert("{{ alert_message }}");
+</script>
+{% endif %}
 </body>
 </html>

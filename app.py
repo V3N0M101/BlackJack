@@ -5,12 +5,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import smtplib, ssl
 from email.message import EmailMessage
 import random
+<<<<<<< HEAD
 import threading
 
 # It's assumed 'secure.py' exists and contains EMAIL_PASS_SECURE
 from secure import EMAIL_PASS_SECURE 
 
 # It's assumed 'Black_logic.py' exists within the 'Back' directory
+=======
+from secure import EMAIL_PASS_SECURE
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
 from Back.black_logic import BlackjackMultiGame
 
 
@@ -26,8 +30,13 @@ def send_verification_email(to_email: str, code: str, username: str = ""):
     app_password = EMAIL_PASS_SECURE
 
     message = EmailMessage()
+<<<<<<< HEAD
     message["From"] = sender_email
     message["To"] = to_email
+=======
+    message["From"]      = sender_email
+    message["To"]        = to_email
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
     message["Subject"] = "Your Password Reset Code"
     message.set_content(
         f"Hi {username},\n\n"
@@ -49,6 +58,138 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+<<<<<<< HEAD
+=======
+### Define methods and stuff
+@app.route('/api/start_game', methods=['POST'])
+def start_game():
+    if "username" not in session:
+        return jsonify({"success": False, "message": "Not logged in"}), 401
+
+    player_username = session.get("username")
+    # Retrieve chips from the session for the game's initial state
+    # This value comes from the database when the user logs in
+    player_chips = session.get("chips", 10000)
+
+    # Initialize a new multi-hand game with the player's current chips and 3 hands
+    game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
+    game.reset_round() # Ensure a clean slate for the new game
+
+    # Store the entire game state dictionary in the session
+    session["blackjack_game_state"] = game.to_dict()
+
+    # Send initial game state to frontend (dealer card hidden initially)
+    return jsonify({"success": True, "game_state": game.get_game_state(reveal_dealer_card=False)})
+
+
+@app.route('/api/place_bets', methods=['POST'])
+def place_bets():
+    if "blackjack_game_state" not in session:
+        return jsonify({"success": False, "message": "Game not started"}), 400
+
+    # Reconstruct the game object from the session state
+    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+    bets_data = request.json.get("bets") # Expects a list of bet objects, one for each hand
+
+    # Attempt to place bets
+    if not game.place_bets(bets_data):
+        # Update session even on failure so the frontend gets the error message
+        session["blackjack_game_state"] = game.to_dict()
+        return jsonify({"success": False, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
+
+    # If bets placed successfully, deal initial cards
+    if not game.deal_initial_cards():
+        # Update session if dealing fails (e.g., unexpected internal error)
+        session["blackjack_game_state"] = game.to_dict()
+        return jsonify({"success": False, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
+
+    # Save the updated game state back to the session
+    session["blackjack_game_state"] = game.to_dict()
+
+    # Determine if dealer's second card should be revealed
+    # This happens if the game immediately transitions to round_over (e.g., dealer blackjack)
+    reveal_dealer = game.game_phase in ["round_over"] # Dealer's hand should be revealed only if round is over
+
+    return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=reveal_dealer)})
+
+
+@app.route('/api/player_action', methods=['POST'])
+def player_action():
+    if "blackjack_game_state" not in session:
+        return jsonify({"success": False, "message": "Game not started"}), 400
+
+    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+    action_type = request.json.get("action")
+    hand_index = request.json.get("hand_index") # Crucial for multi-hand: which hand is acted upon
+
+    success = False
+    if action_type == 'hit':
+        success = game.hit(hand_index)
+    elif action_type == 'stand':
+        success = game.stand(hand_index)
+    elif action_type == 'double': # Handle 'double down' action
+        success = game.double_down(hand_index)
+    # elif action_type == 'split': # Placeholder for future split functionality
+    #     success = game.split(hand_index)
+    else:
+        game.game_message = "Invalid action."
+        success = False
+
+    if not success:
+        session["blackjack_game_state"] = game.to_dict() # Save state with updated message
+        return jsonify({"success": False, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
+
+    # After a player action, check if it's now the dealer's turn
+    if game.game_phase == "dealer_turn":
+        game.dealer_play() # Dealer performs their actions
+        game.settle_all_bets() # Settle all hands once the dealer is done
+
+    # Save the updated game state back to the session
+    session["blackjack_game_state"] = game.to_dict()
+
+    # Determine if dealer's hand should be revealed
+    # It should be revealed once the dealer's turn starts or the round is over
+    reveal_dealer = game.game_phase in ["dealer_turn", "settlement", "round_over"]
+
+    return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=reveal_dealer)})
+
+
+@app.route('/api/reset_round', methods=['POST'])
+def reset_round():
+    if "blackjack_game_state" not in session:
+        return jsonify({"success": False, "message": "Game not started"}), 400
+
+    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+    game.reset_round() # Reset the game for a new round
+    session["blackjack_game_state"] = game.to_dict() # Save the reset state
+
+    return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
+
+
+@app.route('/api/collect_chips', methods=['POST'])
+def collect_chips():
+    if "username" not in session:
+        return jsonify({"success": False, "message": "Not logged in"}), 401
+    if "blackjack_game_state" not in session:
+        return jsonify({"success": False, "message": "No active game"}), 400
+
+    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+    player_username = session["username"]
+    final_chips = game.player.chips # Get the current chips from the game instance
+
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE users SET chips = ? WHERE username = ?", (final_chips, player_username))
+        conn.commit()
+        session["chips"] = final_chips # Update chips in Flask session as well
+        return jsonify({"success": True, "message": "Chips collected and saved!", "new_chips": final_chips})
+    except Exception as e:
+        flash(f"Error saving chips: {e}")
+        return jsonify({"success": False, "message": "Failed to save chips."}), 500
+    finally:
+        conn.close()
+
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
 
 ## API Routes for Blackjack Game
 
@@ -207,6 +348,7 @@ def game():
     fullscreen = request.args.get("fullscreen", "").lower() == "true"
     game_state_for_display = None
 
+<<<<<<< HEAD
     if "blackjack_game_state" in session:
         try:
             game_obj = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
@@ -218,14 +360,45 @@ def game():
     if game_state_for_display is None:
         game_state_for_display = {
             "player_chips": session.get("chips", 0),
+=======
+    # Check if a game state exists in the session
+    if "blackjack_game_state" in session:
+        try:
+            # Reconstruct the game object
+            game_obj = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+            # Get the state dictionary to pass to the template
+            game_state_for_display = game_obj.get_game_state(reveal_dealer_card=False) # Keep dealer card hidden on initial load
+        except Exception as e:
+            print(f"Error loading game from session in /game route: {e}")
+            session.pop('blackjack_game_state', None) # Clear corrupted session data
+            # Optionally, you might want to initialize a new game here or redirect to home/start_game
+            # For now, if loading fails, game_state_for_display remains None, which default(0) in template handles.
+    
+    # If no game state in session, or if loading failed, create a placeholder
+    # This ensures game_state is always defined when rendering the template.
+    if game_state_for_display is None:
+        # Create a default game state to avoid Jinja2 errors
+        # This is a minimal representation to satisfy the template's initial needs
+        # Player chips will be 0, num_hands will be 0 or a default you prefer
+        game_state_for_display = {
+            "player_chips": session.get("chips", 0), # Use stored chips from login if available
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
             "game_phase": "betting",
             "game_message": "Place your bets!",
             "dealer_hand": [],
             "dealer_total": 0,
+<<<<<<< HEAD
             "player_hands": [],
             "num_hands": 3
         }
 
+=======
+            "player_hands": [], # Empty list for hands if no game active
+            "num_hands": 3 # Default number of hands for the template loop
+        }
+
+
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
     return render_template("game.html", fullscreen=fullscreen, game_state=game_state_for_display)
 
 
@@ -325,6 +498,7 @@ def login():
         conn.close()
 
         if user and check_password_hash(user["password"], password):
+<<<<<<< HEAD
             session["username"] = user["username"]
             session["chips"] = user["chips"]
             session["login_alert"] = True
@@ -338,6 +512,15 @@ def login():
         )
 
     return render_template("login.html", logout_alert=logout_alert, register_alert=register_alert)
+=======
+            session["username"]     = user["username"]
+            session["chips"]        = user["chips"]
+            session["login_alert"]  = True   # set the flag
+            return redirect("/")             # literal path
+
+        flash("Invalid username or password.")
+        return redirect("/login")            # literal path
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
 
 
 @app.route("/navbar")
@@ -387,6 +570,24 @@ def register():
 
         cursor.execute("SELECT * FROM users WHERE username = ? OR email = ?", (username, email))
         existing_user = cursor.fetchone()
+<<<<<<< HEAD
+=======
+
+        if existing_user:
+            flash('Username or email already exists.')
+            conn.close()
+            return redirect('/register')
+
+        # Hash the password before saving it
+        hashed_password = generate_password_hash(password)
+
+        # Insert the new user into the database
+        cursor.execute(
+            "INSERT INTO users (email, username, password, chips) VALUES (?, ?, ?, ?)",
+    (email, username, hashed_password, 1000000)   # Starting chips
+        )
+        conn.commit()
+>>>>>>> 0e8552402e78fac551b6d83de0d6fb0bebd959be
         conn.close()
 
         if existing_user:

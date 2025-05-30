@@ -44,7 +44,9 @@ app.secret_key = 'secretkey123'  # 🔐 required for sessions, flash, etc.
 
 # users.db 
 def get_db_connection():
-    conn = sqlite3.connect('users.db')
+    # MODIFIED: Use app.root_path to get the absolute path to your project directory
+    db_path = os.path.join(app.root_path, 'users.db')
+    conn = sqlite3.connect(db_path) 
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -78,7 +80,7 @@ def start_game():
 
     # Always initialize with 3 hands when starting a new game
     game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
-    game.reset_round() 
+    game.reset_round()  
 
     session["blackjack_game_state"] = game.to_dict()
 

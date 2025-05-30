@@ -13,7 +13,6 @@ from secure import EMAIL_PASS_SECURE
 # It's assumed 'Black_logic.py' exists within the 'Back' directory
 from Back.black_logic import BlackjackMultiGame
 
-
 # so you can `import deck, player, Black_logic` directly
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))
 
@@ -49,7 +48,20 @@ def get_db_connection():
     conn.row_factory = sqlite3.Row
     return conn
 
+# Helper function to save chips to the database
+def save_chips_to_db(username, chips):
+    conn = get_db_connection()
+    try:
+        conn.execute("UPDATE users SET chips = ? WHERE username = ?", (chips, username))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error saving chips for {username}: {e}")
+        return False
+    finally:
+        conn.close()
 
+    
 ## API Routes for Blackjack Game
 
 
@@ -130,6 +142,13 @@ def player_action():
     if game.game_phase == "dealer_turn":
         game.dealer_play()
         game.settle_all_bets()
+        player_username = session["username"]
+        final_chips = game.player.chips
+        if save_chips_to_db(player_username, final_chips):
+            session["chips"] = final_chips # Update session chips after saving
+            game.game_message += " Chips saved!"
+        else:
+            game.game_message += " Failed to save chips."
 
     session["blackjack_game_state"] = game.to_dict()
 
@@ -147,6 +166,15 @@ def reset_round():
         return jsonify({"success": False, "message": "Game not started"}), 400
 
     game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+     # Before resetting, ensure chips are saved if the previous round ended
+    if game.game_phase == "round_over":
+        player_username = session["username"]
+        final_chips = game.player.chips
+        if save_chips_to_db(player_username, final_chips):
+            session["chips"] = final_chips # Update session chips after saving
+            game.game_message = "Chips saved! " + game.game_message # Prepend message
+        else:
+            game.game_message = "Failed to save chips before reset. " + game.game_message # Prepend message
     game.reset_round()
     session["blackjack_game_state"] = game.to_dict()
 
@@ -299,8 +327,15 @@ def reset_password():
 
 @app.route("/leaderboard")
 def leaderboard():
-    """Renders the leaderboard page."""
-    return render_template("leaderboard.html")
+    """
+    Renders the leaderboard page, displaying users ranked by their chips.
+    """
+    conn = get_db_connection()
+    # Fetch users ordered by chips in descending order, limit to top 10 for example
+    # You can adjust the LIMIT as needed.
+    users = conn.execute("SELECT username, chips FROM users ORDER BY chips DESC LIMIT 10").fetchall()
+    conn.close()
+    return render_template("leaderboard.html", users=users)
 
 @app.route("/learn")
 def learn():
@@ -440,6 +475,9 @@ def verify():
             return render_template('verify.html', alert_message="Incorrect verification code.")
 
     return render_template('verify.html')
+
+
+
 
 
 if __name__ == '__main__':

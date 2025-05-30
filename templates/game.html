@@ -42,7 +42,6 @@
       </div>
       <div class = "Dealer_mid">
         <div class="cards" id="dealer-cards">
-          {# Dealer cards will be loaded dynamically by JavaScript #}
         </div>
         <div class="dealer-total" id="dealer-total">Dealer: 0</div>
       </div>
@@ -144,12 +143,13 @@
   <script src="/static/Scripts/max.js"></script>
   <script src="/static/Scripts/transition.js"></script>
   <script src="/static/Scripts/game.js"></script>
-  <script>
-    // This part should be in your main.js or a global script if it's for all pages
-    // Assuming loadComponent loads the navbar for demonstration purposes.
-    // window.addEventListener("DOMContentLoaded", () => {
-    //   loadComponent("navbar", "navbar.html");
-    // });
-  </script>
+<script>
+window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+        // Page was loaded from back/forward cache — reload it
+        window.location.reload();
+    }
+});
+</script>
 </body>
 </html>

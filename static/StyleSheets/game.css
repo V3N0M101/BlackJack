@@ -1,530 +1,564 @@
 /* === ICON BUTTON (Fullscreen / Minimize) === */
 .fs-icon {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  width: 44px;
-  height: 44px;
-  background: rgba(20, 20, 20, 0.7);
-  border: none;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 1002;
+    position: fixed; /* Kept fixed for consistent placement */
+    top: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.7);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1002;
 }
+
 .fs-icon:hover {
-  background: #b97cff;
+    background: #0c0c0c;
 }
+
 .fs-icon img {
-  width: 26px;
-  height: 26px;
-  filter: brightness(0) invert(1);
+    width: 26px;
+    height: 26px;
+    filter: brightness(0) invert(1);
 }
 
 /* === VOLUME BUTTON === */
 .vol {
-  background: none;
-  border: none;
-  cursor: pointer;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
+
 .vol img {
-  width: 24px;
-  height: 24px;
-  filter: brightness(0) invert(1);
+    width: 24px;
+    height: 24px;
+    filter: brightness(0) invert(1);
 }
 
 /* === COLLECT & LEFT-BOTTOM GROUP === */
 .left-bottom {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 /* === COLLECT BUTTON === */
 .btn-collect {
-  padding: 0.6em 1.2em;
-  font-size: 1rem;
-  background: #28a745;
-  color: #fff;
-  border: none;
-  border-radius: 0.3em;
-  cursor: pointer;
+    padding: 0.6em 1.2em;
+    font-size: 1rem;
+    background: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 0.3em;
+    cursor: pointer;
 }
+
 .btn-collect:hover {
-  background: #1c6d34;
+    background: #1c6d34;
 }
+
 .btn-collect:active {
-  transform: scale(0.9);
+    transform: scale(0.9);
 }
 
 .btn-collect:disabled {
-  background: #94d3a2;
-  cursor: not-allowed;
+    background: #94d3a2;
+    cursor: not-allowed;
 }
 
 /* === LOGO === */
 .Logo {
-  font: bold 2rem Arial, sans-serif;
-  color: #fff;
-  text-shadow: 0 0 10px #b97cff;
+    font: bold 2rem Arial, sans-serif;
+    color: #fff;
+    text-shadow: 0 0 10px #b97cff;
 }
 
 /* === MIN-MAX BOX === */
 .min-max-box {
-  background: #111;
-  padding: 10px;
-  border: 2px solid #fff;
-  border-radius: 8px;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    background: #111;
+    padding: 10px;
+    border: 2px solid #fff;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
+
 .min-max-box .min,
 .min-max-box .max {
-  font-weight: bold;
-  color: #fff;
+    font-weight: bold;
+    color: #fff;
 }
 
 /* === DISCARD / DRAW PILES === */
 .Discard,
 .Draw {
-  width: 20vh;
+    width: 20vh;
 }
+
 .Discard img,
 .Draw img {
-  width: 100%;
-  height: auto;
+    width: 100%;
+    height: auto;
 }
 
 /* === RULES BOX === */
 .rules-box {
-  background: #222;
-  padding: 12px;
-  border-radius: 10px;
-  border: 1px solid #b97cff;
-  color: #fff;
-  text-align: left;
-  box-shadow: 0 0 10px rgba(185, 124, 255, 0.4);
+    background: #222;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #b97cff;
+    color: #fff;
+    text-align: left;
+    box-shadow: 0 0 10px rgba(185, 124, 255, 0.4);
 }
+
 .rules-box h2,
 .rules-box p {
-  margin: 4px 0;
+    margin: 4px 0;
 }
 
 /* === GLOBAL LAYOUT === */
 body {
-  margin: 0;
-  padding: 0;
-  color: #fff;
-  font-family: Arial, sans-serif;
-  background-color: #333;
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    background-color: #333;
+    height: 100vh;
+    overflow: hidden; /* Important for fixed layout */
 }
 
-.Game-Container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 12px 20px;
-  box-sizing: border-box;
-  background: none;
-  box-shadow: 0 0 15px rgba(185, 124, 255, 0.6);
+/* Header and Footer: Fixed to the viewport edges */
+.Game-head {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    background: #222;
+    z-index: 1000;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-/* === HEADER & FOOTER === */
-.Game-head,
 .foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 20px;
-  background: #222;
-  border-radius: 8px;
-  margin-bottom: 12px;
-}
-.foot {
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* === HEADER CONTENT AREAS === */
-.head-left,
-.head-center,
-.head-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.head-center {
-  flex: 1;
-  flex-direction: column;
-  text-align: center;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 10px 20px;
+    background: #222;
+    z-index: 1000;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
+/* Main Table Area: Fixed to cover viewport, acting as a background and container for game content */
 
-/* normal layout stays untouched */
 
-.player {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  width: 100%;
+/* Inner Game Content Area (scaled and centered within the fixed table) */
+.table-content {
+    position: absolute; /* Positioned relative to .table */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw; /* Dimensions for the visible game area */
+    height: 70vh;
+    padding: 20px;
+    border-radius: 20px;
+    background: #444; /* Background for the game content area */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space out dealer and player */
+    align-items: center;
+    box-sizing: border-box;
+    overflow: auto; /* Allow scrolling if content overflows */
+    z-index: 2; /* Above the fixed .table background */
 }
 
-/* === PLAYER AREA === */
-.Player-Area {
-  flex: 1;
-  min-width: 220px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: #fac7ff49;
-  padding: 12px;
-  border-radius: 8px;
-  color: #eee;
-}
-.cards {
-  display: flex;
-  align-items: center;
-  overflow-x: auto;
-  background: #222;
-  border-radius: 6px;
-  padding: 6px;
-}
-.cards img {
-  width: 5vw;
-  height: auto;
+.table-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 90vh;
+    background: #666; /* Background for the table area */
+    z-index: 1; /* Below header/footer */
+    display: flex; /* Use flex to center the .table-content */
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
 }
 
+.table-windowed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 80vh;
+    background: #666; /* Background for the table area */
+    z-index: 1; /* Below header/footer */
+    display: flex; /* Use flex to center the .table-content */
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    margin-top: 100px;
+}
+
+/* Player's Area (positioned within .table-content) */
+.table-windowed .player {
+    position: absolute; /* Positioned relative to .table-content */
+    bottom: 10%; /* Adjust as needed */
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    width: 80%; /* Adjust width to fit multiple hands */
+    z-index: 3; /* Above the .table-content background */
+    scale: 0.75;
+    margin-bottom: 3.5vh;
+    left:40%
+}
+
+/* Player Area */
+.table-windowed .Player-Area {
+    flex: 1;
+    min-width: 20vw;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #ef8af849;
+    padding: 12px;
+    border-radius: 8px;
+    color: #eee;
+}
+
+.table-fullscreen .player {
+    position: absolute; /* Positioned relative to .table-content */
+    bottom: 10%; /* Adjust as needed */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+    width: 80%; /* Adjust width to fit multiple hands */
+    z-index: 3; /* Above the .table-content background */
+}
+
+/* Player Area */
+.table-fullscreen .Player-Area {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #f047ff49;
+    padding: 12px;
+    border-radius: 8px;
+    color: #eee;
+    margin-bottom: 6vh;
+}
+
+
+/* Dealer's Area (positioned within .table-content) */
 .Dealer_mid {
-  background-color: red;
+    position: absolute; /* Positioned relative to .table-content */
+    top: 10%; /* Adjust as needed */
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 3; /* Above the .table-content background */
 }
 
-/* ——————————————————————— */
-/*  OVERLAP “ZONE” DIVS AS CHIPS  */
-/* ——————————————————————— */
+.dealer-total {
+    color: #eee;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    z-index: auto;
+}
 
+
+/* Standard card and hand display */
+.cards {
+    display: flex;
+    align-items: center;
+    overflow-x: auto;
+    background: #222;
+    border-radius: 6px;
+    padding: 6px;
+    min-height: 120px;
+    min-width: 180px;
+    justify-content: center;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    box-sizing: border-box;
+}
+
+.cards img {
+    height: 100px;
+    width: auto;
+    max-width: 100%;
+    margin: 0 4px;
+}
+
+/* Hand Info (for player hands) */
+.hand-info {
+    color: #eee;
+    background: rgba(0,0,0,0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    z-index: auto;
+}
+
+/* OVERLAP “ZONE” DIVS AS CHIPS */
 .Zone {
-  position: relative;
-  height: 150px; /* fixed height for consistency */
-  width: 100%;
-  margin: 0 auto;
+    position: relative;
+    height: 150px;
+    width: 100%;
+    margin: 0 auto;
 }
 
-/* Reset any buttons inside the zone */
 .Zone button {
-  border: none;
-  padding: 0;
-  background: none;
-  cursor: pointer;
+    border: none;
+    padding: 0;
+    background: none;
+    cursor: pointer;
 }
 
-/* Shared styles */
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
-  position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  font-weight: bold;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  color: #000;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #000;
 }
 
-/* Main Chip in Center */
 .Zone .MAIN {
-  width: 100px;
-  height: 100px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #a2d5c6;
-  border: 3px solid #6ba;
-  z-index: 1;
+    width: 100px;
+    height: 100px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #a2d5c6;
+    border: 3px solid #6ba;
+    z-index: 1;
 }
 
-/* Side Chips (PP and 21+3) */
 .Zone .PP,
 .Zone .TWENTYONE {
-  width: 50px;
-  height: 50px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: #9fc;
-  border: 3px solid #6a9;
-  z-index: 2;
-}
-
-/* Position side chips relative to center */
-.Zone .PP {
-  left: calc(50% - 75px); /* half of MAIN + half of PP + gap */
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #9fc;
+    border: 3px solid #6a9;
+    z-index: 2;
 }
 
 .Zone .TWENTYONE {
-  left: calc(50% + 25px); /* half of MAIN - half of PP */
+    left: calc(50% + 25px);
 }
 
-/* Hover effects */
 .Zone .PP:hover,
 .Zone .MAIN:hover,
 .Zone .TWENTYONE:hover {
-  transform: translateY(-50%) scale(1.1);
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.3),
-    0 0 8px rgba(255,255,255,0.6);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(255, 255, 255, 0.6);
 }
 
 .Zone .MAIN:hover {
-  transform: translate(-50%, -50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.1);
 }
-
 
 /* === STATUS BAR === */
 .status {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    z-index: auto;
 }
+
 .status-item {
-  min-width: 80px;
-  padding: 8px 16px;
-  background: #444;
-  border-radius: 6px;
-  text-align: center;
+    min-width: 80px;
+    padding: 8px 16px;
+    background: #444;
+    border-radius: 6px;
+    text-align: center;
 }
 
 /* === CONTROLS & CHIP BUTTONS === */
 .controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: auto;
 }
+
 .chips {
-  display: flex;
-  gap: 10px;
+    display: flex;
+    gap: 10px;
 }
 
 .chips button {
-  background: none;
-  border: none;
-  padding: 0;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .chips button img {
-  display: block;
-  width: 100%;
-  height: auto;
-  transition: filter 0.2s ease;
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: filter 0.2s ease;
 }
 
 .chips button:hover {
-  transform: scale(1.15);
-  box-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.25),   /* subtle drop shadow */
-    0 0 8px rgba(255, 215, 0, 0.8);    /* golden glow */
-  z-index: 1;
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+        0 0 8px rgba(255, 215, 0, 0.8);
+    z-index: 1;
 }
 
 .chips button:hover img {
-  filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
 }
+
 /* === ACTION BUTTONS === */
 .actions {
-  display: flex;
-  gap: 10px;
-  border-radius: 8px;
+    display: flex;
+    gap: 4px;
+    border-radius: 8px;
+    z-index: 1001;
 }
+
 .actions button {
-  padding: 10px 16px;
-  background: #b97cff;
-  color: #fff;
-  font-weight: bold;
-  cursor: pointer;
+    padding: 10px 16px;
+    background: #b97cff; /* Default color for all action buttons */
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    border-radius: 0;
+    transition: transform 0.2s ease, background 0.2s ease;
 }
+
 .actions button:hover {
-  background: #6200ff;
-  transform: scale(1.2);
-  border-radius: 8px;
-  z-index: 10002;
+    background: #6200ff;
+    transform: scale(1.05);
 }
 
-/* === HEADER LAYOUT OVERRIDES === */
-.Game-head {
-  /* start everything from the left, not spaced evenly */
-  justify-content: flex-start;
-  /* give a little breathing room between blocks */
-  gap: 20px;
-}
-
-/* stack the left-hand group vertically */
-.head-left {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;  /* left-align each item */
-  gap: 8px;                 /* space between collect / logo / min-max */
-}
-
-/* make discard only as wide as its content, immediately after head-left */
-.head-center {
-  flex: 0 0 auto;
-  margin-left: 0;           /* no extra push */
-}
-
-/* push the right-hand “rules” box all the way to the right */
-.head-right {
-  margin-left: auto;
-}
-
-.actions {
-  display: flex;
-  gap: 12px;
-}
-
-.actions button {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-
-.icon-bg {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  border-radius: 8px;
-}
-
-/* size the icons */
-.icon-bg img {
-  display: block;
-  width: 36px;
-  height: 36px;
-}
-
-
-.clear-bg   { background-color: rgba(157, 216, 255, 0.74); }
-.re-bet-bg  { background-color: #ffd7a8bd; } 
-.deal-bg    { background-color: rgba(106, 255, 168, 0.829); } 
-.hit-bg     { background-color: #ecc0fff3; }
-.double-bg  { background-color: rgb(255, 241, 185); }
-.stand-bg   { background-color: rgba(255, 255, 255, 0.74); } 
-.split-bg   { background-color: rgba(255, 198, 198, 0.74); } 
-
-.Game-Container {
-  position: relative;
-}
-
-.actions {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  gap: 4px;   
-  margin-bottom: 5px;           
-}
-
-.actions button {
-  border-radius: 0;       
-}
 .actions button:first-child {
-  border-top-left-radius: 6px;
-  border-bottom-left-radius: 6px;
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
 }
 
 .actions button:last-child {
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
 }
 
-/* Default windowed dimensions */
-
-.table {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  background: #666;
-  border-radius: 8px;
-  padding: 20px;
-  overflow-x: auto;
-  margin-bottom: 10px;
+.actions button img {
+    display: block;
+    width: 36px;
+    height: 36px;
 }
 
-.table-windowed .Zone .MAIN {
-  width: 7vw;
-  height: 14vh;
-}
-.table-windowed .Zone .PP,
-.table-windowed .Zone .TWENTYONE {
-  width: 3.5vw;
-  height: 7vh;
-  top: 3.5vh;
+/* Reverted specific background colors for action buttons - they will now use the general .actions button background */
+.btn-clear { } /* Empty rule to override previous specific color if any */
+.btn-re-bet { }
+.btn-deal { }
+.btn-hit { }
+.btn-double { }
+.btn-stand { }
+.btn-split { }
+
+
+/* HEADER LAYOUT OVERRIDES */
+.Game-head .head-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
 }
 
-/* Fullscreen dimensions */
-.table-fullscreen {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90vw;
-  height: 70vh;
+.Game-head .head-center {
+    flex: 1; /* Allows it to take available space */
+    margin-left: 0;
+    text-align: center;
 }
 
-.table-fullscreen .Zone .MAIN {
-  width: 10vw;
-  height: 18vh;
-}
-.table-fullscreen .Zone .PP,
-.table-fullscreen .Zone .TWENTYONE {
-  width: 5vw;
-  height: 9vh;
-  top: 4.5vh;
+.Game-head .head-right {
+    margin-left: auto;
+    display: flex; /* Make children display side-by-side */
+    align-items: center; /* Vertically align items in the center */
+    gap: 15px; /* Add some space between the Draw and Rules Box */
 }
 
-/* For dealer's cards specifically (to ensure it doesn't collapse) */
-.Dealer_mid .cards {
-    min-height: 120px; /* Adjust this value to your desired height */
-    min-width: 180px; /* Adjust this value to ensure it's not too narrow */
-    display: flex; /* Keep flex for card alignment */
-    justify-content: center; /* Center cards horizontally */
-    align-items: center; /* Center cards vertically */
-    /* Optional: Add a dashed border to visualize the empty space */
-    border: 1px dashed rgba(255, 255, 255, 0.3);
-    border-radius: 8px; /* Match other borders */
-    box-sizing: border-box; /* Ensures padding and border are included in the defined width/height */
+/* Windowed table dimensions (default for .Zone elements) */
+.Zone .MAIN {
+    width: 100px;
+    height: 100px;
+}
+.Zone .PP,
+.Zone .TWENTYONE {
+    width: 50px;
+    height: 50px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+.Zone .PP { left: calc(50% - 75px); }
+.Zone .TWENTYONE { left: calc(50% + 25px); }
+
+/* Player Area and its internals */
+.bet-input-container {
+    display: flex;
+    gap: 5px;
+    margin-top: 10px;
+    justify-content: center;
 }
 
-/* For player's cards specifically */
-.Player-Area .cards {
-    min-height: 120px; /* Adjust this value to your desired height */
-    min-width: 180px; /* Adjust this value to ensure it's not too narrow */
-    display: flex; /* Keep flex for card alignment */
-    justify-content: center; /* Center cards horizontally */
-    align-items: center; /* Center cards vertically */
-    /* Optional: Add a dashed border to visualize the empty space */
-    border: 1px dashed rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    box-sizing: border-box;
+.bet-input-container input[type="number"] {
+    width: 80px;
+    padding: 5px;
+    border: 1px solid #b97cff;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 0.9em;
+    text-align: center;
 }
 
-/* Common styles for card images inside both dealer and player hands */
-/* You had `width: 5vw;` which can make cards too small on small screens.
-   Consider a fixed height and auto width, or a max-width. */
-.cards img {
-    height: 100px; /* **Recommended:** Set a fixed height for card images */
-    width: auto; /* Allow width to scale proportionally */
-    max-width: 100%; /* Ensure images don't overflow their container */
-    margin: 0 4px; /* Small spacing between cards */
+.bet-input-container input[type="number"]:focus {
+    outline: none;
+    border-color: #00d0ff;
+    box-shadow: 0 0 5px #00d0ff;
 }
 
+.main-bet-display {
+    color: #000;
+    font-weight: bold;
+    font-size: 1.2em;
+}

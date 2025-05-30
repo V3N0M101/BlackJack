@@ -491,3 +491,40 @@ body {
   height: 9vh;
   top: 4.5vh;
 }
+
+/* For dealer's cards specifically (to ensure it doesn't collapse) */
+.Dealer_mid .cards {
+    min-height: 120px; /* Adjust this value to your desired height */
+    min-width: 180px; /* Adjust this value to ensure it's not too narrow */
+    display: flex; /* Keep flex for card alignment */
+    justify-content: center; /* Center cards horizontally */
+    align-items: center; /* Center cards vertically */
+    /* Optional: Add a dashed border to visualize the empty space */
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px; /* Match other borders */
+    box-sizing: border-box; /* Ensures padding and border are included in the defined width/height */
+}
+
+/* For player's cards specifically */
+.Player-Area .cards {
+    min-height: 120px; /* Adjust this value to your desired height */
+    min-width: 180px; /* Adjust this value to ensure it's not too narrow */
+    display: flex; /* Keep flex for card alignment */
+    justify-content: center; /* Center cards horizontally */
+    align-items: center; /* Center cards vertically */
+    /* Optional: Add a dashed border to visualize the empty space */
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+/* Common styles for card images inside both dealer and player hands */
+/* You had `width: 5vw;` which can make cards too small on small screens.
+   Consider a fixed height and auto width, or a max-width. */
+.cards img {
+    height: 100px; /* **Recommended:** Set a fixed height for card images */
+    width: auto; /* Allow width to scale proportionally */
+    max-width: 100%; /* Ensure images don't overflow their container */
+    margin: 0 4px; /* Small spacing between cards */
+}
+

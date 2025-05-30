@@ -64,7 +64,6 @@ def save_chips_to_db(username, chips):
     
 ## API Routes for Blackjack Game
 
-
 @app.route('/api/start_game', methods=['POST'])
 def start_game():
     """
@@ -77,6 +76,7 @@ def start_game():
     player_username = session.get("username")
     player_chips = session.get("chips", 10000)  # Default chips if not found in session
 
+    # Always initialize with 3 hands when starting a new game
     game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
     game.reset_round() 
 
@@ -100,6 +100,16 @@ def place_bets():
     if not game.place_bets(bets_data):
         session["blackjack_game_state"] = game.to_dict()
         return jsonify({"success": False, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
+    
+    # Store the placed bets in session for rebet functionality
+    # We only store the main_bet, side_bet_21_3, and side_bet_perfect_pair
+    session['last_bets'] = [
+        {
+            "main_bet": hand_data["main_bet"],
+            "side_21_3": hand_data["side_bet_21_3"],
+            "side_pp": hand_data["side_bet_perfect_pair"]
+        } for hand_data in game.player_hands
+    ]
 
     if not game.deal_initial_cards():
         session["blackjack_game_state"] = game.to_dict()
@@ -109,6 +119,44 @@ def place_bets():
 
     reveal_dealer = game.game_phase in ["round_over"]
     return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=reveal_dealer)})
+
+@app.route('/api/rebet', methods=['POST'])
+def rebet():
+    """
+    Resets the current round and retrieves the last placed bets.
+    Requires an active game session.
+    """
+    if "blackjack_game_state" not in session:
+        return jsonify({"success": False, "message": "Game not started"}), 400
+
+    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+
+    # Before resetting, ensure chips are saved if the previous round ended
+    if game.game_phase == "round_over":
+        player_username = session["username"]
+        final_chips = game.player.chips
+        if save_chips_to_db(player_username, final_chips):
+            session["chips"] = final_chips
+            game.game_message = "Chips saved! " + game.game_message
+        else:
+            game.game_message = "Failed to save chips before rebet. " + game.game_message
+
+    # Reset the round with the default 3 hands
+    player_username = session.get("username")
+    player_chips = game.player.chips # Use current chips
+    game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3) # Reinitialize with 3 hands
+    game.reset_round() # This clears the hands and sets game_phase to "betting"
+
+    session["blackjack_game_state"] = game.to_dict()
+
+    last_bets = session.get('last_bets', []) # Get the last saved bets
+
+    return jsonify({
+        "success": True,
+        "message": game.game_message,
+        "game_state": game.get_game_state(reveal_dealer_card=False),
+        "last_bets": last_bets # Include last_bets in the response
+    })
 
 
 @app.route('/api/player_action', methods=['POST'])
@@ -131,6 +179,8 @@ def player_action():
         success = game.stand(hand_index)
     elif action_type == 'double':
         success = game.double_down(hand_index)
+    elif action_type == 'split': # NEW: Handle split action
+        success = game.split(hand_index)
     else:
         game.game_message = "Invalid action."
         success = False
@@ -166,7 +216,7 @@ def reset_round():
         return jsonify({"success": False, "message": "Game not started"}), 400
 
     game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
-     # Before resetting, ensure chips are saved if the previous round ended
+    # Before resetting, ensure chips are saved if the previous round ended
     if game.game_phase == "round_over":
         player_username = session["username"]
         final_chips = game.player.chips
@@ -174,8 +224,14 @@ def reset_round():
             session["chips"] = final_chips # Update session chips after saving
             game.game_message = "Chips saved! " + game.game_message # Prepend message
         else:
-            game.game_message = "Failed to save chips before reset. " + game.game_message # Prepend message
+            game.game_message = "Failed to save chips before reset. " + game.game_message
+    
+    # Reinitialize the game with 3 hands when resetting the round
+    player_username = session.get("username")
+    player_chips = game.player.chips # Use current chips
+    game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
     game.reset_round()
+    
     session["blackjack_game_state"] = game.to_dict()
 
     return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
@@ -208,9 +264,7 @@ def collect_chips():
     finally:
         conn.close()
 
-
 ## HTML Page Routes
-
 
 @app.route("/")
 def home():
@@ -238,7 +292,10 @@ def game():
     if "blackjack_game_state" in session:
         try:
             game_obj = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+            # Ensure the number of hands for display is pulled from the game object,
+            # or defaulted to 3 if starting fresh.
             game_state_for_display = game_obj.get_game_state(reveal_dealer_card=False)
+            game_state_for_display["num_hands"] = game_obj.num_hands # Ensure num_hands is set
         except Exception as e:
             print(f"Error loading game from session in /game route: {e}")
             session.pop('blackjack_game_state', None)
@@ -251,7 +308,7 @@ def game():
             "dealer_hand": [],
             "dealer_total": 0,
             "player_hands": [],
-            "num_hands": 3
+            "num_hands": 3 # Default to 3 hands for new games
         }
 
     return render_template("game.html", fullscreen=fullscreen, game_state=game_state_for_display)
@@ -475,9 +532,6 @@ def verify():
             return render_template('verify.html', alert_message="Incorrect verification code.")
 
     return render_template('verify.html')
-
-
-
 
 
 if __name__ == '__main__':

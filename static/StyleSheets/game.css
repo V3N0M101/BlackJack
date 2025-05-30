@@ -166,31 +166,13 @@ body {
 
 
 /* Inner Game Content Area (scaled and centered within the fixed table) */
-.table-content {
-    position: absolute; /* Positioned relative to .table */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90vw; /* Dimensions for the visible game area */
-    height: 70vh;
-    padding: 20px;
-    border-radius: 20px;
-    background: #444; /* Background for the game content area */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between; /* Space out dealer and player */
-    align-items: center;
-    box-sizing: border-box;
-    overflow: auto; /* Allow scrolling if content overflows */
-    z-index: 2; /* Above the fixed .table background */
-}
-
+/* === Table Container (Fixed position, centers the game content) === */
 .table-fullscreen {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
-    height: 90vh;
+    height: 90vh; /* Takes up 90% of viewport height */
     background: #666; /* Background for the table area */
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
@@ -201,75 +183,147 @@ body {
 
 .table-windowed {
     position: fixed;
-    top: 0;
+    top: 20;
     left: 0;
     width: 100vw;
-    height: 80vh;
+    height: 80vh; /* Slightly smaller height in windowed mode */
     background: #666; /* Background for the table area */
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
     justify-content: center;
     align-items: center;
     transition: all 0.3s ease;
-    margin-top: 100px;
+    margin: 10.8vh auto; /* Centers the whole table horizontally in windowed mode */
 }
 
-/* Player's Area (positioned within .table-content) */
+/* === Main Game Content Area (positioned within table-fullscreen/windowed) === */
+.table-content {
+    /* No position: absolute here if its parent is using flex to center it.
+       If .table-fullscreen/.table-windowed are using `display: flex; justify-content: center; align-items: center;`
+       then this element will be centered automatically. */
+    /* If you still need absolute positioning for some reason, ensure its parent is `position: relative`. */
+    /* Assuming .table-fullscreen and .table-windowed are the positioned parents. */
+    /* If .table-content is a direct child of .table-fullscreen/.table-windowed and they are flex containers: */
+    /* Then remove position: absolute, top, left, transform from here. */
+    /* Let's assume you want it centered by its parent flex container */
+    width: 90vw; /* Dimensions for the visible game area */
+    height: 70vh;
+    padding: 20px;
+    border-radius: 20px;
+    background: transparent; /* Background for the game content area */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Space out dealer and player */
+    align-items: center;
+    box-sizing: border-box;
+    overflow: hidden; /* Changed from 'auto' to 'hidden' to prevent scrollbars unless explicitly needed */
+    z-index: 2; /* Above the fixed .table background */
+    /* REMOVED: scale: 1.2; */ /* Remove scaling here to avoid layout issues */
+
+    /* If you still want .table-content to be absolutely positioned relative to its parent,
+       and its parent (.table-fullscreen or .table-windowed) is `position: relative;`:
+       position: absolute;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+    */
+    /* However, given .table-fullscreen/windowed have display:flex + centering,
+       the absolute positioning here on .table-content is likely redundant or conflicting.
+       I'm removing it for a cleaner flex-based centering. */
+}
+
+/* === Player's Area Container (within .table-content) === */
+/* This will now rely on the dimensions and flex properties for sizing, not scale */
+
 .table-windowed .player {
     position: absolute; /* Positioned relative to .table-content */
     bottom: 10%; /* Adjust as needed */
-    transform: translateX(-50%);
+    left: 50%; /* FIX: Changed to 50% for proper centering */
+    transform: translateX(-50%); /* Centers the .player container */
     display: flex;
-    gap: 20px;
+    gap: 40px; /* Space between player hands */
     justify-content: center;
-    width: 80%; /* Adjust width to fit multiple hands */
+    width: 90%; /* Adjust width to fit multiple hands */
     z-index: 3; /* Above the .table-content background */
-    scale: 0.75;
+    /* REMOVED: scale: 0.75; */ /* Remove scaling to fix overlap */
     margin-bottom: 3.5vh;
-    left:40%
 }
 
-/* Player Area */
+/* Individual Player Hand (within .player) */
 .table-windowed .Player-Area {
-    flex: 1;
-    min-width: 20vw;
+    flex: 1 1 200px; /* flex-grow: 1, flex-shrink: 1, flex-basis: 200px (base width) */
+    min-width: 220px; /* Ensure a minimum width for each hand */
+    min-height: 30vh; /* Use min-height to ensure it's tall enough, but allows content to expand */
+    /* REMOVED: height: 250px; if you want it to adjust to content up to min-height */
+
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px; /* Internal gap between elements */
     background: #ef8af849;
-    padding: 12px;
+    padding: 18px;
     border-radius: 8px;
+    border: solid black; /* FIX: Added 8px for consistency with original border */
     color: #eee;
+    /* REMOVED: scale: 1.2; */ /* Remove scaling to fix overlap */
 }
 
+.Player-Area.active-hand {
+    /* Change the background color to a shade of yellow */
+    background-color: #ffe9a6a2; /* A common yellow from Bootstrap, or choose your own hex code */
+    /* You might also want to adjust the border color for consistency */
+    border-color: #e0a800; /* A darker yellow for the border */
+    /* Add a subtle box-shadow for emphasis, if you like */
+    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7); /* Yellow glow */
+}
+
+/* If you have different active-hand styles for fullscreen vs windowed,
+   you might need to target them specifically: */
+
+.table-windowed .Player-Area.active-hand {
+    background-color: #002fafa2; /* A common yellow from Bootstrap, or choose your own hex code */
+    /* You might also want to adjust the border color for consistency */
+    border-color: rgb(149, 165, 255); /* A darker yellow for the border */
+    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
+}
+
+.table-fullscreen .Player-Area.active-hand {
+    background-color: #002fafa2; /* A common yellow from Bootstrap, or choose your own hex code */
+    /* You might also want to adjust the border color for consistency */
+    border-color: rgb(149, 165, 255); /* A darker yellow for the border */
+    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
+}
+
+/* === Fullscreen Mode Player Area === */
 .table-fullscreen .player {
     position: absolute; /* Positioned relative to .table-content */
     bottom: 10%; /* Adjust as needed */
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    gap: 24px;
+    gap: 30px; /* Adjusted gap for fullscreen, can be same as windowed if desired */
     justify-content: center;
-    width: 80%; /* Adjust width to fit multiple hands */
-    z-index: 3; /* Above the .table-content background */
+    width: 85%; /* Adjust width to fit multiple hands better in fullscreen */
+    z-index: 3;
 }
 
-/* Player Area */
+/* Individual Player Hand (within .player for fullscreen) */
 .table-fullscreen .Player-Area {
-    flex: 1;
-    min-width: 220px;
+    flex: 1 1 200px; /* Consistent flex properties with windowed mode */
+    min-width: 350px; /* Consistent min-width */
+    min-height: 50vh; /* Potentially taller for fullscreen */
+
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    background: #f047ff49;
+    gap: 15px; /* Internal gap for fullscreen */
+    background: #f047ff49; /* Different background color for visual distinction */
     padding: 12px;
     border-radius: 8px;
     color: #eee;
-    margin-bottom: 6vh;
+    margin-bottom: 1vh;
+    border: solid black; /* Add border for consistency, if desired */
 }
 
 
-/* Dealer's Area (positioned within .table-content) */
 .Dealer_mid {
     position: absolute; /* Positioned relative to .table-content */
     top: 10%; /* Adjust as needed */
@@ -447,38 +501,82 @@ body {
 }
 
 /* === ACTION BUTTONS === */
+button {
+    padding: 10px 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    color: white; /* Default text color */
+    text-transform: uppercase;
+    /* Combine transitions for smoother all-around effect */
+    transition: background-color 0.2s ease, transform 0.15s ease-out, box-shadow 0.2s ease; /* Adjusted transform duration */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+button:hover:not(.disabled) { /* Added :not(.disabled) to prevent hover on disabled buttons */
+    transform: scale(1.05); /* Enlarge slightly on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+button:active:not(.disabled) { /* Added :not(.disabled) to prevent active on disabled buttons */
+    transform: scale(0.95); /* Shrink slightly on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+button.disabled {
+    opacity: 0.5; /* Changed from 0 to 0.5 to make them visible but faded */
+    cursor: not-allowed;
+    filter: grayscale(50%); /* Makes them look faded */
+    transform: none; /* No scaling when disabled */
+    box-shadow: none; /* No shadow when disabled */
+    pointer-events: none; /* Prevents interaction even if accidentally hovered */
+}
+
+/* === ACTION BUTTONS GROUPING === */
 .actions {
     display: flex;
-    gap: 4px;
-    border-radius: 8px;
-    z-index: 1001;
+    gap: 4px; /* Space between buttons */
+    border-radius: 8px; /* Rounded corners for the whole group */
+    z-index: 1001; /* High z-index to ensure it's on top */
+    /* Position of this div itself */
 }
 
 .actions button {
     padding: 10px 16px;
-    background: #b97cff; /* Default color for all action buttons */
+    background: #ffffff; /* Set a default background for action buttons */
     color: #fff;
     font-weight: bold;
     cursor: pointer;
     border: none;
-    border-radius: 0;
-    transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.actions button:hover {
-    background: #6200ff;
-    transform: scale(1.05);
+    border-radius: 10px; /* Remove individual button radius if part of a group with rounded ends */
+    box-shadow: none; /* Remove individual button shadows for a flatter look within the group */
 }
 
 .actions button:first-child {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
+    border-top-left-radius: 15px;
+    border-bottom-left-radius: 15px;
 }
 
 .actions button:last-child {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
+    border-top-right-radius: 15px;
+    border-bottom-right-radius: 15px;
 }
+
+
+.actions button:hover:not(.disabled) { /* Apply scaling to action buttons too */
+    background: #888888; /* Slightly lighter on hover */
+    transform: scale(1.05); /* Enlarge slightly on hover */
+    /* Add a subtle shadow for hover on action buttons too, if desired */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.actions button:active:not(.disabled) { /* Apply scaling to action buttons too */
+    background: #ac5aff; /* Slightly darker on active */
+    transform: scale(0.95); /* Shrink slightly on click */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
 
 .actions button img {
     display: block;
@@ -486,15 +584,23 @@ body {
     height: 36px;
 }
 
-/* Reverted specific background colors for action buttons - they will now use the general .actions button background */
-.btn-clear { } /* Empty rule to override previous specific color if any */
-.btn-re-bet { }
-.btn-deal { }
-.btn-hit { }
-.btn-double { }
-.btn-stand { }
-.btn-split { }
+/* Specific background colors for action buttons (retains hover/active scaling) */
+.btn-clear { background-color: #ff5722; } /* Example color */
+.btn-re-bet { background-color: #4CAF50; } /* Example color */
+.btn-deal { background-color: #2196F3; } /* Example color */
+.btn-hit { background-color: #f44336; } /* Example color */
+.btn-double { background-color: #9C27B0; } /* Example color */
+.btn-stand { background-color: #FFC107; color: #333; } /* Example color, black text for yellow */
+.btn-split { background-color: #00BCD4; } /* Example color */
 
+
+.btn-collect {
+    background-color: #6c757d;
+}
+
+.btn-collect:hover:not(.disabled) {
+    background-color: #5a6268;
+}
 
 /* HEADER LAYOUT OVERRIDES */
 .Game-head .head-left {
@@ -557,8 +663,3 @@ body {
     box-shadow: 0 0 5px #00d0ff;
 }
 
-.main-bet-display {
-    color: #000;
-    font-weight: bold;
-    font-size: 1.2em;
-}

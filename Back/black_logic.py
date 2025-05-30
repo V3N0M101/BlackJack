@@ -149,6 +149,16 @@ def evaluate_side_bets(player_hand, dealer_upcard):
 
     if len(player_hand) != 2:
         return result
+    
+    c1, c2 = player_hand
+    if c1.rank_idx == c2.rank_idx:
+        if c1.suit == c2.suit:
+            result["Perfect Pair"] = {"type": "Perfect Pair", "payout": 25, "won": True}
+        elif (c1.suit in ['♦', '♥'] and c2.suit in ['♦', '♥']) or \
+             (c1.suit in ['♠', '♣'] and c2.suit in ['♠', '♣']):
+            result["Perfect Pair"] = {"type": "Colored Pair", "payout": 12, "won": True}
+        else:
+            result["Perfect Pair"] = {"type": "Mixed Pair", "payout": 6, "won": True}
 
     combo = player_hand + [dealer_upcard]
     suits = [card.suit for card in combo]
@@ -187,15 +197,7 @@ def evaluate_side_bets(player_hand, dealer_upcard):
     elif is_flush_check():
         result["21+3"] = {"hand": "Flush", "payout": 5, "won": True}
 
-    c1, c2 = player_hand
-    if c1.rank_idx == c2.rank_idx:
-        if c1.suit == c2.suit:
-            result["Perfect Pair"] = {"type": "Perfect Pair", "payout": 25, "won": True}
-        elif (c1.suit in ['♦', '♥'] and c2.suit in ['♦', '♥']) or \
-             (c1.suit in ['♠', '♣'] and c2.suit in ['♠', '♣']):
-            result["Perfect Pair"] = {"type": "Colored Pair", "payout": 12, "won": True}
-        else:
-            result["Perfect Pair"] = {"type": "Mixed Pair", "payout": 6, "won": True}
+    
     return result
 
 
@@ -234,6 +236,8 @@ class BlackjackMultiGame:
             self.game_phase = game_state_data['game_phase']
             self.game_message = game_state_data['game_message']
 
+    
+    
     def _create_new_hand_state(self):
         return {
             "hand": [],
@@ -245,9 +249,10 @@ class BlackjackMultiGame:
             "stood": False,
             "blackjack": False,
             "can_double": False,
-            "can_split": False, # Not implemented yet
-            "is_active": False, # Is this the hand currently being played?
-            "result_message": "" # Message for this specific hand
+            "can_split": False,
+            "can_resplit": True, # NEW: Indicates if this hand can be split again
+            "is_active": False,
+            "result_message": ""
         }
 
     def to_dict(self):
@@ -414,18 +419,36 @@ class BlackjackMultiGame:
         # Clear active status for all hands first
         for hand_state in self.player_hands:
             hand_state["is_active"] = False
+            # Reset action eligibility for the next turn for all hands
+            hand_state["can_double"] = False
+            hand_state["can_split"] = False
 
         # Find the next hand that hasn't busted/stood/blackjacked
-        for i in range(self.num_hands):
+        for i in range(len(self.player_hands)): # Use len(self.player_hands) as num_hands can change
             hand_state = self.player_hands[i]
             if not hand_state["busted"] and not hand_state["stood"] and not hand_state["blackjack"]:
                 self.current_active_hand_index = i
                 hand_state["is_active"] = True
                 self.game_message = f"It's Hand {i+1}'s turn. "
-                # Check for double down eligibility for this specific hand
-                hand_state["can_double"] = (len(hand_state["hand"]) == 2 and 
-                                             9 <= hand_value(hand_state["hand"]) <= 11 and
-                                             hand_state["main_bet"] <= self.player.chips)
+
+                # Determine can_double eligibility for this specific hand
+                if len(hand_state["hand"]) == 2 and 9 <= hand_value(hand_state["hand"]) <= 11 and hand_state["main_bet"] <= self.player.chips:
+                    hand_state["can_double"] = True
+
+                # Determine can_split eligibility for this specific hand
+                # A hand can split if:
+                # 1. It has exactly two cards.
+                # 2. Both cards have the same rank (e.g., two 8s, two Queens).
+                # 3. The player has enough chips to place an equal bet.
+                # 4. The hand hasn't been re-split too many times (controlled by can_resplit and overall max hands).
+                max_total_hands = 4 # Common casino rule: Max 4 hands after splitting
+                if (len(hand_state["hand"]) == 2 and
+                    hand_state["hand"][0].rank_idx == hand_state["hand"][1].rank_idx and
+                    hand_state["main_bet"] <= self.player.chips and
+                    hand_state["can_resplit"] and # Check if this hand can be re-split
+                    len(self.player_hands) < max_total_hands): # Check overall limit
+                    hand_state["can_split"] = True
+
                 return True # Found an active hand
 
         # If no active hands, all player hands are finished
@@ -433,6 +456,63 @@ class BlackjackMultiGame:
         self.game_phase = "dealer_turn"
         self.game_message = "All player hands finished. Dealer's turn."
         return False # No active hand found
+    
+    def split(self, hand_index):
+        hand_state = self._get_hand_by_index(hand_index)
+        if not hand_state or self.game_phase != "player_turns" or not hand_state["is_active"] or not hand_state["can_split"]:
+            self.game_message = "Cannot split this hand at this time."
+            return False
+
+        if hand_state["main_bet"] > self.player.chips:
+            self.game_message = "Not enough chips to split this hand."
+            return False
+
+        # Deduct the new bet for the split hand
+        self.player.chips -= hand_state["main_bet"]
+
+        # Create a new hand state for the second split hand
+        new_hand_state = self._create_new_hand_state()
+        new_hand_state["main_bet"] = hand_state["main_bet"]
+        new_hand_state["side_bet_21_3"] = hand_state["side_bet_21_3"] # Side bets carry over
+        new_hand_state["side_bet_perfect_pair"] = hand_state["side_bet_perfect_pair"]
+
+        # Move one card from the original hand to the new hand
+        new_hand_state["hand"].append(hand_state["hand"].pop())
+
+        # Deal one new card to the original hand
+        hand_state["hand"].extend(self.deck.dealCards(1))
+        # Deal one new card to the new split hand
+        new_hand_state["hand"].extend(self.deck.dealCards(1))
+
+        # Check for Aces special rule: if splitting Aces, they each get only one card and stand automatically.
+        if hand_state["hand"][0].rank == 'A': # Check original hand's first card (it was an Ace)
+            hand_state["stood"] = True
+            new_hand_state["stood"] = True
+            hand_state["can_resplit"] = False # Cannot re-split Aces
+            new_hand_state["can_resplit"] = False # Cannot re-split Aces
+            hand_state["result_message"] += "Stood on Ace split."
+            new_hand_state["result_message"] += "Stood on Ace split."
+
+        # After splitting, neither hand can split or double down again immediately
+        hand_state["can_double"] = False
+        hand_state["can_split"] = False
+        new_hand_state["can_double"] = False
+        new_hand_state["can_split"] = False
+
+        # Insert the new hand immediately after the hand that was split
+        self.player_hands.insert(hand_index + 1, new_hand_state)
+        # Update the number of total hands
+        self.num_hands = len(self.player_hands)
+
+        self.game_message = f"Hand {hand_index+1} split. Play the first hand."
+        # No need to call find_next_active_hand immediately here.
+        # The current hand (hand_index) remains active for player's action
+        # unless it was an Ace split (which auto-stands).
+        if hand_state["stood"]: # If it was an Ace split, move to next hand
+            self.find_next_active_hand()
+        # Otherwise, the current hand (hand_index) remains active, and renderGameState will update it.
+
+        return True
 
     def hit(self, hand_index):
         hand_state = self._get_hand_by_index(hand_index)

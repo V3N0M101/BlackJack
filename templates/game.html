@@ -57,36 +57,34 @@
         </div>
       </div>
     </header>
-
+    <div class="table-content">
     <div class="table {% if fullscreen %}table-fullscreen{% else %}table-windowed{% endif %}">
       <div class="player">
         {% for i in range(game_state.num_hands) %}
         <div class="Player-Area" id="hand-{{ i }}">
-          <div class="cards" id="cards-hand-{{ i }}">
-            {# Player hand cards for this hand will be loaded dynamically by JavaScript #}
-          </div>
+          <div class="cards" id="cards-hand-{{ i }}"></div>
           <div class="hand-info">
-            <span class="hand-total" id="total-hand-{{ i }}">Total: 0</span>
+            <span class="hand-total" id="total-hand-{{ i }}">Total:</span>
             <span class="hand-message" id="message-hand-{{ i }}"></span>
           </div>
           <div class="Zone">
             <button class="PP" id="pp-bet-{{ i }}">PP</button>
-            <span class="main-bet-display" id="main-bet-{{ i }}">0</span>
-            <button class="MAIN bet-area" data-hand-index="{{ i }}"></button> <button class="TWENTYONE" id="213-bet-{{ i }}">21+3</button>
+            <button class="MAIN bet-area" data-hand-index="{{ i }}"></button> 
+            <button class="TWENTYONE" id="213-bet-{{ i }}">21+3</button>
           </div>
           <div class="bet-input-container">
-            <input type="number" class="main-bet-input" id="main-bet-input-{{ i }}" placeholder="Main Bet" value="500" min="500" step="500">
-            <input type="number" class="side-bet-input" id="213-bet-input-{{ i }}" placeholder="21+3" value="0" min="0" step="100">
             <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">
+            <input type="number" class="main-bet-input" id="main-bet-input-{{ i }}" placeholder="Main" value="500" min="500" step="500">
+            <input type="number" class="side-bet-input" id="213-bet-input-{{ i }}" placeholder="21+3" value="0" min="0" step="100">
           </div>
         </div>
         {% endfor %}
       </div>
     </div>
+    </div>
 
     <div class="foot">
       <div class="status">
-        {# HERE'S THE FIX: Use Jinja to display the initial player chips #}
         <div class="status-item balance" id="player-chips">Balance: ${{ game_state.player_chips | default(0) }}</div>
         <div class="status-item bet" id="total-bet-display">Total Bet: $0</div>
         <div class="status-item game-message" id="game-message">{{ game_state.game_message | default('Welcome!') }}</div>

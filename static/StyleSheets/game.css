@@ -663,3 +663,8 @@ button.disabled {
     box-shadow: 0 0 5px #00d0ff;
 }
 
+/* Styling for the selected bet area button */
+.bet-area-button.selected {
+    border: 2px solid gold; /* Or a glowing effect, different background, etc. */
+    box-shadow: 0 0 10px gold;
+}

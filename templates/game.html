@@ -68,9 +68,9 @@
             <span class="hand-message" id="message-hand-{{ i }}"></span>
           </div>
           <div class="Zone">
-            <button class="PP" id="pp-bet-{{ i }}">PP</button>
-            <button class="MAIN bet-area" data-hand-index="{{ i }}"></button> 
-            <button class="TWENTYONE" id="213-bet-{{ i }}">21+3</button>
+            <button class="PP bet-area-button" id="pp-bet-{{ i }} data-input-target="pp-bet-input-{{ i }}">PP</button>
+            <button class="MAIN bet-area bet-area-button" data-hand-index="{{ i }} data-input-target="main-bet-input-{{ i }}"></button> 
+            <button class="TWENTYONE bet-area-button" id="213-bet-{{ i }} data-input-target="213-bet-input-{{ i }}">21+3</button>
           </div>
           <div class="bet-input-container">
             <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">

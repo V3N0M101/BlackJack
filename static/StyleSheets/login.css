@@ -8,18 +8,21 @@
 }
 
 body {
-    justify-content: center;
-    align-items: center;
+    /* Remove display: flex, justify-content, align-items from body if it's not the direct parent of wrapper */
+    /* Only keep background and min-height for the full page */
     min-height: 100vh;
     background: url('../Images/Backgrounds/Login_2.jpg') no-repeat;
     background-size: cover;
     background-position: center;
+    margin: 0; /* Important */
+    padding: 0; /* Important */
 }
 
 .Hover_Back_Wrap {
   position: absolute;
   top: 20px;
   left: 20px;
+  z-index: 1001;
 }
 
 .back-arrow {
@@ -111,9 +114,11 @@ body {
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
     background: transparent;
-    box-shadow: 0 10px 10px 0 #333 transparent(0.2) ;
-    position: relative;
+    /* FIX: Correct box-shadow syntax */
+    box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.2); /* Corrected transparency */
+    position: relative; /* Keep if needed for absolute positioning of children */
     padding: 30px 40px;
+    /* No need for margin: auto or other centering here, as its parent (.center-container) handles it */
 }
 
 
@@ -223,10 +228,12 @@ h1 {
 
 
 .center-container {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    min-height: 100vh; /* Make it take full height of its parent or viewport */
+    width: 100%; /* Ensure it spans full width */
+    display: flex; /* Make it a flex container */
+    justify-content: center; /* Center its direct children (like .wrapper) horizontally */
+    align-items: center; /* Center its direct children (like .wrapper) vertically */
+    /* If page-transition adds padding-top, adjust this min-height or use padding on page-transition */
 }
 
 .password-suggest-wrap {

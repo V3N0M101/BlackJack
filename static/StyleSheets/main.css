@@ -12,7 +12,9 @@
     --spacing-xs: 0.5rem; /* 8px */
     --spacing-sm: 1rem;   /* 16px */
     --spacing-md: 1.5rem; /* 24px */
-    --spacing-lg: 2rem;   /* 32px */
+    --spacing-nav: 5vh;   /* 32px */
+    --spacing-lgt: 12vh; 
+    --spacing-lgb: 0; 
 
     /* Border Radius - Standardized values */
     --border-radius-sm: 8px;
@@ -39,7 +41,6 @@
 
 /* --- Body & Overall Layout --- */
 body {
-    min-height: 100vh;
     /* Adjusted background overlay for better visibility of the "Trippy.png" */
     background: linear-gradient(rgba(66, 255, 230, 0.25), rgba(66, 255, 230, 0.25)),
                 url("../Images/Backgrounds/Trippy.png") repeat center center / cover;
@@ -47,6 +48,7 @@ body {
     color: var(--text-color-light); /* Default text color */
     display: flex;
     flex-direction: column;
+    overflow: auto;
 }
 
 html, body {
@@ -153,7 +155,7 @@ html, body {
 /* --- Navigation Links & Buttons --- */
 .nav-links-center {
     display: flex;
-    gap: var(--spacing-lg); /* Increased gap for better visual separation */
+    gap: var(--spacing-nav); /* Increased gap for better visual separation */
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -261,21 +263,36 @@ html, body {
 
 /* --- Game Preview Section --- */
 .game-preview-outer {
-    flex: 1;
+    flex: 1; /* This is key! It makes this section take up all available vertical space */
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* Vertically center content within this flexible space */
+    align-items: center; /* Horizontally center content within this flexible space */
     width: 100%;
-    margin-top: var(--spacing-lg); /* Adjusted margin-top */
-    padding-bottom: var(--spacing-lg); /* Add some bottom padding */
+    /* Reconsider --spacing-lg (13vh). If this is applied to margin-top AND padding-bottom, */
+    /* it could push content outside if the available space (after flex: 1) is too small. */
+    /* A fixed pixel value might be safer, or adjust based on viewport size with media queries. */
+    margin-top: var(--spacing-lgt); /* 13vh - this will contribute to height */
+    padding-bottom: var(--spacing-lgb); /* 13vh - this will contribute to height */
+
+    /* If --spacing-lg causes scroll due to overall height, you might need to adjust */
+    /* or remove it, or use flexbox for spacing (gap). */
 }
 
 .game-preview-inner {
     position: relative;
     border-radius: var(--border-radius-xl);
     overflow: hidden; /* Ensures the iframe respects the border-radius */
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9); /* More prominent shadow for depth */
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.9);
+}
+
+.game-frame {
+    width: 88vw;
+    height: 80vh; /* 80% of viewport height */
+    border-radius: var(--border-radius-xl);
+    display: block;
+    background: transparent;
+    border: none;
 }
 
 .fullscreen-icon {
@@ -304,27 +321,7 @@ html, body {
     filter: brightness(0) invert(1);
 }
 
-.game-frame {
-    width: 88vw;
-    height: 80vh;
-    border-radius: var(--border-radius-xl);
-    display: block;
-    background: transparent;
-    border: none; /* Ensure no default iframe border */
-}
-
 /* NAV BAR Specifics (kept separate as in original for clarity) */
-.nav-bar {
-    /* Parameters already adjusted above, keeping this empty to avoid duplicates */
-}
-
-.nav-links-center {
-    /* Parameters already adjusted above */
-}
-
-.nav-button.nav-link {
-    /* Parameters already adjusted above */
-}
 
 .logo {
     margin-left: 1rem; /* Kept original margin */

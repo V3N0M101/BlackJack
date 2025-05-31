@@ -10,7 +10,8 @@ cursor.execute('''
     email TEXT NOT NULL UNIQUE,
     username TEXT NOT NULL UNIQUE,
     password TEXT NOT NULL,
-    chips INTEGER DEFAULT 0
+    chips INTEGER DEFAULT 0,
+    last_bonus_collection TEXT DEFAULT '1970-01-01 00:00:00'
 );
 ''')
 

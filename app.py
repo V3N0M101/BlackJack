@@ -6,6 +6,7 @@ import smtplib, ssl
 from email.message import EmailMessage
 import random
 import threading
+from datetime import datetime, timedelta 
 
 # It's assumed 'secure.py' exists and contains EMAIL_PASS_SECURE
 from secure import EMAIL_PASS_SECURE 
@@ -63,10 +64,15 @@ def get_db_connection():
     return conn
 
 # Helper function to save chips to the database
-def save_chips_to_db(username, chips):
+def save_chips_to_db(username, chips, update_bonus_time=False):
     conn = get_db_connection()
     try:
-        conn.execute("UPDATE users SET chips = ? WHERE username = ?", (chips, username))
+        if update_bonus_time:
+            # Format current UTC time for SQLite TEXT storage
+            now_utc = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+            conn.execute("UPDATE users SET chips = ?, last_bonus_collection = ? WHERE username = ?", (chips, now_utc, username))
+        else:
+            conn.execute("UPDATE users SET chips = ? WHERE username = ?", (chips, username))
         conn.commit()
         return True
     except Exception as e:
@@ -266,27 +272,78 @@ def reset_round():
 @app.route('/api/collect_chips', methods=['POST'])
 def collect_chips():
     """
-    Saves the player's current chip count from the game to the database.
-    Requires the user to be logged in and an active game session.
+    Allows the player to collect a daily bonus.
+    Checks the 24-hour cooldown and updates chips and last_bonus_collection timestamp.
     """
     if "username" not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
-    if "blackjack_game_state" not in session:
-        return jsonify({"success": False, "message": "No active game"}), 400
 
-    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
     player_username = session["username"]
-    final_chips = game.player.chips
+    BONUS_AMOUNT = 5000 # Define your bonus amount
 
     conn = get_db_connection()
     try:
-        conn.execute("UPDATE users SET chips = ? WHERE username = ?", (final_chips, player_username))
-        conn.commit()
-        session["chips"] = final_chips
-        return jsonify({"success": True, "message": "Chips collected and saved!", "new_chips": final_chips})
+        user_data = conn.execute("SELECT chips, last_bonus_collection FROM users WHERE username = ?", (player_username,)).fetchone()
+
+        if not user_data:
+            return jsonify({"success": False, "message": "User not found."}), 404
+
+        current_chips = user_data["chips"]
+        last_collection_str = user_data["last_bonus_collection"]
+
+        # Parse the last collection time from the database
+        last_collection_time = datetime.strptime(last_collection_str, '%Y-%m-%d %H:%M:%S')
+        
+        # Calculate when the next collection is due
+        next_collection_time = last_collection_time + timedelta(hours=24)
+        
+        now_utc = datetime.utcnow()
+
+        if now_utc >= next_collection_time:
+            # Player is eligible to collect bonus
+            new_chips = current_chips + BONUS_AMOUNT
+            # Update chips and the last_bonus_collection timestamp in the database
+            if save_chips_to_db(player_username, new_chips, update_bonus_time=True):
+                session["chips"] = new_chips # Update chips in Flask session
+                # If there's an active game, update its internal player chips
+                if "blackjack_game_state" in session:
+                    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+                    game.player.chips = new_chips
+                    session["blackjack_game_state"] = game.to_dict() # Save updated game state
+                    
+                message = f"Bonus of ${BONUS_AMOUNT} collected! Your new balance is ${new_chips}."
+                return jsonify({
+                    "success": True,
+                    "message": message,
+                    "game_state": game.get_game_state(reveal_dealer_card=False) if "blackjack_game_state" in session else {
+                        "player_chips": new_chips,
+                        "game_phase": "betting", # Assume betting phase if game isn't active
+                        "game_message": message,
+                        "dealer_hand": [], "dealer_total": 0, "player_hands": [], "num_hands": 3
+                    }
+                })
+            else:
+                message = "Failed to update chips in the database."
+                return jsonify({"success": False, "message": message}), 500
+        else:
+            # Player is not yet eligible
+            time_remaining = next_collection_time - now_utc
+            hours, remainder = divmod(time_remaining.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            message = f"You can collect your bonus in {int(hours)}h {int(minutes)}m."
+            return jsonify({
+                "success": False,
+                "message": message,
+                "game_state": BlackjackMultiGame.from_dict(session["blackjack_game_state"]).get_game_state(reveal_dealer_card=False) if "blackjack_game_state" in session else {
+                        "player_chips": current_chips,
+                        "game_phase": "betting",
+                        "game_message": message,
+                        "dealer_hand": [], "dealer_total": 0, "player_hands": [], "num_hands": 3
+                    }
+            })
     except Exception as e:
-        flash(f"Error saving chips: {e}")
-        return jsonify({"success": False, "message": "Failed to save chips."}), 500
+        print(f"Error collecting bonus chips for {player_username}: {e}")
+        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
     finally:
         conn.close()
 
@@ -336,8 +393,35 @@ def game():
             "player_hands": [],
             "num_hands": 3 # Default to 3 hands for new games
         }
+    
+    # NEW: Get last_bonus_collection to potentially disable the button initially on page load
+    # This might require an additional fetch or passing it through `game_state_for_display`
+    # For now, the frontend will handle enabling/disabling based on the API response.
+    # We can fetch it here and add to game_state_for_display if needed for initial UI render
+    if "username" in session:
+        conn = get_db_connection()
+        user_data = conn.execute("SELECT last_bonus_collection FROM users WHERE username = ?", (session["username"],)).fetchone()
+        conn.close()
+        if user_data:
+            game_state_for_display["last_bonus_collection"] = user_data["last_bonus_collection"]
+            
+            last_collection_time = datetime.strptime(user_data["last_bonus_collection"], '%Y-%m-%d %H:%M:%S')
+            next_collection_time = last_collection_time + timedelta(hours=24)
+            now_utc = datetime.utcnow()
+            
+            game_state_for_display["can_collect_bonus"] = now_utc >= next_collection_time
+            if not game_state_for_display["can_collect_bonus"]:
+                time_remaining = next_collection_time - now_utc
+                hours, remainder = divmod(time_remaining.total_seconds(), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                game_state_for_display["bonus_cooldown_message"] = f"Next bonus in {int(hours)}h {int(minutes)}m."
+        else:
+            game_state_for_display["can_collect_bonus"] = True # Assume collectible if no record
+            game_state_for_display["bonus_cooldown_message"] = ""
+
 
     return render_template("game.html", fullscreen=fullscreen, game_state=game_state_for_display)
+
 
 
 @app.route("/email")
@@ -447,7 +531,12 @@ def leaderboard():
 @app.route("/learn")
 def learn():
     """Renders the 'learn' page (presumably for game rules or tutorials)."""
-    return render_template("learn.html")
+    login_in_alert = session.pop("login_alert", False)
+    return render_template(
+        "learn.html",
+        logged_in="username" in session,
+        login_in_alert=login_in_alert,
+    )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -500,7 +589,12 @@ def logout():
 @app.route("/news")
 def news():
     """Renders the news page."""
-    return render_template("news.html")
+    login_in_alert = session.pop("login_alert", False)
+    return render_template(
+        "news.html",
+        logged_in="username" in session,
+        login_in_alert=login_in_alert,
+    )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -562,43 +656,85 @@ def verify():
     If successful, the user's account is created in the database.
     """
     if request.method == 'POST':
-        code_input = ''.join([request.form.get(f'd{i}', '') for i in range(1, 7)])
-        actual_code = session.get('verify_code')
+        # --- MODIFIED: Get JSON data instead of form data ---
+        data = request.get_json() # Get the JSON payload
+        if not data:
+            # If no JSON data is sent, this could be a malformed request or a non-JS form submit attempt.
+            # Handle as an error or fallback.
+            flash("Invalid request. Please ensure JavaScript is enabled.")
+            return jsonify({"success": False, "message": "Invalid request data."}), 400
 
-        # Debugging prints
+        # Extract the 'code' directly from the JSON payload
+        code_input = data.get('code', '')
+
+        # --- IMPORTANT: The /verify route also needs to return JSON now for consistency with fetch ---
+        # The frontend's verify.js is expecting a JSON response, not a redirect directly.
+        # So, we'll return JSON, and the JS will handle the redirection.
+
+        actual_code = session.get('verify_code')
+        user_data = session.get('pending_user')
+
         print(f"DEBUG: Submitted code: {code_input}")
         print(f"DEBUG: Stored code: {actual_code}")
-        print(f"DEBUG: Pending user: {session.get('pending_user')}")
+        print(f"DEBUG: Pending user: {user_data}")
 
         if code_input == actual_code:
             user = session.pop('pending_user', None)
             session.pop('verify_code', None) # Clear verification code after use
 
             if not user:
-                flash("No pending registration. Please register again.")
-                return redirect('/register')
+                message = "No pending registration. Please register again."
+                # Flask's flash is for redirects. For JSON, send message in JSON.
+                # flash(message) # No longer redirecting, so flash won't show
+                return jsonify({"success": False, "message": message, "type": "registration"}), 400
 
             hashed_password = generate_password_hash(user['password'])
             conn = get_db_connection()
-            conn.execute(
-                "INSERT INTO users (email, username, password, chips) VALUES (?, ?, ?, ?)",
-                (user['email'], user['username'], hashed_password, 10000) # Starting chips for new users
-            )
-            conn.commit()
-            conn.close()
+            try:
+                initial_bonus_time = '1970-01-01 00:00:00'
+                conn.execute(
+                    "INSERT INTO users (email, username, password, chips, last_bonus_collection) VALUES (?, ?, ?, ?, ?)",
+                    (user['email'], user['username'], hashed_password, 10000, initial_bonus_time)
+                )
+                conn.commit()
+                conn.close()
 
-            flash("Account verified and registered successfully! You can now log in.")
-            session["register_alert"] = True # Set alert for login page
-            return redirect('/login')
+                message = "Account verified and registered successfully! You can now log in."
+                session["register_alert"] = True # Still set alert for login page
+                # Return JSON with success and redirect URL
+                return jsonify({
+                    "success": True,
+                    "message": message,
+                    "type": "registration",
+                    "redirect_url": "/login"
+                })
+            except sqlite3.IntegrityError as e:
+                conn.close()
+                if "UNIQUE constraint failed" in str(e):
+                    message = "Registration failed: Username or email already in use. Please try logging in or registering with different details."
+                    print(f"ERROR: IntegrityError during user insert: {e} for user {user.get('username')}")
+                else:
+                    message = "An unexpected database error occurred during account creation. Please try again."
+                    print(f"ERROR: SQLite error during user insert: {e} for user {user.get('username')}")
+                # Return JSON with failure message
+                return jsonify({"success": False, "message": message, "type": "registration"}), 400
+            except Exception as e:
+                conn.close()
+                message = "An unexpected error occurred during account creation. Please try again later."
+                print(f"ERROR: An unexpected error occurred during account creation for user {user.get('username')}: {e}")
+                # Return JSON with failure message
+                return jsonify({"success": False, "message": message, "type": "registration"}), 500
+
         else:
-            flash("Incorrect verification code. Please try again.")
-            return redirect('/verify') # Redirect to show flash message
+            message = "Incorrect verification code. Please try again."
+            # Return JSON with failure message
+            return jsonify({"success": False, "message": message, "type": "registration"}), 400
 
     # For GET request to /verify
     if 'pending_user' not in session:
         flash("No pending registration. Please register first.")
         return redirect('/register')
-    
+
     return render_template('Verify.html')
 
 

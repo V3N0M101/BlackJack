@@ -301,7 +301,7 @@ function updateUI(gameState) {
     setButtonsDisabled([splitBtn], !(isPlayerTurn && activeHandData && activeHandData.can_split));
 
     setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver));
-    setButtonsDisabled([collectBtn], !isRoundOver);
+    setButtonsDisabled([collectBtn], !isBettingPhase);
 
     if (!isPlayerTurn) {
         setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);

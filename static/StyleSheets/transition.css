@@ -1,44 +1,32 @@
-/* In Main.css */
 .page-transition {
-    position: absolute;
-    top: 0; /* Or adjust this if the navbar is part of the 'page-transition' scroll area */
+    position: absolute; /* Keeps it in the document flow, but allows layering */
+    top: 0;
     left: 0;
     width: 100%;
-    min-height: 100%;
+    min-height: 100%; /* Revert to min-height: 100% or 100vh for overall page height if it's a wrapper */
     z-index: 1;
     transition: transform 0.5s ease-out, opacity 0.5s ease-out;
-
-    /* Add these to center content horizontally */
-    display: flex;
-    justify-content: center; /* Centers children horizontally */
-    align-items: flex-start; /* Aligns children to the start vertically (top) */
-    /* You might need 'flex-direction: column;' if you have multiple direct children you want stacked */
-    flex-direction: column; /* Assuming your main content will stack vertically within this */
-    padding-top: 80px; /* Add padding here to push content below the fixed navbar */
 }
 
 .page-transition.loaded {
-  opacity: 1;
-  transform: scale(1);
+    opacity: 1;
+    transform: scale(1);
 }
 
 .page-transition.exiting {
-  opacity: 0;
-  transform: scale(1.05);
+    opacity: 0;
+    transform: scale(1.05);
 }
 
-
 .overlay-transition {
-    position: fixed; /* Make it fixed to cover the whole viewport */
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 9999; /* Ensure it's on top during transitions */
-    background-color: black; /* Or whatever color your transition is */
-    pointer-events: none; /* Allows clicks to pass through when not active */
-    opacity: 0; /* Default to hidden */
-    transition: opacity 0.5s ease-in-out; /* Example transition */
+    z-index: 9999;
+    background-color: black;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
 }
-
-

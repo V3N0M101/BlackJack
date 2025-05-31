@@ -1,6 +1,7 @@
 // --- Global Variables and DOM Elements ---
 let currentGameState = null; // Stores the current game state from the backend
 let activeBetInput = null; // To track which bet input is currently focused for chip clicks
+let activeBetButton = null; // To track the currently selected circular bet button
 
 // Get references to all necessary DOM elements
 const dealerCardsDiv = document.getElementById('dealer-cards');
@@ -18,7 +19,7 @@ const standBtn = document.getElementById('standBtn');
 const doubleBtn = document.getElementById('doubleBtn');
 const splitBtn = document.getElementById('splitBtn');
 const clearBetsBtn = document.getElementById('clearBetsBtn');
-const reBetBtn = document.getElementById('reBetBtn'); // This is the button we're fixing
+const reBetBtn = document.getElementById('reBetBtn');
 const collectBtn = document.getElementById('collectBtn');
 
 // Chip Buttons
@@ -68,13 +69,31 @@ function setButtonsDisabled(buttons, disable) {
 }
 
 /**
+ * Manages the 'selected' class for bet area buttons.
+ * Only one bet area button should be selected at a time.
+ * @param {HTMLElement} newSelectedButton - The button that was just clicked/selected.
+ */
+function setSelectedBetButton(newSelectedButton) {
+    if (activeBetButton) {
+        activeBetButton.classList.remove('selected');
+    }
+    activeBetButton = newSelectedButton;
+    if (activeBetButton) { // Ensure newSelectedButton is not null
+        activeBetButton.classList.add('selected');
+    }
+}
+
+/**
  * Gets or creates a player hand container and its sub-elements.
  * @param {number} index The index of the hand (0, 1, 2, 3...)
  * @returns {Object} An object containing references to the hand's DOM elements.
  */
 function getOrCreatePlayerHandElement(index) {
     let handEl = document.getElementById(`hand-${index}`);
+    let isNewHand = false;
+
     if (!handEl) {
+        isNewHand = true;
         // Create the new hand container if it doesn't exist
         handEl = document.createElement('div');
         handEl.classList.add('Player-Area');
@@ -88,9 +107,9 @@ function getOrCreatePlayerHandElement(index) {
                 <span class="hand-total" id="total-hand-${index}">Total:</span> <span class="hand-message" id="message-hand-${index}"></span>
             </div>
             <div class="Zone">
-                <button class="PP" id="pp-bet-${index}">PP</button>
-                <button class="MAIN bet-area" data-hand-index="${index}"></button>
-                <button class="TWENTYONE" id="213-bet-${index}">21+3</button>
+                <button class="PP bet-area-button" id="pp-bet-${index}" data-input-target="pp-bet-input-${index}">PP</button>
+                <button class="MAIN bet-area bet-area-button" data-hand-index="${index}" data-input-target="main-bet-input-${index}"></button>
+                <button class="TWENTYONE bet-area-button" id="213-bet-${index}" data-input-target="213-bet-input-${index}">21+3</button>
             </div>
             <div class="bet-input-container">
                 <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main Bet" value="500" min="500" step="500">
@@ -98,38 +117,10 @@ function getOrCreatePlayerHandElement(index) {
                 <input type="number" class="side-bet-input" id="pp-bet-input-${index}" placeholder="PP" value="0" min="0" step="100">
             </div>
         `;
-
-        // Attach event listeners for bet inputs immediately
-        const mainBetInput = document.getElementById(`main-bet-input-${index}`);
-        const side213BetInput = document.getElementById(`213-bet-input-${index}`);
-        const sidePPBetInput = document.getElementById(`pp-bet-input-${index}`);
-
-        if (mainBetInput) mainBetInput.addEventListener('focus', () => activeBetInput = mainBetInput);
-        if (side213BetInput) side213BetInput.addEventListener('focus', () => activeBetInput = side213BetInput);
-        if (sidePPBetInput) sidePPBetInput.addEventListener('focus', () => activeBetInput = sidePPBetInput);
-
-        // Attach click listeners to the bet zone buttons (PP, MAIN, 21+3)
-        const mainZoneButton = document.querySelector(`#hand-${index} .MAIN`);
-        const ppZoneButton = document.querySelector(`#hand-${index} .PP`);
-        const twentyOneZoneButton = document.querySelector(`#hand-${index} .TWENTYONE`);
-
-        if (mainZoneButton) mainZoneButton.addEventListener('click', () => {
-            activeBetInput = mainBetInput;
-            mainBetInput.focus();
-        });
-        if (ppZoneButton) ppZoneButton.addEventListener('click', () => {
-            activeBetInput = sidePPBetInput;
-            sidePPBetInput.focus();
-        });
-        if (twentyOneZoneButton) twentyOneZoneButton.addEventListener('click', () => {
-            activeBetInput = side213BetInput;
-            side213BetInput.focus();
-        });
-
     }
 
     // Return an object with references to the elements for easier access
-    return {
+    const handElements = {
         area: handEl,
         cardsDiv: document.getElementById(`cards-hand-${index}`),
         totalSpan: document.getElementById(`total-hand-${index}`),
@@ -137,12 +128,49 @@ function getOrCreatePlayerHandElement(index) {
         mainBetInput: document.getElementById(`main-bet-input-${index}`),
         side213BetInput: document.getElementById(`213-bet-input-${index}`),
         sidePPBetInput: document.getElementById(`pp-bet-input-${index}`),
-        // Ensure this ID matches what's in your HTML for displaying the bet value
-        mainBetDisplay: document.querySelector(`#hand-${index} .MAIN.bet-area`), // It's your MAIN button that displays the bet
-        betAreaBtn: document.querySelector(`#hand-${index} .bet-area[data-hand-index="${index}"]`) // This is the MAIN bet button
+        mainBetDisplay: handEl.querySelector(`.MAIN.bet-area`), // This is the MAIN button
+        ppBetButton: handEl.querySelector(`.PP.bet-area-button`),
+        twentyOneBetButton: handEl.querySelector(`.TWENTYONE.bet-area-button`)
     };
-}
 
+    // Attach event listeners for bet inputs and circular buttons if new hand or not already attached
+    if (isNewHand || !handEl.dataset.listenersAttached) { // Use a data attribute to prevent re-attaching
+        if (handElements.mainBetInput) handElements.mainBetInput.addEventListener('focus', () => {
+            activeBetInput = handElements.mainBetInput;
+            setSelectedBetButton(handElements.mainBetDisplay); // MAIN button is the display
+        });
+        if (handElements.side213BetInput) handElements.side213BetInput.addEventListener('focus', () => {
+            activeBetInput = handElements.side213BetInput;
+            setSelectedBetButton(handElements.twentyOneBetButton);
+        });
+        if (handElements.sidePPBetInput) handElements.sidePPBetInput.addEventListener('focus', () => {
+            activeBetInput = handElements.sidePPBetInput;
+            setSelectedBetButton(handElements.ppBetButton);
+        });
+
+        // --- NEW: Attach click listeners to the circular bet zone buttons (PP, MAIN, 21+3) ---
+        // This is where the core fix is
+        handElements.ppBetButton.addEventListener('click', function() {
+            activeBetInput = handElements.sidePPBetInput;
+            setSelectedBetButton(this); // 'this' refers to the clicked button
+            activeBetInput.focus(); // Optional: visually focus the input field
+        });
+        handElements.mainBetDisplay.addEventListener('click', function() { // mainBetDisplay is the MAIN button
+            activeBetInput = handElements.mainBetInput;
+            setSelectedBetButton(this);
+            activeBetInput.focus();
+        });
+        handElements.twentyOneBetButton.addEventListener('click', function() {
+            activeBetInput = handElements.side213BetInput;
+            setSelectedBetButton(this);
+            activeBetInput.focus();
+        });
+
+        handEl.dataset.listenersAttached = 'true'; // Mark listeners as attached
+    }
+
+    return handElements;
+}
 
 /**
  * Sets the visibility of bet input fields, bet display spans, and bet zone buttons for a specific hand.
@@ -150,54 +178,39 @@ function getOrCreatePlayerHandElement(index) {
  * @param {boolean} isBettingPhase - True if it's the betting phase, false otherwise.
  */
 function toggleBetElementsVisibilityForHand(handEl, isBettingPhase) {
-    const mainZoneButton = handEl.betAreaBtn; // This is the .MAIN button
-    const ppZoneButton = mainZoneButton ? mainZoneButton.previousElementSibling : null; // This is the .PP button
-    const twentyOneZoneButton = mainZoneButton ? mainZoneButton.nextElementSibling : null; // This is the .TWENTYONE button
-
-    // Always ensure the bet zone buttons are visible
-    if (mainZoneButton) mainZoneButton.style.display = 'inline-block'; // MAIN
-    if (ppZoneButton) ppZoneButton.style.display = 'flex'; // PP (use flex as per your CSS)
-    if (twentyOneZoneButton) twentyOneZoneButton.style.display = 'flex'; // 21+3 (use flex as per your CSS)
+    // Buttons (PP, MAIN, 21+3) are always visible, but their clickability changes
+    if (handEl.mainBetDisplay) handEl.mainBetDisplay.style.display = 'inline-block'; // MAIN
+    if (handEl.ppBetButton) handEl.ppBetButton.style.display = 'flex'; // PP (use flex as per your CSS)
+    if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.style.display = 'flex'; // 21+3 (use flex as per your CSS)
 
     // Control their clickability based on the phase
-    if (mainZoneButton) mainZoneButton.disabled = !isBettingPhase;
-    if (ppZoneButton) ppZoneButton.disabled = !isBettingPhase;
-    if (twentyOneZoneButton) twentyOneZoneButton.disabled = !isBettingPhase;
+    const betButtons = [handEl.mainBetDisplay, handEl.ppBetButton, handEl.twentyOneBetButton];
+    setButtonsDisabled(betButtons, !isBettingPhase);
 
 
     if (isBettingPhase) {
-        // During betting phase:
-        // Show input fields for users to type/click chips into
+        // During betting phase: Show input fields, clear display text on main bet button
         if (handEl.mainBetInput) handEl.mainBetInput.style.display = 'inline-block';
         if (handEl.side213BetInput) handEl.side213BetInput.style.display = 'inline-block';
         if (handEl.sidePPBetInput) handEl.sidePPBetInput.style.display = 'inline-block';
 
-        // Hide the main bet display span (this shows the bet *value* during play)
-        // If your MAIN button is *also* the display, you'll need to handle this carefully.
-        // I'm assuming it's an element that changes its text content.
-        if (handEl.mainBetDisplay) {
-            // Keep the button visible, but ensure it shows the current bet or nothing
-            // This is crucial: the MAIN button is where the bet is displayed later
-            handEl.mainBetDisplay.textContent = handEl.mainBetInput.value; // Show current input value
-        }
+        // Clear the displayed bet values on the buttons if in betting phase
+        if (handEl.mainBetDisplay) handEl.mainBetDisplay.textContent = '';
+        if (handEl.ppBetButton) handEl.ppBetButton.textContent = 'PP';
+        if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.textContent = '21+3';
+
 
     } else {
-        // After betting phase (game in progress):
-        // Hide input fields
+        // After betting phase (game in progress): Hide input fields, show bet values on buttons
         if (handEl.mainBetInput) handEl.mainBetInput.style.display = 'none';
         if (handEl.side213BetInput) handEl.side213BetInput.style.display = 'none';
         if (handEl.sidePPBetInput) handEl.sidePPBetInput.style.display = 'none';
 
-        // Show the main bet display span (which is the MAIN button)
-        if (handEl.mainBetDisplay) handEl.mainBetDisplay.style.display = 'inline-block';
+        // Update the displayed bet values on the buttons
+        // These will be updated by updateUI later with actual bet amounts
     }
 }
 
-
-/**
- * Updates the UI based on the current game state.
- * @param {Object} gameState - The game state object received from the backend.
- */
 /**
  * Updates the UI based on the current game state.
  * @param {Object} gameState - The game state object received from the backend.
@@ -244,11 +257,11 @@ function updateUI(gameState) {
 
         handEl.messageSpan.textContent = handData.result_message;
 
-        // Update displayed bets (the text content of the MAIN button)
-        if (handEl.mainBetDisplay) {
-            handEl.mainBetDisplay.textContent = `$${handData.main_bet}`;
-            // You might want to update the PP and 21+3 buttons' text content too
-        }
+        // Update displayed bets (the text content of the MAIN, PP, and 21+3 buttons)
+        if (handEl.mainBetDisplay) handEl.mainBetDisplay.textContent = `$${handData.main_bet}`;
+        if (handEl.ppBetButton) handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
+        if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
+
 
         // Highlight active hand
         if (i === gameState.current_active_hand_index && gameState.game_phase === "player_turns") {
@@ -299,6 +312,25 @@ function updateUI(gameState) {
             setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
         }
     }
+
+    // Reset active button state if not in betting phase
+    if (!isBettingPhase) {
+        if (activeBetButton) {
+            activeBetButton.classList.remove('selected');
+        }
+        activeBetButton = null;
+        activeBetInput = null;
+    } else {
+        // If transitioning to betting phase, ensure a button is selected by default
+        // (e.g., the main bet of the first hand)
+        if (!activeBetButton && currentGameState.player_hands.length > 0) {
+            const firstHandEl = getOrCreatePlayerHandElement(0);
+            if (firstHandEl.mainBetDisplay) {
+                setSelectedBetButton(firstHandEl.mainBetDisplay);
+                activeBetInput = firstHandEl.mainBetInput;
+            }
+        }
+    }
 }
 
 // --- API Calls (remains the same) ---
@@ -312,9 +344,6 @@ async function fetchGameState(url, options = {}) {
 
         if (data.success) {
             updateUI(data.game_state);
-            // The handleRebet function might also return last_bets
-            // We don't need to re-apply them here if updateUI handles it
-            // via currentGameState, which it does.
         } else {
             gameMessageDiv.textContent = `Error: ${data.message}`;
             if (data.game_state) {
@@ -334,10 +363,11 @@ async function fetchGameState(url, options = {}) {
 document.addEventListener('DOMContentLoaded', () => {
     fetchGameState('/api/start_game', { method: 'POST' });
 
-    // Set initial active bet input to the first main bet input
+    // Set initial active bet input to the first main bet input and button
     const initialHandEl = getOrCreatePlayerHandElement(0);
-    if (initialHandEl && initialHandEl.mainBetInput) {
+    if (initialHandEl && initialHandEl.mainBetInput && initialHandEl.mainBetDisplay) {
         activeBetInput = initialHandEl.mainBetInput;
+        setSelectedBetButton(initialHandEl.mainBetDisplay);
         activeBetInput.focus();
     }
 });
@@ -346,32 +376,69 @@ document.addEventListener('DOMContentLoaded', () => {
 // Chip buttons click handler
 chipButtons.forEach(button => {
     button.addEventListener('click', () => {
+        if (currentGameState.game_phase !== 'betting') {
+            gameMessageDiv.textContent = "You can only place bets during the betting phase.";
+            return;
+        }
+
         if (activeBetInput && !activeBetInput.disabled) {
             const chipValue = parseInt(button.dataset.chipValue);
             let currentValue = parseInt(activeBetInput.value) || 0;
-            activeBetInput.value = currentValue + chipValue;
-            // Also update the displayed bet on the main button if it's the main bet input
-            if (activeBetInput.classList.contains('main-bet-input')) {
-                const handIndex = activeBetInput.id.replace('main-bet-input-', '');
-                const handEl = getOrCreatePlayerHandElement(parseInt(handIndex));
-                if (handEl.mainBetDisplay) {
-                    handEl.mainBetDisplay.textContent = `$${activeBetInput.value}`;
-                }
+            let newValue = currentValue + chipValue;
+
+            // Simple check to prevent negative balance locally
+            // A more robust check might need to aggregate all bets
+            if (currentGameState.player_chips < newValue) { // This is a simplified check
+                gameMessageDiv.textContent = "Not enough chips!";
+                return;
             }
-            // For side bets, you might need similar logic to update their respective display elements
+
+            activeBetInput.value = newValue;
+
+            // Update the displayed bet on the main button if it's the main bet input
+            // Or update the specific side bet button's text
+            const handIndex = parseInt(activeBetInput.closest('.Player-Area').id.replace('hand-', ''));
+            const handEl = getOrCreatePlayerHandElement(handIndex);
+
+            if (activeBetInput === handEl.mainBetInput) {
+                handEl.mainBetDisplay.textContent = `$${newValue}`;
+            } else if (activeBetInput === handEl.sidePPBetInput) {
+                handEl.ppBetButton.textContent = `$${newValue}`;
+            } else if (activeBetInput === handEl.side213BetInput) {
+                handEl.twentyOneBetButton.textContent = `$${newValue}`;
+            }
+
+            // Update total bet display immediately
+            updateTotalBetDisplay();
+
         } else {
-            gameMessageDiv.textContent = "Please select a bet input first.";
+            gameMessageDiv.textContent = "Please select a bet area (PP, Main, or 21+3) first.";
         }
     });
 });
+
+/**
+ * Calculates and updates the total bet displayed at the bottom.
+ */
+function updateTotalBetDisplay() {
+    let currentTotalBet = 0;
+    // Iterate through all currently active hands in the DOM
+    const handElements = playerHandsContainer.querySelectorAll('.Player-Area');
+    handElements.forEach((handElDiv, index) => {
+        const handEl = getOrCreatePlayerHandElement(index); // Re-get elements for safety
+        currentTotalBet += (parseInt(handEl.mainBetInput.value) || 0);
+        currentTotalBet += (parseInt(handEl.side213BetInput.value) || 0);
+        currentTotalBet += (parseInt(handEl.sidePPBetInput.value) || 0);
+    });
+    totalBetDisplaySpan.textContent = `Total Bet: $${currentTotalBet}`;
+}
+
 
 // Deal button handler
 dealBtn.addEventListener('click', () => {
     const bets = [];
     let hasValidBet = false;
 
-    // Use currentGameState.player_hands.length to determine how many hands to iterate over
-    // If currentGameState is null (e.g., first load), default to 3
     const numHandsToCollectBetsFrom = currentGameState && currentGameState.player_hands ? currentGameState.player_hands.length : 3;
 
     for (let i = 0; i < numHandsToCollectBetsFrom; i++) {
@@ -395,6 +462,10 @@ dealBtn.addEventListener('click', () => {
         gameMessageDiv.textContent = "You must place a main bet on at least one hand.";
         return;
     }
+
+    // Clear active bet button highlight when dealing
+    setSelectedBetButton(null);
+    activeBetInput = null;
 
     fetchGameState('/api/place_bets', {
         method: 'POST',
@@ -458,11 +529,14 @@ clearBetsBtn.addEventListener('click', () => {
         if (handEl.mainBetInput) handEl.mainBetInput.value = 0;
         if (handEl.side213BetInput) handEl.side213BetInput.value = 0;
         if (handEl.sidePPBetInput) handEl.sidePPBetInput.value = 0;
-        
-        // Also update the display on the MAIN button if it's visible
-        if (handEl.mainBetDisplay) handEl.mainBetDisplay.textContent = '$0';
+
+        // Also update the display on the MAIN, PP, 21+3 buttons
+        if (handEl.mainBetDisplay) handEl.mainBetDisplay.textContent = ''; // Clear for user input
+        if (handEl.ppBetButton) handEl.ppBetButton.textContent = 'PP';
+        if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.textContent = '21+3';
     }
     gameMessageDiv.textContent = "Bets cleared.";
+    updateTotalBetDisplay(); // Update total bet display
 });
 
 // --- Re-Bet button handler (THE FIX IS HERE) ---
@@ -488,7 +562,7 @@ function openFullscreen() {
     }
 }
 
-// Function to handle the "Rebet" button click (This function is now called)
+// Function to handle the "Rebet" button click
 async function handleRebet() {
     try {
         const response = await fetch('/api/rebet', {
@@ -500,29 +574,18 @@ async function handleRebet() {
         const data = await response.json();
 
         if (data.success) {
-            // updateUI will handle rendering the game_state received from the backend,
-            // which should already contain the 'last_bets' pre-filled into hand data.
             updateUI(data.game_state);
-
-            // The 'last_bets' in the response is primarily for debugging or if you needed
-            // to do something client-side with them specifically.
-            // Since updateUI already uses game_state.player_hands[i].main_bet etc.
-            // to populate the inputs when isBettingPhase is true, this section
-            // is largely redundant for the core rebet functionality.
-            // Keeping it commented out for clarity that updateUI does the job.
-            /*
-            if (data.last_bets && data.last_bets.length > 0) {
-                data.last_bets.forEach((bet_info, index) => {
-                    // Ensure you're getting the correct input elements for the hand
-                    const handEl = getOrCreatePlayerHandElement(index);
-                    if (handEl.mainBetInput) handEl.mainBetInput.value = bet_info.main_bet;
-                    if (handEl.side213BetInput) handEl.side213BetInput.value = bet_info.side_21_3;
-                    if (handEl.sidePPBetInput) handEl.sidePPBetInput.value = bet_info.side_pp;
-                });
-                console.log("Bets pre-filled with last round's values (via game_state update).");
+            // After rebet, re-select the first main bet by default if in betting phase
+            if (data.game_state.game_phase === 'betting' && data.game_state.player_hands.length > 0) {
+                const firstHandEl = getOrCreatePlayerHandElement(0);
+                if (firstHandEl.mainBetInput && firstHandEl.mainBetDisplay) {
+                    activeBetInput = firstHandEl.mainBetInput;
+                    setSelectedBetButton(firstHandEl.mainBetDisplay);
+                    activeBetInput.focus();
+                }
             }
-            */
             gameMessageDiv.textContent = data.message; // Display any message from the backend
+            updateTotalBetDisplay(); // Ensure total bet is updated after rebet
         } else {
             gameMessageDiv.textContent = "Error rebetting: " + data.message;
             console.error("Error rebetting:", data.message);
@@ -532,5 +595,3 @@ async function handleRebet() {
         console.error("Error during rebet fetch:", error);
     }
 }
-
-

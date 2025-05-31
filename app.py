@@ -143,21 +143,33 @@ def rebet():
         else:
             game.game_message = "Failed to save chips before rebet. " + game.game_message
 
-    # Reset the round with the default 3 hands
-    player_username = session.get("username")
-    player_chips = game.player.chips # Use current chips
-    game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3) # Reinitialize with 3 hands
-    game.reset_round() # This clears the hands and sets game_phase to "betting"
+    # Get the last saved bets *before* resetting the game state
+    last_bets_from_session = session.get('last_bets', [])
+
+    # Reset the round on the *existing* game object
+    # This will clear the hands and set game_phase to "betting"
+    # and reinitialize with the correct number of hands
+    game.reset_round() 
+    
+    # After resetting, apply the last_bets to the game's player_hands
+    # Ensure that last_bets_from_session has data for all hands
+    if last_bets_from_session and len(last_bets_from_session) == game.num_hands:
+        for i, hand_data in enumerate(game.player_hands):
+            if i < len(last_bets_from_session):
+                hand_data["main_bet"] = last_bets_from_session[i].get("main_bet", 0)
+                hand_data["side_bet_21_3"] = last_bets_from_session[i].get("side_21_3", 0)
+                hand_data["side_bet_perfect_pair"] = last_bets_from_session[i].get("side_pp", 0)
+        game.game_message += " Previous bets loaded!"
+    else:
+        game.game_message += " No previous bets to load or inconsistent number of hands."
 
     session["blackjack_game_state"] = game.to_dict()
-
-    last_bets = session.get('last_bets', []) # Get the last saved bets
 
     return jsonify({
         "success": True,
         "message": game.game_message,
         "game_state": game.get_game_state(reveal_dealer_card=False),
-        "last_bets": last_bets # Include last_bets in the response
+        "last_bets": last_bets_from_session # Include last_bets in the response
     })
 
 

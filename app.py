@@ -16,10 +16,11 @@ from Back.black_logic import BlackjackMultiGame
 # so you can `import deck, player, Black_logic` directly
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))
 
-def send_verification_email(to_email: str, code: str, username: str = ""):
+def send_verification_email(to_email: str, code: str, username: str = "", email_type: str = "verification"):
     """
     Sends a verification email with a given code.
     The username parameter is optional and can be used to personalize the email.
+    The email_type parameter determines the subject and content.
     """
     sender_email = "blackhub420@gmail.com"
     app_password = EMAIL_PASS_SECURE
@@ -27,12 +28,23 @@ def send_verification_email(to_email: str, code: str, username: str = ""):
     message = EmailMessage()
     message["From"] = sender_email
     message["To"] = to_email
-    message["Subject"] = "Your Password Reset Code"
-    message.set_content(
-        f"Hi {username},\n\n"
-        f"Your verification code is: {code}\n\n"
-        "If you didn’t request this, just ignore this email."
-    )
+    
+    if email_type == "reset":
+        message["Subject"] = "Your Password Reset Code"
+        email_body = (
+            f"Hi {username if username else to_email},\n\n"
+            f"Your password reset code is: {code}\n\n"
+            "If you didn’t request this, just ignore this email."
+        )
+    else: # Default to "verification"
+        message["Subject"] = "Verify Your BlackJack Account"
+        email_body = (
+            f"Hi {username if username else to_email},\n\n"
+            f"Your account verification code is: {code}\n\n"
+            "Please use this code to complete your registration."
+        )
+
+    message.set_content(email_body)
 
     context = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
@@ -345,13 +357,21 @@ def send_reset_code():
     The code is stored in the session.
     """
     email = request.form['email']
+    
+    conn = get_db_connection()
+    user = conn.execute("SELECT username FROM users WHERE email = ?", (email,)).fetchone()
+    conn.close()
+
+    username = user['username'] if user else ""
+
     code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-    session['email'] = email
-    session['code'] = code
+    session['reset_email'] = email # Use a distinct session key for reset flow
+    session['reset_code'] = code # Use a distinct session key for reset flow
     
     # Send email in background to avoid lag
-    threading.Thread(target=send_verification_email, args=(email, code)).start()
+    threading.Thread(target=send_verification_email, args=(email, code, username, "reset")).start()
     
+    flash('A password reset code has been sent to your email.')
     return redirect('/forgot?verify=true')
 
 @app.route('/verify-code', methods=['POST'])
@@ -361,9 +381,17 @@ def verify_code():
     """
     data = request.get_json()
     input_code = data.get('code')
-    if input_code == session.get('code'):
+    
+    # Use distinct session keys for reset flow
+    if input_code == session.get('reset_code'):
+        # Code matches, user is now allowed to reset password.
+        # Don't pop 'reset_code' yet, as the user might need it to proceed to reset-password page
+        # where the email is retrieved from session for the update query.
         return jsonify({'success': True})
-    return jsonify({'success': False}), 400
+    
+    # Flash message for incorrect code for the password reset flow
+    flash('Incorrect verification code. Please try again.')
+    return jsonify({'success': False, 'message': 'Incorrect verification code.'}), 400
 
 @app.route("/reset-password", methods=["GET", "POST"])
 def reset_password():
@@ -371,6 +399,11 @@ def reset_password():
     Handles password reset functionality.
     Allows a user to set a new password after successful code verification.
     """
+    # Ensure they have gone through the verification step for reset
+    if 'reset_email' not in session:
+        flash("Please initiate the password reset process first.")
+        return redirect("/forgot")
+
     if request.method == "POST":
         new_password = request.form.get("new_password")
         confirm_password = request.form.get("confirm_password")
@@ -379,7 +412,7 @@ def reset_password():
             flash("Passwords do not match.")
             return redirect("/reset-password")
 
-        user_email = session.get("email")
+        user_email = session.get("reset_email") # Retrieve email from reset session key
         if not user_email:
             flash("Session expired. Please restart the password reset process.")
             return redirect("/forgot")
@@ -390,6 +423,9 @@ def reset_password():
         conn.execute("UPDATE users SET password = ? WHERE email = ?", (hashed_password, user_email))
         conn.commit()
         conn.close()
+
+        session.pop('reset_email', None) # Clear reset session keys after successful reset
+        session.pop('reset_code', None)
 
         flash("Password reset successful! Please log in.")
         return redirect("/login")
@@ -436,9 +472,9 @@ def login():
             session["login_alert"] = True
             return redirect("/")
         
+        flash("Invalid username or password.") # Use flash for consistency
         return render_template(
             "login.html",
-            alert_message="Invalid username or password.",
             logout_alert=logout_alert,
             register_alert=register_alert
         )
@@ -480,13 +516,16 @@ def register():
 
         # Basic validations
         if not email or not username or not password or not confirm_password:
-            return render_template('register.html', alert_message='Please fill out all fields.')
+            flash('Please fill out all fields.')
+            return redirect('/register') # Redirect instead of render to clear form data
 
         if password != confirm_password:
-            return render_template('register.html', alert_message='Passwords do not match.')
+            flash('Passwords do not match.')
+            return redirect('/register')
 
         if len(username) > 16:
-            return render_template('register.html', alert_message='Please pick a username with 16 or fewer characters.')
+            flash('Please pick a username with 16 or fewer characters.')
+            return redirect('/register')
 
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -496,7 +535,8 @@ def register():
         conn.close()
 
         if existing_user:
-            return render_template('register.html', alert_message='Username or email already exists.')
+            flash('Username or email already exists.')
+            return redirect('/register')
 
         session['pending_user'] = {
             'email': email,
@@ -505,11 +545,12 @@ def register():
         }
 
         code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-        session['verify_code'] = code
+        session['verify_code'] = code # This is for registration verification
         
-        # Pass username to send_verification_email for personalization
-        threading.Thread(target=send_verification_email, args=(email, code, username)).start()
+        # Pass username to send_verification_email for personalization and specify type
+        threading.Thread(target=send_verification_email, args=(email, code, username, "verification")).start()
 
+        flash('Registration successful! A verification code has been sent to your email.')
         return redirect('/verify')
 
     return render_template('register.html')
@@ -524,11 +565,17 @@ def verify():
         code_input = ''.join([request.form.get(f'd{i}', '') for i in range(1, 7)])
         actual_code = session.get('verify_code')
 
+        # Debugging prints
+        print(f"DEBUG: Submitted code: {code_input}")
+        print(f"DEBUG: Stored code: {actual_code}")
+        print(f"DEBUG: Pending user: {session.get('pending_user')}")
+
         if code_input == actual_code:
             user = session.pop('pending_user', None)
-            session.pop('verify_code', None)
+            session.pop('verify_code', None) # Clear verification code after use
 
             if not user:
+                flash("No pending registration. Please register again.")
                 return redirect('/register')
 
             hashed_password = generate_password_hash(user['password'])
@@ -540,12 +587,19 @@ def verify():
             conn.commit()
             conn.close()
 
-            session["register_alert"] = True
+            flash("Account verified and registered successfully! You can now log in.")
+            session["register_alert"] = True # Set alert for login page
             return redirect('/login')
         else:
-            return render_template('verify.html', alert_message="Incorrect verification code.")
+            flash("Incorrect verification code. Please try again.")
+            return redirect('/verify') # Redirect to show flash message
 
-    return render_template('verify.html')
+    # For GET request to /verify
+    if 'pending_user' not in session:
+        flash("No pending registration. Please register first.")
+        return redirect('/register')
+    
+    return render_template('Verify.html')
 
 
 if __name__ == '__main__':

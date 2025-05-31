@@ -1,3 +1,4 @@
+// static/Scripts/verify.js
 // Function to show the custom message box
 function showCustomMessageBox(message) {
     const customMessageBox = document.getElementById('customMessageBox');
@@ -56,9 +57,10 @@ function submitVerificationCode() {
     let code = Array.from(inputs).map(input => input.value).join("");
 
     console.log("Frontend DEBUG (verify.js): Attempting to submit code:", code);
-    console.log("Frontend DEBUG (verify.js): Sending payload:", JSON.stringify({ code: code }));
+    console.log("Frontend DEBUG (verify.js): Sending payload to /verify:", JSON.stringify({ code: code }));
 
-    fetch('/verify-code', { // This is the API endpoint
+    // --- MODIFIED LINE: Changed endpoint to /verify ---
+    fetch('/verify', { // This is now the registration verification endpoint
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -74,16 +76,22 @@ function submitVerificationCode() {
         console.log("Frontend DEBUG (verify.js): Received response data:", data);
         if (data.success) {
             console.log("Code verification successful!");
-            alert(data.message || "Verification successful!"); // Use browser alert
+            // Use showCustomMessageBox for a consistent UI
+            showCustomMessageBox(data.message || "Verification successful!"); 
+            
             // Redirect based on the 'type' of verification (registration vs. password reset)
-            if (data.type === 'registration') {
-                window.location.href = "/login"; // Redirect to login after successful registration
-            } else if (data.type === 'reset_password') {
-                window.location.href = "/reset-password"; // Redirect to password reset page
+            // The Flask /verify route for registration sends 'type': 'registration' and 'redirect_url'
+            if (data.type === 'registration' && data.redirect_url) {
+                window.location.href = data.redirect_url; // Redirect to login after successful registration
+            } else if (data.type === 'reset_password' && data.redirect_url) { // This part is for /verify-code, which is not called here
+                window.location.href = data.redirect_url; 
+            } else {
+                // Fallback if type or redirect_url is missing, but success is true
+                window.location.href = "/login"; // Default redirect for successful registration
             }
         } else {
             console.error("Code verification failed. Message:", data.message || "Unknown error.");
-            alert(data.message || "Incorrect verification code. Please try again."); // Use browser alert
+            showCustomMessageBox(data.message || "Incorrect verification code. Please try again."); // Use custom message box
             // Clear inputs and refocus on the first one for retry
             inputs.forEach(input => input.value = '');
             inputs[0].focus();
@@ -91,19 +99,19 @@ function submitVerificationCode() {
     })
     .catch(error => {
         console.error("Frontend DEBUG (verify.js): Error during code verification fetch:", error);
-        alert("An unexpected error occurred during verification. Please try again later."); // Use browser alert
+        showCustomMessageBox("An unexpected error occurred during verification. Please try again later."); // Use custom message box
     });
 }
 
 document.querySelectorAll('.verification-boxes input').forEach(input => {
-  input.addEventListener('input', function() {
-    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 1);
-  });
-  input.addEventListener('keydown', function(event) {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      // Clicks the submit button if Enter is pressed
-      document.querySelector('.Btn').click();
-    }
-  });
+    input.addEventListener('input', function() {
+        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 1);
+    });
+    input.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            // Clicks the submit button if Enter is pressed
+            document.querySelector('.Btn').click();
+        }
+    });
 });

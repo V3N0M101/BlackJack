@@ -47,7 +47,7 @@ body {
 .layout {
   display: flex;
   gap: 10px;
-  margin-top: 80px;
+  margin-top: 100px;
   padding: 0 10px;
 }
 
@@ -61,7 +61,7 @@ body {
 }
 
 section {
-  scroll-margin-top: 100px;
+  scroll-margin-top: 80px;
   padding-top: 40px;         
 }
 

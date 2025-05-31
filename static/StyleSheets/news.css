@@ -8,8 +8,8 @@ body {
 }
 
 .news-page {
-  display: flex;
-  margin-top: 80px; /* to go under navbar */
+    display: flex;
+    min-height: calc(100vh) ; /* Ensure it fills remaining viewport height */
 }
 
 .news-leaderboard {
@@ -19,12 +19,15 @@ body {
   padding: 20px;
   border-radius: 10px;
   height: 100%; /* adjust if needed */
-  overflow-y: scroll;
+  overflow-y: auto;
+  margin-top: 50px;
+  border: solid 8px white;
 }
 
 .news-content {
   flex: 1;
   padding: 20px;
+  margin-top: 30px;
 }
 
 .news-content h2 {
@@ -34,7 +37,7 @@ body {
     margin-bottom: 10px;
 }
 .wrap_head {
-    border: solid 1px wheat;
+    border: solid 8px wheat;
     border-radius: 10px;
 }
 

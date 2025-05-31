@@ -28,7 +28,7 @@
 /* === VOLUME BUTTON === */
 .vol {
     background: none;
-    border: none;
+    border: white 2px solid;
     cursor: pointer;
 }
 
@@ -130,6 +130,8 @@ body {
     font-family: Arial, sans-serif;
     height: 100vh;
     overflow: hidden; /* Important for fixed layout */
+    background: linear-gradient(rgba(66, 255, 230, 0.25), rgba(66, 255, 230, 0.25)),
+            url("../Images/Backgrounds/Trippy.png") repeat center center / cover;
 }
 
 /* Header and Footer: Fixed to the viewport edges */
@@ -170,7 +172,6 @@ body {
     width: 100vw;
     height: 90vh; /* Takes up 90% of viewport height */
     background: transparent; /* Background for the table area */
-    backdrop-filter: blur(120px);
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
     justify-content: center;
@@ -257,7 +258,7 @@ body {
 
 .table-windowed .Player-Area.active-hand,
 .table-fullscreen .Player-Area.active-hand {
-    background-color: #002faf50; /* A common yellow from Bootstrap, or choose your own hex code */
+    background-color: #002fafab; /* A common yellow from Bootstrap, or choose your own hex code */
     /* You might also want to adjust the border color for consistency */
     border-color: rgb(149, 165, 255); /* A darker yellow for the border */
     box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
@@ -426,6 +427,9 @@ body {
 .table-fullscreen .Zone .TWENTYONE {
     left: calc(50% + 25px); /* Position relative to the main circle */
 }
+.table-fullscreen .Zone .PP {
+    right: calc(50% + 25px); /* Adjusted position for smaller size */
+}
 
 .table-windowed .Zone {
     height: 125px; /* Smaller height for windowed mode */
@@ -453,6 +457,9 @@ body {
 
 .table-windowed .Zone .TWENTYONE {
     left: calc(50% + 15px); /* Adjusted position for smaller size */
+}
+.table-windowed .Zone .PP {
+    right: calc(50% + 15px); /* Adjusted position for smaller size */
 }
 
 /* === STATUS BAR === */
@@ -539,7 +546,7 @@ button:active:not(.disabled) {
 }
 
 button.disabled {
-    opacity: 0.5; /* Changed from 0 to 0.5 to make them visible but faded */
+    opacity: 0; /* Changed from 0 to 0.5 to make them visible but faded */
     cursor: not-allowed;
     filter: grayscale(50%); /* Makes them look faded */
     transform: none; /* No scaling when disabled */
@@ -660,27 +667,66 @@ button.disabled {
     gap: 5px;
     margin-top: 10px;
     justify-content: center;
-}
-
-.bet-input-container input[type="number"] {
-    width: 80px;
-    padding: 5px;
-    border: 1px solid #b97cff;
-    border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: white;
-    font-size: 0.9em;
-    text-align: center;
-}
-
-.bet-input-container input[type="number"]:focus {
-    outline: none;
-    border-color: #00d0ff;
-    box-shadow: 0 0 5px #00d0ff;
+    visibility: hidden;
 }
 
 /* Styling for the selected bet area button */
 .bet-area-button.selected {
     border: 2px solid gold; /* Or a glowing effect, different background, etc. */
     box-shadow: 0 0 10px gold;
+}
+
+/* --- Tooltip Bubble Styles --- */
+
+/* Parent container for positioning relative tooltips */
+.bet-area-button {
+    position: relative; /* Essential for positioning the tooltip bubble relative to the button */
+    /* Add any other button styles here if not already present */
+}
+
+/* The actual tooltip bubble */
+.tooltip-bubble {
+    visibility: hidden; /* Hidden by default */
+    opacity: 0;         /* Start fully transparent */
+    width: 160px;       /* Adjust width as needed */
+    background-color: rgba(0, 0, 0, 0.85); /* Dark background with some transparency */
+    color: #fff;        /* White text */
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 10px;
+    position: absolute;
+    z-index: 1000; /* Ensure it's above other elements */
+    bottom: 120%; /* Position above the button, adjust as needed */
+    left: 50%;
+    transform: translateX(-50%); /* Center the tooltip horizontally */
+    transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transition for appearance/disappearance */
+    font-size: 0.8em; /* Smaller text for the tooltip */
+    line-height: 1.4;
+    white-space: normal; /* Allow text to wrap */
+}
+
+/* Arrow for the tooltip bubble (optional, but good for UX) */
+.tooltip-bubble::after {
+    content: "";
+    position: absolute;
+    top: 100%; /* At the bottom of the tooltip */
+    left: 50%;
+    margin-left: -5px; /* Half the width of the arrow to center it */
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent; /* Creates a downward-pointing arrow */
+}
+
+/* Show the tooltip when hovering over the parent button */
+.bet-area-button:hover .tooltip-bubble {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Ensure the main bet text is visible inside the button */
+.MAIN.bet-area.bet-area-button {
+    /* If the main bet button is getting its text updated by JS,
+       you might want to ensure its text color is contrasting with the background
+       and that the tooltip doesn't interfere with the bet amount display.
+       The existing .bet-area styling should cover this, but keep an eye out. */
 }

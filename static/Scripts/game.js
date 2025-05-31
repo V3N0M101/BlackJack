@@ -112,7 +112,7 @@ function getOrCreatePlayerHandElement(index) {
                 <button class="TWENTYONE bet-area-button" id="213-bet-${index}" data-input-target="213-bet-input-${index}">21+3</button>
             </div>
             <div class="bet-input-container">
-                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main Bet" value="500" min="500" step="500">
+                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main Bet" value="0" min="500" step="500">
                 <input type="number" class="side-bet-input" id="213-bet-input-${index}" placeholder="21+3" value="0" min="0" step="100">
                 <input type="number" class="side-bet-input" id="pp-bet-input-${index}" placeholder="PP" value="0" min="0" step="100">
             </div>
@@ -595,3 +595,28 @@ async function handleRebet() {
         console.error("Error during rebet fetch:", error);
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const volumeButton = document.getElementById('volumeButton');
+    const volumeIcon = document.getElementById('volumeIcon');
+    let isMuted = false; // Initial state: not muted
+
+    if (volumeButton && volumeIcon) {
+        volumeButton.addEventListener('click', () => {
+            if (isMuted) {
+                // If currently muted, change to volume icon
+                volumeIcon.src = '/static/Images/icons/vol.png';
+                volumeIcon.alt = 'Volume';
+                // You would also unmute your actual game audio here
+            } else {
+                // If currently unmuted, change to mute icon
+                volumeIcon.src = '/static/Images/icons/mute.png';
+                volumeIcon.alt = 'Mute';
+                // You would also mute your actual game audio here
+            }
+            isMuted = !isMuted; // Toggle the state
+        });
+    } else {
+        console.error('Volume button or icon not found. Check IDs.');
+    }
+});

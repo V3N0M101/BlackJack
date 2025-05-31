@@ -65,28 +65,33 @@ html, body {
 }
 
 .nav-wrap {
-    position: absolute; /* Kept original positioning */
+    position: fixed; /* CHANGE THIS FROM absolute to fixed */
     top: 10px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: center;
-    z-index: 10;
+    z-index: 10; /* Ensure it's above other content */
     padding-top: 0;
     margin-top: 0;
 }
 
+
 .nav-border-glow {
     position: absolute;
-    top: -5px; /* Extend glow slightly beyond the nav bar */
-    left: -5px;
-    right: -5px;
+    top: -5px;
     bottom: -5px;
+    /* Remove left/right, and instead set a width and use margin: auto */
+    width: calc(95% + 10px); /* 95% of parent + 5px left/right extension */
+    max-width: calc(1300px + 10px); /* Max-width of parent + 5px left/right extension */
+    left: 50%; /* Position half-way from the left */
+    transform: translateX(-50%); /* Move back by half its own width to center it */
+
     border-radius: var(--border-radius-lg);
     background: conic-gradient(from var(--angle), var(--primary-glow-color-1), var(--primary-glow-color-2), var(--primary-glow-color-1));
-    filter: blur(20px); /* Increased blur for a softer, wider glow */
+    filter: blur(20px);
     z-index: 1;
-    animation: spin-border var(--animation-duration-slow) linear infinite; /* Using your existing animation name */
+    animation: spin-border var(--animation-duration-slow) linear infinite;
     pointer-events: none;
 }
 

@@ -128,7 +128,6 @@ body {
     padding: 0;
     color: #fff;
     font-family: Arial, sans-serif;
-    background-color: #333;
     height: 100vh;
     overflow: hidden; /* Important for fixed layout */
 }
@@ -140,7 +139,7 @@ body {
     left: 0;
     width: 100%;
     padding: 10px 20px;
-    background: #222;
+    background: transparent;
     z-index: 1000;
     box-sizing: border-box;
     display: flex;
@@ -154,16 +153,13 @@ body {
     left: 0;
     width: 100%;
     padding: 10px 20px;
-    background: #222;
+    background: transparent;
     z-index: 1000;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
-
-/* Main Table Area: Fixed to cover viewport, acting as a background and container for game content */
-
 
 /* Inner Game Content Area (scaled and centered within the fixed table) */
 /* === Table Container (Fixed position, centers the game content) === */
@@ -173,7 +169,8 @@ body {
     left: 0;
     width: 100vw;
     height: 90vh; /* Takes up 90% of viewport height */
-    background: #666; /* Background for the table area */
+    background: transparent; /* Background for the table area */
+    backdrop-filter: blur(120px);
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
     justify-content: center;
@@ -187,7 +184,8 @@ body {
     left: 0;
     width: 100vw;
     height: 80vh; /* Slightly smaller height in windowed mode */
-    background: #666; /* Background for the table area */
+    background: transparent; /* Background for the table area */
+    backdrop-filter: (120px);
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
     justify-content: center;
@@ -198,14 +196,6 @@ body {
 
 /* === Main Game Content Area (positioned within table-fullscreen/windowed) === */
 .table-content {
-    /* No position: absolute here if its parent is using flex to center it.
-       If .table-fullscreen/.table-windowed are using `display: flex; justify-content: center; align-items: center;`
-       then this element will be centered automatically. */
-    /* If you still need absolute positioning for some reason, ensure its parent is `position: relative`. */
-    /* Assuming .table-fullscreen and .table-windowed are the positioned parents. */
-    /* If .table-content is a direct child of .table-fullscreen/.table-windowed and they are flex containers: */
-    /* Then remove position: absolute, top, left, transform from here. */
-    /* Let's assume you want it centered by its parent flex container */
     width: 90vw; /* Dimensions for the visible game area */
     height: 70vh;
     padding: 20px;
@@ -218,18 +208,6 @@ body {
     box-sizing: border-box;
     overflow: hidden; /* Changed from 'auto' to 'hidden' to prevent scrollbars unless explicitly needed */
     z-index: 2; /* Above the fixed .table background */
-    /* REMOVED: scale: 1.2; */ /* Remove scaling here to avoid layout issues */
-
-    /* If you still want .table-content to be absolutely positioned relative to its parent,
-       and its parent (.table-fullscreen or .table-windowed) is `position: relative;`:
-       position: absolute;
-       top: 50%;
-       left: 50%;
-       transform: translate(-50%, -50%);
-    */
-    /* However, given .table-fullscreen/windowed have display:flex + centering,
-       the absolute positioning here on .table-content is likely redundant or conflicting.
-       I'm removing it for a cleaner flex-based centering. */
 }
 
 /* === Player's Area Container (within .table-content) === */
@@ -254,22 +232,20 @@ body {
     flex: 1 1 200px; /* flex-grow: 1, flex-shrink: 1, flex-basis: 200px (base width) */
     min-width: 220px; /* Ensure a minimum width for each hand */
     min-height: 30vh; /* Use min-height to ensure it's tall enough, but allows content to expand */
-    /* REMOVED: height: 250px; if you want it to adjust to content up to min-height */
-
     display: flex;
     flex-direction: column;
     gap: 20px; /* Internal gap between elements */
-    background: #ef8af849;
+    background: rgba(128, 0, 128, 0.288);
     padding: 18px;
     border-radius: 8px;
-    border: solid black; /* FIX: Added 8px for consistency with original border */
+    border: solid rgba(252, 252, 252, 0.514); /* FIX: Added 8px for consistency with original border */
     color: #eee;
     /* REMOVED: scale: 1.2; */ /* Remove scaling to fix overlap */
 }
 
 .Player-Area.active-hand {
     /* Change the background color to a shade of yellow */
-    background-color: #ffe9a6a2; /* A common yellow from Bootstrap, or choose your own hex code */
+    background-color: #fff5d5a2; /* A common yellow from Bootstrap, or choose your own hex code */
     /* You might also want to adjust the border color for consistency */
     border-color: #e0a800; /* A darker yellow for the border */
     /* Add a subtle box-shadow for emphasis, if you like */
@@ -279,15 +255,9 @@ body {
 /* If you have different active-hand styles for fullscreen vs windowed,
    you might need to target them specifically: */
 
-.table-windowed .Player-Area.active-hand {
-    background-color: #002fafa2; /* A common yellow from Bootstrap, or choose your own hex code */
-    /* You might also want to adjust the border color for consistency */
-    border-color: rgb(149, 165, 255); /* A darker yellow for the border */
-    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
-}
-
+.table-windowed .Player-Area.active-hand,
 .table-fullscreen .Player-Area.active-hand {
-    background-color: #002fafa2; /* A common yellow from Bootstrap, or choose your own hex code */
+    background-color: #002faf50; /* A common yellow from Bootstrap, or choose your own hex code */
     /* You might also want to adjust the border color for consistency */
     border-color: rgb(149, 165, 255); /* A darker yellow for the border */
     box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
@@ -311,11 +281,10 @@ body {
     flex: 1 1 200px; /* Consistent flex properties with windowed mode */
     min-width: 350px; /* Consistent min-width */
     min-height: 50vh; /* Potentially taller for fullscreen */
-
     display: flex;
     flex-direction: column;
     gap: 15px; /* Internal gap for fullscreen */
-    background: #f047ff49; /* Different background color for visual distinction */
+    background: rgba(128, 0, 128, 0.288); /* Different background color for visual distinction */
     padding: 12px;
     border-radius: 8px;
     color: #eee;
@@ -337,7 +306,7 @@ body {
 
 .dealer-total {
     color: #eee;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     padding: 5px 10px;
     border-radius: 5px;
     margin-top: 5px;
@@ -350,7 +319,7 @@ body {
     display: flex;
     align-items: center;
     overflow-x: auto;
-    background: #222;
+    background: #2222227e;
     border-radius: 6px;
     padding: 6px;
     min-height: 120px;
@@ -370,7 +339,7 @@ body {
 /* Hand Info (for player hands) */
 .hand-info {
     color: #eee;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     padding: 5px 10px;
     border-radius: 5px;
     margin-top: 5px;
@@ -380,7 +349,6 @@ body {
 /* OVERLAP “ZONE” DIVS AS CHIPS */
 .Zone {
     position: relative;
-    height: 150px;
     width: 100%;
     margin: 0 auto;
 }
@@ -405,7 +373,37 @@ body {
     color: #000;
 }
 
+.Zone .PP,
+.Zone .TWENTYONE {
+    z-index: 2;
+}
+
 .Zone .MAIN {
+    z-index: 1;
+}
+
+/* Hover effects apply to both modes */
+.Zone .PP:hover,
+.Zone .MAIN:hover,
+.Zone .TWENTYONE:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.Zone .PP:hover,
+.Zone .TWENTYONE:hover {
+    transform: translateY(-50%) scale(1.1);
+}
+
+.Zone .MAIN:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+.table-fullscreen .Zone {
+    height: 100px; /* Example height for fullscreen */
+}
+
+.table-fullscreen .Zone .MAIN {
     width: 100px;
     height: 100px;
     top: 50%;
@@ -413,34 +411,48 @@ body {
     transform: translate(-50%, -50%);
     background: #a2d5c6;
     border: 3px solid #6ba;
-    z-index: 1;
 }
 
-.Zone .PP,
-.Zone .TWENTYONE {
+.table-fullscreen .Zone .PP,
+.table-fullscreen .Zone .TWENTYONE {
     width: 50px;
     height: 50px;
     top: 50%;
     transform: translateY(-50%);
     background: #9fc;
     border: 3px solid #6a9;
-    z-index: 2;
 }
 
-.Zone .TWENTYONE {
-    left: calc(50% + 25px);
+.table-fullscreen .Zone .TWENTYONE {
+    left: calc(50% + 25px); /* Position relative to the main circle */
 }
 
-.Zone .PP:hover,
-.Zone .MAIN:hover,
-.Zone .TWENTYONE:hover {
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
-        0 0 8px rgba(255, 255, 255, 0.6);
+.table-windowed .Zone {
+    height: 125px; /* Smaller height for windowed mode */
 }
 
-.Zone .MAIN:hover {
-    transform: translate(-50%, -50%) scale(1.1);
+.table-windowed .Zone .MAIN {
+    width: 70px; /* Smaller main circle */
+    height: 70px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #c3e0d8; /* Slightly different color for distinction */
+    border: 2px solid #8cc;
+}
+
+.table-windowed .Zone .PP,
+.table-windowed .Zone .TWENTYONE {
+    width: 35px; /* Smaller side circles */
+    height: 35px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #b5d1c4; /* Slightly different color */
+    border: 2px solid #89b;
+}
+
+.table-windowed .Zone .TWENTYONE {
+    left: calc(50% + 15px); /* Adjusted position for smaller size */
 }
 
 /* === STATUS BAR === */
@@ -514,12 +526,14 @@ button {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-button:hover:not(.disabled) { /* Added :not(.disabled) to prevent hover on disabled buttons */
+button:hover:not(.disabled) {
+    /* Added :not(.disabled) to prevent hover on disabled buttons */
     transform: scale(1.05); /* Enlarge slightly on hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-button:active:not(.disabled) { /* Added :not(.disabled) to prevent active on disabled buttons */
+button:active:not(.disabled) {
+    /* Added :not(.disabled) to prevent active on disabled buttons */
     transform: scale(0.95); /* Shrink slightly on click */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -564,14 +578,16 @@ button.disabled {
 }
 
 
-.actions button:hover:not(.disabled) { /* Apply scaling to action buttons too */
+.actions button:hover:not(.disabled) {
+    /* Apply scaling to action buttons too */
     background: #888888; /* Slightly lighter on hover */
     transform: scale(1.05); /* Enlarge slightly on hover */
     /* Add a subtle shadow for hover on action buttons too, if desired */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
-.actions button:active:not(.disabled) { /* Apply scaling to action buttons too */
+.actions button:active:not(.disabled) {
+    /* Apply scaling to action buttons too */
     background: #ac5aff; /* Slightly darker on active */
     transform: scale(0.95); /* Shrink slightly on click */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -585,13 +601,28 @@ button.disabled {
 }
 
 /* Specific background colors for action buttons (retains hover/active scaling) */
-.btn-clear { background-color: #ff5722; } /* Example color */
-.btn-re-bet { background-color: #4CAF50; } /* Example color */
-.btn-deal { background-color: #2196F3; } /* Example color */
-.btn-hit { background-color: #f44336; } /* Example color */
-.btn-double { background-color: #9C27B0; } /* Example color */
-.btn-stand { background-color: #FFC107; color: #333; } /* Example color, black text for yellow */
-.btn-split { background-color: #00BCD4; } /* Example color */
+.btn-clear {
+    background-color: #ff5722;
+} /* Example color */
+.btn-re-bet {
+    background-color: #4CAF50;
+} /* Example color */
+.btn-deal {
+    background-color: #2196F3;
+} /* Example color */
+.btn-hit {
+    background-color: #f44336;
+} /* Example color */
+.btn-double {
+    background-color: #9C27B0;
+} /* Example color */
+.btn-stand {
+    background-color: #FFC107;
+    color: #333;
+} /* Example color, black text for yellow */
+.btn-split {
+    background-color: #00BCD4;
+} /* Example color */
 
 
 .btn-collect {
@@ -623,21 +654,6 @@ button.disabled {
     gap: 15px; /* Add some space between the Draw and Rules Box */
 }
 
-/* Windowed table dimensions (default for .Zone elements) */
-.Zone .MAIN {
-    width: 100px;
-    height: 100px;
-}
-.Zone .PP,
-.Zone .TWENTYONE {
-    width: 50px;
-    height: 50px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-.Zone .PP { left: calc(50% - 75px); }
-.Zone .TWENTYONE { left: calc(50% + 25px); }
-
 /* Player Area and its internals */
 .bet-input-container {
     display: flex;
@@ -663,3 +679,8 @@ button.disabled {
     box-shadow: 0 0 5px #00d0ff;
 }
 
+/* Styling for the selected bet area button */
+.bet-area-button.selected {
+    border: 2px solid gold; /* Or a glowing effect, different background, etc. */
+    box-shadow: 0 0 10px gold;
+}

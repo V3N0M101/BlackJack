@@ -8,11 +8,10 @@
     <link rel="stylesheet" href="/static/StyleSheets/login.css" />
     <link rel="stylesheet" href="/static/StyleSheets/forgot.css" />
     <script src="/static/Scripts/transition.js" defer></script>
-</head>
+    <script src="/static/Scripts/verify.js" defer></script> </head>
 <body>
     <div class="overlay-transition"></div>
 
-    <!-- Home Button -->
     <div class="Hover_Back_Wrap">
         <a href="/" class="back-arrow">
             <img src="/static/Images/Icons/home-icon.png" class="Homer" />
@@ -23,13 +22,12 @@
     <div class="page-transition">
         <div class="center-container">
 
-            <!-- Verification Code Input -->
             <div class="verify-wrapper">
                 <div class="verification-title">Verify Your Account</div>
                 <p class="verification-message">
                     A verification code has been sent to your email. Please enter it below to complete registration.
                 </p>
-                <form action="/verify" method="POST">
+                <form onsubmit="event.preventDefault(); submitVerificationCode();">
                     <div class="verification-boxes">
                         <input name="d1" type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus>
                         <input name="d2" type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
@@ -45,11 +43,18 @@
 
         </div>
     </div>
-{% if alert_message %}
-<script>
-    alert("{{ alert_message }}");
-</script>
-{% endif %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    {% for message in messages %}
+                        alert("{{ message }}");
+                    {% endfor %}
+                });
+            </script>
+        {% endif %}
+    {% endwith %}
 
 </body>
 </html>

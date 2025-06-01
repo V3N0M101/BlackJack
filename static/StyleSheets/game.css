@@ -67,6 +67,7 @@
 .btn-collect:disabled {
     background: #94d3a2;
     cursor: not-allowed;
+    pointer-events: none;
 }
 
 /* === LOGO === */
@@ -130,7 +131,7 @@ body {
     font-family: Arial, sans-serif;
     height: 100vh;
     overflow: hidden; /* Important for fixed layout */
-    background: linear-gradient(rgba(66, 255, 230, 0.25), rgba(66, 255, 230, 0.25)),
+    background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)),
             url("../Images/Backgrounds/Trippy.png") repeat center center / cover;
 }
 
@@ -230,18 +231,18 @@ body {
 
 /* Individual Player Hand (within .player) */
 .table-windowed .Player-Area {
-    flex: 1 1 200px; /* flex-grow: 1, flex-shrink: 1, flex-basis: 200px (base width) */
-    min-width: 220px; /* Ensure a minimum width for each hand */
-    min-height: 30vh; /* Use min-height to ensure it's tall enough, but allows content to expand */
+    flex: 1 1 200px;
+    min-width: 220px;
+    min-height: 30vh;
     display: flex;
     flex-direction: column;
-    gap: 20px; /* Internal gap between elements */
+    gap: 20px;
     background: rgba(128, 0, 128, 0.288);
     padding: 18px;
     border-radius: 8px;
-    border: solid rgba(252, 252, 252, 0.514); /* FIX: Added 8px for consistency with original border */
+    border: solid rgba(252, 252, 252, 0.514);
     color: #eee;
-    /* REMOVED: scale: 1.2; */ /* Remove scaling to fix overlap */
+    justify-content: flex-end; /* This remains important to push .Zone to bottom */
 }
 
 .Player-Area.active-hand {
@@ -279,19 +280,21 @@ body {
 
 /* Individual Player Hand (within .player for fullscreen) */
 .table-fullscreen .Player-Area {
-    flex: 1 1 200px; /* Consistent flex properties with windowed mode */
-    min-width: 350px; /* Consistent min-width */
-    min-height: 50vh; /* Potentially taller for fullscreen */
+    flex: 1 1 200px;
+    min-width: 350px;
+    min-height: 50vh;
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Internal gap for fullscreen */
-    background: rgba(128, 0, 128, 0.288); /* Different background color for visual distinction */
+    gap: 15px;
+    background: rgba(128, 0, 128, 0.288);
     padding: 12px;
     border-radius: 8px;
     color: #eee;
     margin-bottom: 1vh;
-    border: solid black; /* Add border for consistency, if desired */
+    border: solid black;
+    justify-content: flex-end; /* This remains important to push .Zone to bottom */
 }
+
 
 
 .Dealer_mid {
@@ -349,9 +352,16 @@ body {
 
 /* OVERLAP “ZONE” DIVS AS CHIPS */
 .Zone {
-    position: relative;
+    display: flex; /* Make it a flex container */
+    justify-content: center; /* Center the buttons horizontally */
+    align-items: flex-end; /* Align items to the bottom of the zone */
+    gap: 10px; /* Space between buttons */
     width: 100%;
-    margin: 0 auto;
+    /* Adjust height based on overall layout and how much space you want below cards */
+    height: 180px; /* Base height for the zone */
+    margin: 0 auto; /* Center the zone horizontally */
+    margin-top: auto; /* Pushes the .Zone to the bottom of the Player-Area */
+    padding-bottom: 15px; /* Add some padding at the very bottom of the zone */
 }
 
 .Zone button {
@@ -359,20 +369,28 @@ body {
     padding: 0;
     background: none;
     cursor: pointer;
+    display: flex; /* Make buttons flex containers to center their text */
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    color: #000;
+    /* Common styles for all three buttons - they will now be squares */
+    border-radius: 8px; /* Slightly rounded corners for squares */
 }
 
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
-    position: absolute;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    font-weight: bold;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    color: #000;
+    /* Set a base size for windowed mode, fullscreen will override */
+    width: 70px; /* Equal width for all */
+    height: 70px; /* Equal height for all (makes them squares) */
+    font-size: 1.1em; /* Adjust text size */
+    background: #c3e0d8; /* Default background */
+    border: 2px solid #8cc; /* Default border */
+    z-index: 1; /* They are side by side, so z-index is less critical now */
 }
+
 
 .Zone .PP,
 .Zone .TWENTYONE {
@@ -389,39 +407,24 @@ body {
 .Zone .TWENTYONE:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
         0 0 8px rgba(255, 255, 255, 0.6);
+    transform: scale(1.1); /* Simple scale on hover */
 }
 
-.Zone .PP:hover,
-.Zone .TWENTYONE:hover {
-    transform: translateY(-50%) scale(1.1);
-}
-
-.Zone .MAIN:hover {
-    transform: translate(-50%, -50%) scale(1.1);
-}
 
 .table-fullscreen .Zone {
-    height: 100px; /* Example height for fullscreen */
+    height: 200px; /* Adjust zone height for fullscreen */
+    gap: 15px; /* More gap in fullscreen */
 }
 
-.table-fullscreen .Zone .MAIN {
-    width: 100px;
-    height: 100px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #a2d5c6;
-    border: 3px solid #6ba;
-}
 
 .table-fullscreen .Zone .PP,
+.table-fullscreen .Zone .MAIN,
 .table-fullscreen .Zone .TWENTYONE {
-    width: 50px;
-    height: 50px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #9fc;
-    border: 3px solid #6a9;
+    width: 100px; /* Larger equal squares */
+    height: 100px;
+    font-size: 1.3em;
+    background: #a2d5c6; /* Fullscreen specific color */
+    border: 3px solid #6ba; /* Fullscreen specific border */
 }
 
 .table-fullscreen .Zone .TWENTYONE {
@@ -432,27 +435,18 @@ body {
 }
 
 .table-windowed .Zone {
-    height: 125px; /* Smaller height for windowed mode */
-}
-
-.table-windowed .Zone .MAIN {
-    width: 70px; /* Smaller main circle */
-    height: 70px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #c3e0d8; /* Slightly different color for distinction */
-    border: 2px solid #8cc;
+    height: 150px; /* Adjust zone height for windowed */
+    gap: 10px;
 }
 
 .table-windowed .Zone .PP,
+.table-windowed .Zone .MAIN,
 .table-windowed .Zone .TWENTYONE {
-    width: 35px; /* Smaller side circles */
-    height: 35px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #b5d1c4; /* Slightly different color */
-    border: 2px solid #89b;
+    width: 70px; /* Smaller equal squares */
+    height: 70px;
+    font-size: 1.1em;
+    background: #c3e0d8; /* Windowed specific color */
+    border: 2px solid #8cc; /* Windowed specific border */
 }
 
 .table-windowed .Zone .TWENTYONE {
@@ -551,7 +545,6 @@ button.disabled {
     filter: grayscale(50%); /* Makes them look faded */
     transform: none; /* No scaling when disabled */
     box-shadow: none; /* No shadow when disabled */
-    pointer-events: none; /* Prevents interaction even if accidentally hovered */
 }
 
 /* === ACTION BUTTONS GROUPING === */
@@ -599,8 +592,6 @@ button.disabled {
     transform: scale(0.95); /* Shrink slightly on click */
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-
-
 .actions button img {
     display: block;
     width: 36px;
@@ -631,10 +622,6 @@ button.disabled {
     background-color: #00BCD4;
 } /* Example color */
 
-
-.btn-collect {
-    background-color: #6c757d;
-}
 
 .btn-collect:hover:not(.disabled) {
     background-color: #5a6268;
@@ -671,8 +658,8 @@ button.disabled {
 }
 
 /* Styling for the selected bet area button */
-.bet-area-button.selected {
-    border: 2px solid gold; /* Or a glowing effect, different background, etc. */
+.bet-area-button .selected {
+    border: 5px solid gold; /* Or a glowing effect, different background, etc. */
     box-shadow: 0 0 10px gold;
 }
 
@@ -680,8 +667,33 @@ button.disabled {
 
 /* Parent container for positioning relative tooltips */
 .bet-area-button {
-    position: relative; /* Essential for positioning the tooltip bubble relative to the button */
-    /* Add any other button styles here if not already present */
+    border: 2px solid transparent; /* This will be the outer border now */
+    border-radius: 8px; /* Apply border-radius to the wrapper */
+    padding: 0; /* No padding on the wrapper */
+    display: flex; /* Make it a flex container to center the button */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer; /* Keep cursor pointer on the wrapper */
+    transition: all 0.2s ease; /* Transition wrapper properties */
+    position: relative; /* Needed for tooltip positioning */
+}
+
+.bet-area-button button {
+    background: #c3e0d8; /* Default background for buttons inside the wrapper */
+    color: #000;
+    font-weight: bold;
+    width: 100%; /* Make button fill its wrapper */
+    height: 100%; /* Make button fill its wrapper */
+    border: none; /* Remove default button border */
+    border-radius: 6px; /* Slightly smaller border-radius for the inner button */
+    font-size: 1.1em; /* Adjust font size */
+    display: flex; /* Ensure content is centered */
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease; /* Only transition background for the inner button */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    pointer-events: none;
 }
 
 /* The actual tooltip bubble */
@@ -718,15 +730,27 @@ button.disabled {
 }
 
 /* Show the tooltip when hovering over the parent button */
-.bet-area-button:hover .tooltip-bubble {
-    visibility: visible;
-    opacity: 1;
+.bet-area-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
+                0 0 8px rgba(255, 255, 255, 0.6);
+    transform: scale(1.1); /* Scale the wrapper */
 }
 
-/* Ensure the main bet text is visible inside the button */
-.MAIN.bet-area.bet-area-button {
-    /* If the main bet button is getting its text updated by JS,
-       you might want to ensure its text color is contrasting with the background
-       and that the tooltip doesn't interfere with the bet amount display.
-       The existing .bet-area styling should cover this, but keep an eye out. */
+
+.background-blur {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    background: url("../Images/Backgrounds/Trippy.png") center center / cover no-repeat;
+    filter: blur(8px);
+    /* Optional: darken or add overlay for better contrast */
+    /* background-color: rgba(0,0,0,0.2); */
+}
+body {
+    position: relative;
+    z-index: 1;
+    /* Remove background image from body if present */
+    background: none !important;
 }

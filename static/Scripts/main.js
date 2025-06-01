@@ -3,12 +3,20 @@ const hoverBack = document.querySelector('.hover-back');
 
 navButtons.forEach(btn => {
   btn.addEventListener('mouseenter', () => {
+    if (!hoverBack) return; // Add this line
     const rect = btn.getBoundingClientRect();
     const navRect = btn.parentElement.getBoundingClientRect();
     hoverBack.style.left = (rect.left - navRect.left) + "px";
     hoverBack.style.width = rect.width + "px";
   });
 });
+
+const navBar = document.querySelector('.nav-bar');
+if (navBar && hoverBack) {
+  navBar.addEventListener('mouseleave', () => {
+    hoverBack.style.width = "0";
+  });
+}
 
 document.querySelector('.nav-bar').addEventListener('mouseleave', () => {
   hoverBack.style.width = "0";

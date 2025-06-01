@@ -9,22 +9,22 @@ body {
 }
 
 .side-nav {
-  min-height: 100vh;
+  min-height: calc(100vh);
   width: var(--sidenav-width);
-  background: linear-gradient(45deg, #2E8B57 0%, #50C878 100%);
+  background: linear-gradient(45deg, #2e8b56d2 0%, #50c878d2 100%);
   padding: 10px;
   border-radius: 20px;
   color: white;
   /* fix height */
   position: sticky;
   top: 0;
-  height: calc(100vh - 80px);
+  height: calc(100vh);
   overflow-y: auto;
 }
 
 .side-nav ul {
-  list-style: none;
   padding: 0;
+  margin-top: 80px;
 }
 
 .side-nav ul li {
@@ -39,7 +39,7 @@ body {
 }
 
 .side-nav ul li a:hover {
-  color: #00ffee;
+  color: #25fff0;
   transform: scale(1.2);
 }
 
@@ -52,7 +52,7 @@ body {
 
 .page-content {
   flex: 1;
-  background-color: #2E8B57;
+  background-color: #2e8b567e;
   padding: 20px; /* more padding all around */
   border-radius: 20px;
   color: white;

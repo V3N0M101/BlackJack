@@ -287,6 +287,7 @@ class BlackjackMultiGame:
         )
 
     def reset_round(self):
+        self.num_hands = 3 # Reset to default number of hands
         self.player_hands = []
         for i in range(self.num_hands):
             self.player_hands.append(self._create_new_hand_state())
@@ -313,6 +314,11 @@ class BlackjackMultiGame:
             return False
 
         total_bet_amount = 0
+        at_least_one_bet = False
+        bet_hands = []
+        bet_infos = []
+
+        # Do NOT shrink player_hands. Always keep 3 hands.
         for i, bet_info in enumerate(bets_data):
             main_b = bet_info.get("main_bet", 0)
             side_21 = bet_info.get("side_21_3", 0)
@@ -324,17 +330,28 @@ class BlackjackMultiGame:
                     isinstance(side_pp, int) and side_pp >= 0):
                 self.game_message = f"Invalid bet amounts for hand {i+1}. Bets must be non-negative integers."
                 return False
-            if main_b <= 0: # Main bet must be positive
-                self.game_message = f"Main bet for hand {i+1} must be greater than zero."
-                return False
+
+            if main_b > 0: 
+                at_least_one_bet = True
 
             total_bet_amount += (main_b + side_21 + side_pp)
+
+        if not at_least_one_bet:
+            self.game_message = "At least one main bet must be placed."
+            return False   
+
+        if total_bet_amount < 500:
+            self.game_message = "Total bet must be at least $500."
+            return False
+        if total_bet_amount > 500000:
+            self.game_message = "Total bet cannot exceed $500,000."
+            return False
 
         if total_bet_amount > self.player.chips:
             self.game_message = "Not enough chips to cover all bets."
             return False
 
-        # Deduct chips and store bets
+        # Deduct chips and store bets for all hands
         self.player.chips -= total_bet_amount
         for i, bet_info in enumerate(bets_data):
             self.player_hands[i]["main_bet"] = bet_info.get("main_bet", 0)
@@ -423,39 +440,38 @@ class BlackjackMultiGame:
             hand_state["can_double"] = False
             hand_state["can_split"] = False
 
-        # Find the next hand that hasn't busted/stood/blackjacked
-        for i in range(len(self.player_hands)): # Use len(self.player_hands) as num_hands can change
-            hand_state = self.player_hands[i]
-            if not hand_state["busted"] and not hand_state["stood"] and not hand_state["blackjack"]:
+        # Only consider hands with a bet
+        for i, hand_state in enumerate(self.player_hands):
+            if (
+                (hand_state["main_bet"] > 0 or hand_state["side_bet_21_3"] > 0 or hand_state["side_bet_perfect_pair"] > 0)
+                and not hand_state["busted"]
+                and not hand_state["stood"]
+                and not hand_state["blackjack"]
+            ):
                 self.current_active_hand_index = i
                 hand_state["is_active"] = True
                 self.game_message = f"It's Hand {i+1}'s turn. "
 
                 # Determine can_double eligibility for this specific hand
-                if len(hand_state["hand"]) == 2 and 9 <= hand_value(hand_state["hand"]) <= 11 and hand_state["main_bet"] <= self.player.chips:
+                if len(hand_state["hand"]) == 2 and 0 <= hand_value(hand_state["hand"]) <= 11 and hand_state["main_bet"] <= self.player.chips:
                     hand_state["can_double"] = True
 
                 # Determine can_split eligibility for this specific hand
-                # A hand can split if:
-                # 1. It has exactly two cards.
-                # 2. Both cards have the same rank (e.g., two 8s, two Queens).
-                # 3. The player has enough chips to place an equal bet.
-                # 4. The hand hasn't been re-split too many times (controlled by can_resplit and overall max hands).
-                max_total_hands = 4 # Common casino rule: Max 4 hands after splitting
+                max_total_hands = 4
                 if (len(hand_state["hand"]) == 2 and
                     hand_state["hand"][0].rank_idx == hand_state["hand"][1].rank_idx and
                     hand_state["main_bet"] <= self.player.chips and
-                    hand_state["can_resplit"] and # Check if this hand can be re-split
-                    len(self.player_hands) < max_total_hands): # Check overall limit
+                    hand_state["can_resplit"] and
+                    len(self.player_hands) < max_total_hands):
                     hand_state["can_split"] = True
 
-                return True # Found an active hand
+                return True  # Found an active hand
 
         # If no active hands, all player hands are finished
         self.current_active_hand_index = -1
         self.game_phase = "dealer_turn"
         self.game_message = "All player hands finished. Dealer's turn."
-        return False # No active hand found
+        return False  # No active hand found
     
     def split(self, hand_index):
         hand_state = self._get_hand_by_index(hand_index)
@@ -641,11 +657,24 @@ class BlackjackMultiGame:
         
         # Prepare player hands data
         player_hands_for_display = []
-        for hand_state in self.player_hands:
-            hand_copy = hand_state.copy()
-            hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
-            hand_copy["total"] = hand_value(hand_state["hand"])
-            player_hands_for_display.append(hand_copy)
+        if self.game_phase == "betting":
+            for hand_state in self.player_hands:
+                hand_copy = hand_state.copy()
+                hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
+                hand_copy["total"] = hand_value(hand_state["hand"])
+                player_hands_for_display.append(hand_copy)
+
+        else:
+            for hand_state in self.player_hands:
+                if (
+                    hand_state["main_bet"] > 0
+                    or hand_state["side_bet_21_3"] > 0
+                    or hand_state["side_bet_perfect_pair"] > 0
+                ):
+                    hand_copy = hand_state.copy()
+                    hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
+                    hand_copy["total"] = hand_value(hand_state["hand"])
+                    player_hands_for_display.append(hand_copy)
 
         return {
             "dealer_hand": dealer_hand_data,

@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
     <link rel="stylesheet" href="/static/StyleSheets/login.css" />
     <link rel="stylesheet" href="/static/StyleSheets/forgot.css" />
-    <script src="/static/Scripts/forgot.js" defer></script> </head>
+    <script src="/static/Scripts/forgot.js" defer></script>
+</head>
 <body>
     <div class="overlay-transition"></div>
 
@@ -68,33 +69,6 @@
 
         </div>
     </div>
-
     <script src="/static/Scripts/transition.js"></script>
-    <script>
-        // Display any flash messages on page load for forgotten password page
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        {% for message in messages %}
-                            alert("{{ message }}");
-                        {% endfor %}
-                    });
-                </script>
-            {% endif %}
-        {% endwith %}
-
-        window.addEventListener('pageshow', function (event) {
-            if (event.persisted) {
-                window.location.reload();
-            }
-        });
-        if (window.location.search.includes("verify=true")) {
-            document.getElementById("email-section").style.display = "none";
-            document.getElementById("code-section").style.display = "block";
-            // Set focus to the first input in the code section if it's displayed
-            document.querySelector('#code-section input[type="tel"]').focus();
-        }
-    </script>
 </body>
 </html>

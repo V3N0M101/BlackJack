@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, json
 from flask import Flask, render_template, request, redirect, flash, session, jsonify
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -6,13 +6,15 @@ import smtplib, ssl
 from email.message import EmailMessage
 import random
 import threading
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta, timezone
 
 # It's assumed 'secure.py' exists and contains EMAIL_PASS_SECURE
 from secure import EMAIL_PASS_SECURE 
 
 # It's assumed 'Black_logic.py' exists within the 'Back' directory
 from Back.black_logic import BlackjackMultiGame
+BONUS_COOLDOWN_SECONDS = 15
+BONUS_AMOUNT = 5000
 
 # so you can `import deck, player, Black_logic` directly
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))
@@ -86,24 +88,90 @@ def save_chips_to_db(username, chips, update_bonus_time=False):
 
 @app.route('/api/start_game', methods=['POST'])
 def start_game():
-    """
-    Initializes a new Blackjack game for the logged-in user.
-    Requires the user to be logged in.
-    """
     if "username" not in session:
         return jsonify({"success": False, "message": "Not logged in"}), 401
 
-    player_username = session.get("username")
-    player_chips = session.get("chips", 10000)  # Default chips if not found in session
+    player_username = session["username"]
+    conn = get_db_connection() # Crucial for getting user data from DB
+    try:
+        user_data = conn.execute("SELECT chips, last_bonus_collection FROM users WHERE username = ?", (player_username,)).fetchone()
+        if not user_data:
+            return jsonify({"success": False, "message": "User not found."}), 404
 
-    # Always initialize with 3 hands when starting a new game
-    game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
-    game.reset_round()  
+        player_chips = user_data["chips"] # Get actual chips from DB
+        last_bonus_collection_str = user_data["last_bonus_collection"]
 
-    session["blackjack_game_state"] = game.to_dict()
+        game = None
+        game_forfeit_message = None
 
-    return jsonify({"success": True, "game_state": game.get_game_state(reveal_dealer_card=False)})
+        # --- THIS BLOCK HANDLES CHIP FORFEITURE AND LOADS EXISTING GAME STATE ---
+        if "blackjack_game_state" in session:
+            previous_game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
 
+            if previous_game.game_phase not in ["betting", "round_over"]:
+                total_bets = sum(hand.bet_amount for hand in previous_game.player.hands if hand.bet_amount > 0)
+                if total_bets > 0:
+                    player_chips -= total_bets
+                    game_forfeit_message = f"You left an active round. Forfeited ${total_bets} in active bets."
+                    if not save_chips_to_db(player_username, player_chips, update_bonus_time=False):
+                        print(f"Warning: Failed to save forfeited chips for {player_username}")
+                session.pop("blackjack_game_state", None) # Clear old game state
+                print(f"Player {player_username} forfeited chips. Old game state cleared.")
+
+        # Initialize or retrieve game (after potential forfeiture/clearing)
+        if "blackjack_game_state" not in session:
+            # Create a NEW game if no state in session (or cleared due to forfeiture)
+            game = BlackjackMultiGame(player_chips=player_chips)
+            if game_forfeit_message:
+                game.game_message = game_forfeit_message
+        else:
+            # LOAD existing game from session
+            game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+            game.player.chips = player_chips # Sync chips with latest from DB
+            if game_forfeit_message:
+                game.game_message = game_forfeit_message
+
+        session["blackjack_game_state"] = game.to_dict()
+
+        # --- THIS BLOCK CALCULATES BONUS STATUS ---
+        last_collection_time = datetime.strptime(last_bonus_collection_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        next_collection_time = last_collection_time + timedelta(seconds=BONUS_COOLDOWN_SECONDS)
+        now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+        can_collect = now_utc >= next_collection_time
+        bonus_cooldown_message = ""
+        next_bonus_time_iso = None
+
+        if can_collect:
+            bonus_cooldown_message = "Bonus available!"
+            next_bonus_time_iso = None # If bonus is available, there's no "next" time in the future
+        else:
+            time_remaining = next_collection_time - now_utc
+            total_seconds = int(time_remaining.total_seconds())
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            bonus_cooldown_message = f"Next bonus in {hours}h {minutes}m {seconds}s."
+            next_bonus_time_iso = next_collection_time.isoformat() # <--- Crucial for frontend countdown
+
+        current_game_state = game.get_game_state(reveal_dealer_card=False)
+        current_game_state["can_collect_bonus"] = can_collect
+        current_game_state["next_bonus_time"] = next_bonus_time_iso
+        current_game_state["bonus_cooldown_message"] = bonus_cooldown_message
+        current_game_state["player_chips"] = player_chips # Ensure this is always accurate
+
+        initial_message = game_forfeit_message if game_forfeit_message else "Game started/loaded."
+
+        return jsonify({
+            "success": True,
+            "message": initial_message,
+            "game_state": current_game_state
+        })
+    except Exception as e:
+        print(f"Error starting game for {player_username}: {e}")
+        return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/place_bets', methods=['POST'])
 def place_bets():
@@ -120,16 +188,25 @@ def place_bets():
     if not game.place_bets(bets_data):
         session["blackjack_game_state"] = game.to_dict()
         return jsonify({"success": False, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
-    
+
     # Store the placed bets in session for rebet functionality
-    # We only store the main_bet, side_bet_21_3, and side_bet_perfect_pair
-    session['last_bets'] = [
+    # Always store 3 hands (pad with zeros if needed)
+
+    player_username = session["username"]
+    if not save_chips_to_db(player_username, game.player.chips):
+        return jsonify({"success": False, "message": "Failed to save chips after betting.", "game_state": game.get_game_state(reveal_dealer_card=False)}), 500
+    session["chips"] = game.player.chips  # Also update session chips
+
+    bets_for_last_bets = [
         {
             "main_bet": hand_data["main_bet"],
             "side_21_3": hand_data["side_bet_21_3"],
             "side_pp": hand_data["side_bet_perfect_pair"]
         } for hand_data in game.player_hands
     ]
+    while len(bets_for_last_bets) < 3:
+        bets_for_last_bets.append({"main_bet": 0, "side_21_3": 0, "side_pp": 0})
+    session['last_bets'] = bets_for_last_bets
 
     if not game.deal_initial_cards():
         session["blackjack_game_state"] = game.to_dict()
@@ -161,26 +238,26 @@ def rebet():
         else:
             game.game_message = "Failed to save chips before rebet. " + game.game_message
 
+    # Always use 3 hands for betting phase
+    game.num_hands = 3
+
     # Get the last saved bets *before* resetting the game state
     last_bets_from_session = session.get('last_bets', [])
 
-    # Reset the round on the *existing* game object
-    # This will clear the hands and set game_phase to "betting"
-    # and reinitialize with the correct number of hands
-    game.reset_round() 
-    
-    # After resetting, apply the last_bets to the game's player_hands
-    # Ensure that last_bets_from_session has data for all hands
-    if last_bets_from_session and len(last_bets_from_session) == game.num_hands:
-        for i, hand_data in enumerate(game.player_hands):
-            if i < len(last_bets_from_session):
-                hand_data["main_bet"] = last_bets_from_session[i].get("main_bet", 0)
-                hand_data["side_bet_21_3"] = last_bets_from_session[i].get("side_21_3", 0)
-                hand_data["side_bet_perfect_pair"] = last_bets_from_session[i].get("side_pp", 0)
-        game.game_message += " Previous bets loaded!"
-    else:
-        game.game_message += " No previous bets to load or inconsistent number of hands."
+    # Pad last_bets_from_session to always have 3 entries
+    while len(last_bets_from_session) < 3:
+        last_bets_from_session.append({"main_bet": 0, "side_21_3": 0, "side_pp": 0})
 
+    # Reset the round on the *existing* game object
+    game.reset_round()
+
+    # After resetting, apply the last_bets to the game's player_hands
+    for i, hand_data in enumerate(game.player_hands):
+        if i < len(last_bets_from_session):
+            hand_data["main_bet"] = last_bets_from_session[i].get("main_bet", 0)
+            hand_data["side_bet_21_3"] = last_bets_from_session[i].get("side_21_3", 0)
+            hand_data["side_bet_perfect_pair"] = last_bets_from_session[i].get("side_pp", 0)
+    game.game_message += " Previous bets loaded!"
     session["blackjack_game_state"] = game.to_dict()
 
     return jsonify({
@@ -269,6 +346,10 @@ def reset_round():
     return jsonify({"success": True, "message": game.game_message, "game_state": game.get_game_state(reveal_dealer_card=False)})
 
 
+# app.py
+
+# ... (rest of your imports and setup) ...
+
 @app.route('/api/collect_chips', methods=['POST'])
 def collect_chips():
     """
@@ -279,7 +360,6 @@ def collect_chips():
         return jsonify({"success": False, "message": "Not logged in"}), 401
 
     player_username = session["username"]
-    BONUS_AMOUNT = 5000 # Define your bonus amount
 
     conn = get_db_connection()
     try:
@@ -291,56 +371,126 @@ def collect_chips():
         current_chips = user_data["chips"]
         last_collection_str = user_data["last_bonus_collection"]
 
-        # Parse the last collection time from the database
-        last_collection_time = datetime.strptime(last_collection_str, '%Y-%m-%d %H:%M:%S')
-        
-        # Calculate when the next collection is due
-        next_collection_time = last_collection_time + timedelta(hours=24)
-        
-        now_utc = datetime.utcnow()
+        last_collection_time = datetime.strptime(last_collection_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
+        next_collection_time = last_collection_time + timedelta(seconds=BONUS_COOLDOWN_SECONDS)
+        now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
 
-        if now_utc >= next_collection_time:
-            # Player is eligible to collect bonus
+        GRACE_PERIOD_SECONDS = 2 # Use consistent naming, e.g., GRACE_PERIOD_SECONDS
+
+        # --- Initialize bonus related variables for the response ---
+        can_collect_bonus_response = False
+        next_bonus_time_iso_response = None
+        bonus_cooldown_message_response = ""
+
+        # Load game state if available, so we can send a complete game_state object
+        # even if only chips changed.
+        game = BlackjackMultiGame.from_dict(session.get("blackjack_game_state", {}))
+        game.player.chips = current_chips # Ensure current chips are accurate in the game object
+
+        # --- APPLY THE GRACE PERIOD LOGIC HERE ---
+        # Eligibility check: now_utc must be greater than or equal to next_collection_time,
+        # OR within the grace period (meaning, next_collection_time is still in the very near future
+        # or has just passed by a small amount).
+        
+        # Calculate the "earliest" time a user can collect with grace period
+        eligible_time_with_grace = next_collection_time - timedelta(seconds=GRACE_PERIOD_SECONDS)
+
+        if now_utc >= eligible_time_with_grace:
+            # Player is eligible to collect bonus (either on time or within grace period)
+
+            # Important: Confirm it's not too far in the future due to extreme client clock drift
+            # or if the bonus is *actually* past its collection time and we're just handling latency.
+            # If now_utc is significantly BEFORE next_collection_time (i.e., not just grace period),
+            # then it's still not eligible. This ensures the grace period doesn't allow early collection.
+            if now_utc < next_collection_time - timedelta(seconds=GRACE_PERIOD_SECONDS): # If it's *still* more than grace period away
+                 # This should ideally not be hit if the frontend countdown is mostly accurate
+                 # But it's a safety net for large client clock discrepancies
+                 time_remaining = next_collection_time - now_utc
+                 hours, remainder = divmod(time_remaining.total_seconds(), 3600)
+                 minutes, seconds = divmod(remainder, 60)
+                 message = f"You can collect your bonus in {int(hours)}h {int(minutes)}m {int(seconds)}s. (Please wait for countdown)"
+                 
+                 can_collect_bonus_response = False
+                 next_bonus_time_iso_response = next_collection_time.isoformat()
+                 bonus_cooldown_message_response = f"Next bonus in {int(hours)}h {int(minutes)}m {int(seconds)}s."
+                 
+                 return jsonify({
+                    "success": False,
+                    "message": message,
+                    "game_state": {
+                        **game.get_game_state(reveal_dealer_card=False),
+                        "player_chips": current_chips,
+                        "can_collect_bonus": can_collect_bonus_response,
+                        "next_bonus_time": next_bonus_time_iso_response,
+                        "bonus_cooldown_message": bonus_cooldown_message_response
+                    }
+                 }), 400
+
+            # If we reached here, the player is truly eligible with grace
             new_chips = current_chips + BONUS_AMOUNT
+            
             # Update chips and the last_bonus_collection timestamp in the database
             if save_chips_to_db(player_username, new_chips, update_bonus_time=True):
                 session["chips"] = new_chips # Update chips in Flask session
-                # If there's an active game, update its internal player chips
-                if "blackjack_game_state" in session:
-                    game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
-                    game.player.chips = new_chips
-                    session["blackjack_game_state"] = game.to_dict() # Save updated game state
-                    
+                
+                # Update game object with new chips
+                game.player.chips = new_chips
+                session["blackjack_game_state"] = game.to_dict() # Save updated game state
+
                 message = f"Bonus of ${BONUS_AMOUNT} collected! Your new balance is ${new_chips}."
+
+                # --- Set bonus status for the response after collection ---
+                can_collect_bonus_response = False # Just collected, so now on cooldown
+                new_next_collection_time_after_bonus = now_utc + timedelta(seconds=BONUS_COOLDOWN_SECONDS)
+                next_bonus_time_iso_response = new_next_collection_time_after_bonus.isoformat()
+                
+                # Recalculate message based on the new cooldown
+                time_remaining = new_next_collection_time_after_bonus - now_utc
+                hours, remainder = divmod(time_remaining.total_seconds(), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                # Ensure seconds are not negative in message
+                seconds = max(0, int(seconds)) 
+                bonus_cooldown_message_response = f"Next bonus in {int(hours)}h {int(minutes)}m {int(seconds)}s."
+                
                 return jsonify({
                     "success": True,
                     "message": message,
-                    "game_state": game.get_game_state(reveal_dealer_card=False) if "blackjack_game_state" in session else {
+                    "game_state": {
+                        **game.get_game_state(reveal_dealer_card=False),
                         "player_chips": new_chips,
-                        "game_phase": "betting", # Assume betting phase if game isn't active
-                        "game_message": message,
-                        "dealer_hand": [], "dealer_total": 0, "player_hands": [], "num_hands": 3
+                        "can_collect_bonus": can_collect_bonus_response,
+                        "next_bonus_time": next_bonus_time_iso_response,
+                        "bonus_cooldown_message": bonus_cooldown_message_response
                     }
                 })
             else:
                 message = "Failed to update chips in the database."
                 return jsonify({"success": False, "message": message}), 500
         else:
-            # Player is not yet eligible
+            # Player is not yet eligible (outside of grace period)
             time_remaining = next_collection_time - now_utc
             hours, remainder = divmod(time_remaining.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
-            message = f"You can collect your bonus in {int(hours)}h {int(minutes)}m."
+            
+            # --- Set bonus status for the response when not eligible ---
+            can_collect_bonus_response = False
+            next_bonus_time_iso_response = next_collection_time.isoformat() # This is the key!
+            # Ensure seconds are not negative in message
+            seconds = max(0, int(seconds)) 
+            bonus_cooldown_message_response = f"Next bonus in {int(hours)}h {int(minutes)}m {int(seconds)}s."
+
+            message = f"You can collect your bonus in {int(hours)}h {int(minutes)}m {int(seconds)}s."
             return jsonify({
                 "success": False,
                 "message": message,
-                "game_state": BlackjackMultiGame.from_dict(session["blackjack_game_state"]).get_game_state(reveal_dealer_card=False) if "blackjack_game_state" in session else {
-                        "player_chips": current_chips,
-                        "game_phase": "betting",
-                        "game_message": message,
-                        "dealer_hand": [], "dealer_total": 0, "player_hands": [], "num_hands": 3
-                    }
-            })
+                "game_state": {
+                    **game.get_game_state(reveal_dealer_card=False), # Include other game state
+                    "player_chips": current_chips,
+                    "can_collect_bonus": can_collect_bonus_response,
+                    "next_bonus_time": next_bonus_time_iso_response,
+                    "bonus_cooldown_message": bonus_cooldown_message_response
+                }
+            }), 400 # Indicate bad request/not eligible
     except Exception as e:
         print(f"Error collecting bonus chips for {player_username}: {e}")
         return jsonify({"success": False, "message": f"An error occurred: {e}"}), 500
@@ -362,67 +512,63 @@ def home():
         login_in_alert=login_in_alert,
     )
     
-
 @app.route("/game")
 def game():
     """
-    Renders the Blackjack game page.
-    Loads existing game state from the session or provides a default.
+    Always resets the game to the betting phase with default values on reload.
     """
     fullscreen = request.args.get("fullscreen", "").lower() == "true"
-    game_state_for_display = None
+    initial_chips = session.get("chips", 1000)  # Use chips from session or default to 1000
 
-    if "blackjack_game_state" in session:
-        try:
-            game_obj = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
-            # Ensure the number of hands for display is pulled from the game object,
-            # or defaulted to 3 if starting fresh.
-            game_state_for_display = game_obj.get_game_state(reveal_dealer_card=False)
-            game_state_for_display["num_hands"] = game_obj.num_hands # Ensure num_hands is set
-        except Exception as e:
-            print(f"Error loading game from session in /game route: {e}")
-            session.pop('blackjack_game_state', None)
+    # Always create a new game in betting phase with 3 hands
+    player_username = session.get("username", "Player")
+    game_obj = BlackjackMultiGame(player_username, initial_chips=initial_chips, num_hands=3)
+    game_obj.reset_round()  # Ensures betting phase and 3 hands
 
-    if game_state_for_display is None:
-        game_state_for_display = {
-            "player_chips": session.get("chips", 0),
-            "game_phase": "betting",
-            "game_message": "Place your bets!",
-            "dealer_hand": [],
-            "dealer_total": 0,
-            "player_hands": [],
-            "num_hands": 3 # Default to 3 hands for new games
-        }
-    
-    # NEW: Get last_bonus_collection to potentially disable the button initially on page load
-    # This might require an additional fetch or passing it through `game_state_for_display`
-    # For now, the frontend will handle enabling/disabling based on the API response.
-    # We can fetch it here and add to game_state_for_display if needed for initial UI render
+    # Save this new state to session
+    session["blackjack_game_state"] = game_obj.to_dict()
+
+    # Prepare game state for template
+    game_state_for_display = game_obj.get_game_state(reveal_dealer_card=False)
+    game_state_for_display["num_hands"] = game_obj.num_hands
+
+    # --- Bonus logic (optional, keep as in your original code) ---
     if "username" in session:
         conn = get_db_connection()
         user_data = conn.execute("SELECT last_bonus_collection FROM users WHERE username = ?", (session["username"],)).fetchone()
         conn.close()
-        if user_data:
-            game_state_for_display["last_bonus_collection"] = user_data["last_bonus_collection"]
-            
-            last_collection_time = datetime.strptime(user_data["last_bonus_collection"], '%Y-%m-%d %H:%M:%S')
-            next_collection_time = last_collection_time + timedelta(hours=24)
-            now_utc = datetime.utcnow()
-            
-            game_state_for_display["can_collect_bonus"] = now_utc >= next_collection_time
-            if not game_state_for_display["can_collect_bonus"]:
-                time_remaining = next_collection_time - now_utc
-                hours, remainder = divmod(time_remaining.total_seconds(), 3600)
-                minutes, seconds = divmod(remainder, 60)
-                game_state_for_display["bonus_cooldown_message"] = f"Next bonus in {int(hours)}h {int(minutes)}m."
-        else:
-            game_state_for_display["can_collect_bonus"] = True # Assume collectible if no record
-            game_state_for_display["bonus_cooldown_message"] = ""
 
+        if user_data:
+            last_bonus_collection_str = user_data["last_bonus_collection"]
+            if last_bonus_collection_str:
+                last_collection_time = datetime.strptime(last_bonus_collection_str, '%Y-%m-%d %H:%M:%S')
+                last_collection_time = last_collection_time.replace(tzinfo=timezone.utc)
+                next_collection_time = last_collection_time + timedelta(seconds=BONUS_COOLDOWN_SECONDS)
+                now_utc = datetime.utcnow().replace(tzinfo=timezone.utc)
+
+                game_state_for_display["can_collect_bonus"] = now_utc >= next_collection_time
+                game_state_for_display["next_bonus_time"] = next_collection_time.isoformat()
+
+                if not game_state_for_display["can_collect_bonus"]:
+                    time_remaining = next_collection_time - now_utc
+                    total_seconds_remaining = int(time_remaining.total_seconds())
+                    hours = total_seconds_remaining // 3600
+                    remainder = total_seconds_remaining % 3600
+                    minutes = remainder // 60
+                    seconds = remainder % 60
+                    game_state_for_display["bonus_cooldown_message"] = f"Next bonus in {hours:02}h {minutes:02}m {seconds:02}s."
+                else:
+                    game_state_for_display["bonus_cooldown_message"] = "Bonus available!"
+            else:
+                game_state_for_display["can_collect_bonus"] = True
+                game_state_for_display["bonus_cooldown_message"] = "Bonus available!"
+                game_state_for_display["next_bonus_time"] = None
+        else:
+            game_state_for_display["can_collect_bonus"] = True
+            game_state_for_display["bonus_cooldown_message"] = "Bonus available!"
+            game_state_for_display["next_bonus_time"] = None
 
     return render_template("game.html", fullscreen=fullscreen, game_state=game_state_for_display)
-
-
 
 @app.route("/email")
 def email():
@@ -458,7 +604,7 @@ def send_reset_code():
     flash('A password reset code has been sent to your email.')
     return redirect('/forgot?verify=true')
 
-@app.route('/verify-code', methods=['POST'])
+@app.route('/api/verify-code', methods=['POST'])
 def verify_code():
     """
     Verifies the provided reset code against the one stored in the session.

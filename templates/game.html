@@ -7,9 +7,10 @@
 
   <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
   <link rel="stylesheet" href="/static/StyleSheets/main.css" />
-  <link rel="stylesheet" href="/static/StyleSheets/game.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/game.css">
 </head>
 <body>
+  <div class="background-blur"></div>
   <div class="overlay-transition"></div>
   <button class="fs-icon" id="fsBtn" title="Minimize" onclick="window.location.href='/'">
     <img src="/static/Images/Icons/minn.png" id="fsImg" alt="Minimize" />
@@ -22,10 +23,12 @@
   <div class="Game-Container">
     <header class="Game-head">
       <div class="head-left">
-        <div class="Logo">BLACK HUB</div> <div class="min-max-box"> <div class="min">MIN: 500</div>
+        <div class="Logo">BLACK HUB</div>
+        <div class="min-max-box">
+          <div class="min">MIN: 500</div>
           <div class="max">MAX: 500000</div>
         </div>
-        <div class = "left-bottom">
+        <div class="left-bottom">
           <div class="Collect">
             <button id="collectBtn" class="btn btn-collect">Collect</button>
           </div>
@@ -36,13 +39,12 @@
       </div>
 
       <div class="head-center">
-        <div class = "Discard">
+        <div class="Discard">
           <img src="/static/Images/Assets/discard.png" />
         </div>
       </div>
-      <div class = "Dealer_mid">
-        <div class="cards" id="dealer-cards">
-        </div>
+      <div class="Dealer_mid">
+        <div class="cards" id="dealer-cards"></div>
         <div class="dealer-total" id="dealer-total">Dealer: 0</div>
       </div>
       <div class="head-right">
@@ -57,37 +59,39 @@
         </div>
       </div>
     </header>
+
     <div class="table-content">
-    <div class="table {% if fullscreen %}table-fullscreen{% else %}table-windowed{% endif %}">
-      <div class="player">
-        {% for i in range(game_state.num_hands) %}
-        <div class="Player-Area" id="hand-{{ i }}">
-          <div class="cards" id="cards-hand-{{ i }}"></div>
-          <div class="hand-info">
-            <span class="hand-total" id="total-hand-{{ i }}">Total:</span>
-            <span class="hand-message" id="message-hand-{{ i }}"></span>
+      <div class="table {% if fullscreen %}table-fullscreen{% else %}table-windowed{% endif %}">
+        <div class="player">
+          {% for i in range(game_state.num_hands) %}
+          <div class="Player-Area" id="hand-{{ i }}">
+            <div class="cards" id="cards-hand-{{ i }}"></div>
+            <div class="hand-info">
+              <span class="hand-total" id="total-hand-{{ i }}">Total:</span>
+              <span class="hand-message" id="message-hand-{{ i }}"></span>
+            </div>
+            <div class="Zone">
+              <!-- Corrected: .bet-area-button class is now on the button, and IDs match JS -->
+              <button class="PP bet-area-button" id="pp-bet-{{ i }}">PP</button>
+              <button class="MAIN bet-area bet-area-button" id="main-bet-{{ i }}"></button>
+              <button class="TWENTYONE bet-area-button" id="twentyone-bet-{{ i }}">21+3</button>
+            </div>
+            <div class="bet-input-container">
+              <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">
+              <input type="number" class="main-bet-input" id="main-bet-input-{{ i }}" placeholder="Main" value="500" min="500" step="500">
+              <input type="number" class="side-bet-input" id="twentyone-bet-input-{{ i }}" placeholder="21+3" value="0" min="0" step="100">
+            </div>
           </div>
-          <div class="Zone">
-            <button class="PP bet-area-button" id="pp-bet-{{ i }} data-input-target="pp-bet-input-{{ i }}">PP</button>
-            <button class="MAIN bet-area bet-area-button" data-hand-index="{{ i }} data-input-target="main-bet-input-{{ i }}"></button> 
-            <button class="TWENTYONE bet-area-button" id="213-bet-{{ i }} data-input-target="213-bet-input-{{ i }}">21+3</button>
-          </div>
-          <div class="bet-input-container">
-            <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">
-            <input type="number" class="main-bet-input" id="main-bet-input-{{ i }}" placeholder="Main" value="500" min="500" step="500">
-            <input type="number" class="side-bet-input" id="213-bet-input-{{ i }}" placeholder="21+3" value="0" min="0" step="100">
-          </div>
+          {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
     </div>
 
     <div class="foot">
       <div class="status">
         <div class="status-item balance" id="player-chips">Balance: ${{ game_state.player_chips | default(0) }}</div>
         <div class="status-item bet" id="total-bet-display">Total Bet: $0</div>
-        <div class="status-item game-message" id="game-message">{{ game_state.game_message | default('Welcome!') }}</div>
+        <div class="status-item game-message" id="game-message" style="display: none;"></div>
       </div>
       <div class="controls">
         <div class="chips">
@@ -129,7 +133,8 @@
               <img src="/static/Images/Assets/Stand.png" alt="Stand" />
             </span>
           </button>
-          <button class="btn-split" id="splitBtn" disabled> <span class="icon-bg split-bg">
+          <button class="btn-split" id="splitBtn" disabled>
+            <span class="icon-bg split-bg">
               <img src="/static/Images/Assets/Split.png" alt="Split" />
             </span>
           </button>
@@ -141,13 +146,12 @@
   <script src="/static/Scripts/max.js"></script>
   <script src="/static/Scripts/transition.js"></script>
   <script src="/static/Scripts/game.js"></script>
-<script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-        // Page was loaded from back/forward cache — reload it
+  <script>
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
         window.location.reload();
-    }
-});
-</script>
+      }
+    });
+  </script>
 </body>
 </html>

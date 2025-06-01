@@ -1,147 +1,146 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>News</title>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News</title>
 
-    <link rel="stylesheet" href="/static/StyleSheets/news.css" />
-  <link rel="stylesheet" href="/static/StyleSheets/main.css" />
-  <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/news.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/main.css" />
+  <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
 
-    <script src="/static/Scripts/inject.js" defer></script>
+  <script src="/static/Scripts/inject.js" defer></script>
 </head>
 <body>
-    <div class="overlay-transition"></div>
+  <div class="overlay-transition"></div>
 
-    <div id="navbar"></div>
-  {% include 'navbar.html' %}
+  <div id="navbar"></div>
+  {% include 'navbar.html' %}
 
-    <div class="page-transition">
+  <div class="page-transition">
     <main class="news-content">
-        <div class="news-page">
-            <div class="news-leaderboard" style="position: sticky; top: 0px; align-self: flex-start;">
-                <iframe src="/leaderboard" width="250" height="1000" style="border: none;"></iframe>
-            </div>
-
-            <div class="news-content">
-                <div class="wrap_head"><h2>📰 Latest Blackjack News</h2></div>
-
-                <a href="https://www.ctinsider.com/news/article/mohegan-sun-1-million-blackjack-jackpot-winner-ct-20179460.php" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>Mohegan Sun Guest Wins $1.3 Million Blackjack Jackpot</h3>
-                        <div class="card-body">
-                            <p>A lucky player at Mohegan Sun casino scored a stunning win of over $1.3 million after placing a $5 side bet on the Super 4 Progressive table game. This unexpected jackpot has stirred excitement among casino-goers and reinvigorated interest in side bets and progressive blackjack variants.</p>
-                            <img src="/static/Images/news/black1.avif" alt="Mohegan Sun Jackpot" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://pagesix.com/2025/05/19/society/the-weeknd-will-perform-at-jay-zs-1m-blackjack-tournament/" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>The Weeknd to Perform at Jay-Z’s $1M Blackjack Tournament</h3>
-                        <div class="card-body">
-                            <p>Jay-Z’s Reform Alliance is organizing a star-studded $1 million blackjack tournament at Atlantic City's Ocean Casino Resort. The event will feature a live performance by The Weeknd and promises to blend high-stakes gambling with A-list entertainment and celebrity appearances.</p>
-                            <img src="/static/Images/news/black2.avif" alt="Jay-Z Blackjack Tournament" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://www.axios.com/2025/01/02/california-tribes-lawsuit-casino-card-rooms" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>California Tribes Sue to Ban Private Casino "Banked" Games</h3>
-                        <div class="card-body">
-                            <p>Native American tribes in California are pushing back against cardrooms that offer banked games like blackjack, which they argue infringe upon tribal gaming exclusivity. The lawsuit could have major implications for gambling regulation and tribal sovereignty in the state.</p>
-                            <img src="/static/Images/news/black3.avif" alt="California Tribes Lawsuit" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://www.yogonet.com/international/news/2025/02/24/95881-las-vegas-palms-casino-upgrades-blackjack-payouts-to-favor-gamblers" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>Palms Casino Upgrades Blackjack Payouts</h3>
-                        <div class="card-body">
-                            <p>The Palms Casino Resort in Las Vegas has upgraded all of its blackjack tables to the player-friendly 3:2 payout structure, departing from the more house-favored 6:5 payouts. The move is earning praise from blackjack enthusiasts seeking better odds on their hands.</p>
-                            <img src="/static/Images/news/black4.avif" alt="Palms Casino Blackjack" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://arxiv.org/abs/2505.00724" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>Optimal Blackjack Betting Strategies</h3>
-                        <div class="card-body">
-                            <p>A recent research paper published on arXiv delves into optimal betting strategies for blackjack, combining mathematical frameworks like Markov Decision Processes and Expected Utility Theory to offer a deeper understanding of how skilled players can maximize long-term gains.</p>
-                            <img src="/static/Images/news/black5.avif" alt="Blackjack Betting Theory" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://moguldom.com/461582/innovations-in-blackjack-online-in-2025/" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>Innovations In Blackjack Online In 2025</h3>
-                        <div class="card-body">
-                            <p>The world of online blackjack is evolving fast in 2025 with cutting-edge technologies. VR environments, AI-powered dealers, customizable avatars, and multiplayer blackjack tables are transforming how players engage with this timeless game from their homes.</p>
-                            <img src="/static/Images/news/black6.avif" alt="Online Blackjack Innovations" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://www.suffolknewsherald.com/2025/02/19/why-blackjack-remains-a-casino-classic-in-the-digital-age/" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>Blackjack Remains Most Popular in Indiana</h3>
-                        <div class="card-body">
-                            <p>Blackjack continues to hold the top spot among casino table games in Indiana, dethroning baccarat after two years. Industry analysts cite accessibility, low house edge, and simple rules as reasons for blackjack’s continued reign in the digital age.</p>
-                            <img src="/static/Images/news/black7.avif" alt="Indiana Blackjack Popularity" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://gamingnewsroom.com/press-releases/2025/03/06/139404/introducing-blackjack-360-from-iconic21/" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>ICONIC21 Launches Blackjack 360</h3>
-                        <div class="card-body">
-                            <p>Game developer ICONIC21 has released Blackjack 360, a customizable game engine that lets operators tailor blackjack rules, themes, and player rewards to enhance engagement and experience across global online casinos.</p>
-                            <img src="/static/Images/news/black8.avif" alt="Blackjack 360" />
-                        </div>
-                    </div>
-                </a>
-
-                <a href="https://investors.pennentertainment.com/news-releases/news-release-details/penn-entertainment-launches-new-multiplayer-blackjack-icasino" target="_blank" class="square-link">
-                    <div class="square-card">
-                        <h3>PENN Entertainment Launches Multiplayer Blackjack</h3>
-                        <div class="card-body">
-                            <p>PENN Entertainment has unveiled its latest innovation: a multiplayer blackjack iCasino game, now live in New Jersey. The new format encourages social gameplay with chat features, shared tables, and real-time action among friends and strangers alike.</p>
-                            <img src="/static/Images/news/black9.avif" alt="Multiplayer Blackjack" />
-                        </div>
-                    </div>
-                    <br>
-                </a>
-
-            </div>
+      <div class="news-page">
+        <div class="news-leaderboard" style="position: sticky; top: 0px; align-self: flex-start;">
+          <iframe src="/leaderboard" width="250" height="1000" style="border: none;"></iframe>
         </div>
+
+        <div class="news-content">
+          <div class="wrap_head"><h2>📰 Latest Blackjack News</h2></div>
+
+          <a href="https://www.ctinsider.com/news/article/mohegan-sun-1-million-blackjack-jackpot-winner-ct-20179460.php" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>Mohegan Sun Guest Wins $1.3 Million Blackjack Jackpot</h3>
+              <div class="card-body">
+                <p>A lucky player at Mohegan Sun casino scored a stunning win of over $1.3 million after placing a $5 side bet on the Super 4 Progressive table game. This unexpected jackpot has stirred excitement among casino-goers and reinvigorated interest in side bets and progressive blackjack variants.</p>
+                <img src="/static/Images/news/black1.avif" alt="Mohegan Sun Jackpot" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://pagesix.com/2025/05/19/society/the-weeknd-will-perform-at-jay-zs-1m-blackjack-tournament/" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>The Weeknd to Perform at Jay-Z’s $1M Blackjack Tournament</h3>
+              <div class="card-body">
+                <p>Jay-Z’s Reform Alliance is organizing a star-studded $1 million blackjack tournament at Atlantic City's Ocean Casino Resort. The event will feature a live performance by The Weeknd and promises to blend high-stakes gambling with A-list entertainment and celebrity appearances.</p>
+                <img src="/static/Images/news/black2.avif" alt="Jay-Z Blackjack Tournament" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://www.axios.com/2025/01/02/california-tribes-lawsuit-casino-card-rooms" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>California Tribes Sue to Ban Private Casino "Banked" Games</h3>
+              <div class="card-body">
+                <p>Native American tribes in California are pushing back against cardrooms that offer banked games like blackjack, which they argue infringe upon tribal gaming exclusivity. The lawsuit could have major implications for gambling regulation and tribal sovereignty in the state.</p>
+                <img src="/static/Images/news/black3.avif" alt="California Tribes Lawsuit" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://www.yogonet.com/international/news/2025/02/24/95881-las-vegas-palms-casino-upgrades-blackjack-payouts-to-favor-gamblers" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>Palms Casino Upgrades Blackjack Payouts</h3>
+              <div class="card-body">
+                <p>The Palms Casino Resort in Las Vegas has upgraded all of its blackjack tables to the player-friendly 3:2 payout structure, departing from the more house-favored 6:5 payouts. The move is earning praise from blackjack enthusiasts seeking better odds on their hands.</p>
+                <img src="/static/Images/news/black4.avif" alt="Palms Casino Blackjack" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://arxiv.org/abs/2505.00724" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>Optimal Blackjack Betting Strategies</h3>
+              <div class="card-body">
+                <p>A recent research paper published on arXiv delves into optimal betting strategies for blackjack, combining mathematical frameworks like Markov Decision Processes and Expected Utility Theory to offer a deeper understanding of how skilled players can maximize long-term gains.</p>
+                <img src="/static/Images/news/black5.avif" alt="Blackjack Betting Theory" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://moguldom.com/461582/innovations-in-blackjack-online-in-2025/" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>Innovations In Blackjack Online In 2025</h3>
+              <div class="card-body">
+                <p>The world of online blackjack is evolving fast in 2025 with cutting-edge technologies. VR environments, AI-powered dealers, customizable avatars, and multiplayer blackjack tables are transforming how players engage with this timeless game from their homes.</p>
+                <img src="/static/Images/news/black6.avif" alt="Online Blackjack Innovations" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://www.suffolknewsherald.com/2025/02/19/why-blackjack-remains-a-casino-classic-in-the-digital-age/" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>Blackjack Remains Most Popular in Indiana</h3>
+              <div class="card-body">
+                <p>Blackjack continues to hold the top spot among casino table games in Indiana, dethroning baccarat after two years. Industry analysts cite accessibility, low house edge, and simple rules as reasons for blackjack’s continued reign in the digital age.</p>
+                <img src="/static/Images/news/black7.avif" alt="Indiana Blackjack Popularity" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://gamingnewsroom.com/press-releases/2025/03/06/139404/introducing-blackjack-360-from-iconic21/" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>ICONIC21 Launches Blackjack 360</h3>
+              <div class="card-body">
+                <p>Game developer ICONIC21 has released Blackjack 360, a customizable game engine that lets operators tailor blackjack rules, themes, and player rewards to enhance engagement and experience across global online casinos.</p>
+                <img src="/static/Images/news/black8.avif" alt="Blackjack 360" />
+              </div>
+            </div>
+          </a>
+
+          <a href="https://investors.pennentertainment.com/news-releases/news-release-details/penn-entertainment-launches-new-multiplayer-blackjack-icasino" target="_blank" class="square-link">
+            <div class="square-card">
+              <h3>PENN Entertainment Launches Multiplayer Blackjack</h3>
+              <div class="card-body">
+                <p>PENN Entertainment has unveiled its latest innovation: a multiplayer blackjack iCasino game, now live in New Jersey. The new format encourages social gameplay with chat features, shared tables, and real-time action among friends and strangers alike.</p>
+                <img src="/static/Images/news/black9.avif" alt="Multiplayer Blackjack" />
+              </div>
+            </div>
+            <br>
+          </a>
+
+        </div>
+      </div>
     </main>
-  </div>
+  </div>
 
-    <script src="/static/Scripts/transition.js"></script>
-  <script>
-      window.addEventListener("DOMContentLoaded", () => {
-          loadComponent("navbar", "navbar.html");
-      });
+  <script src="/static/Scripts/transition.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      loadComponent("navbar", "navbar.html");
+    });
 
-      function enterFullGame() {
-          window.location.href = "game.html";
-      }
-  </script>
+    function enterFullGame() {
+      window.location.href = "game.html";
+    }
+  </script>
 
-  <script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-        // Page was loaded from back/forward cache — reload it
-        window.location.reload();
-    }
-});
-</script>
+  <script>
+    window.addEventListener('pageshow', function (event) {
+      if (event.persisted) {
+        window.location.reload();
+      }
+    });
+  </script>
 </body>
 </html>

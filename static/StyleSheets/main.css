@@ -42,7 +42,7 @@
 /* --- Body & Overall Layout --- */
 body {
     /* Adjusted background overlay for better visibility of the "Trippy.png" */
-    background: linear-gradient(rgba(66, 255, 230, 0.25), rgba(66, 255, 230, 0.25)),
+    background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)),
                 url("../Images/Backgrounds/Trippy.png") repeat center center / cover;
     font-family: 'Courier New', Courier, monospace, sans-serif;
     color: var(--text-color-light); /* Default text color */
@@ -292,7 +292,7 @@ html, body {
     border-radius: var(--border-radius-xl);
     display: block;
     background: transparent;
-    border: none;
+    border: white 2px solid;
 }
 
 .fullscreen-icon {

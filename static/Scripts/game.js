@@ -67,8 +67,77 @@ function setSelectedBetButton(newSelectedButton) {
 }
 
 function getOrCreatePlayerHandElement(index) {
-    const handEl = document.getElementById(`hand-${index}`);
-    if (!handEl) return null;
+    let handEl = document.getElementById(`hand-${index}`);
+    if (!handEl) {
+        // Create new hand element if it doesn't exist
+        handEl = document.createElement('div');
+        handEl.id = `hand-${index}`;
+        handEl.className = 'Player-Area';
+        handEl.innerHTML = `
+            <div class="cards" id="cards-hand-${index}"></div>
+            <div class="hand-info">
+                <span class="hand-total" id="total-hand-${index}">Total:</span>
+                <span class="hand-message" id="message-hand-${index}"></span>
+            </div>
+            <div class="Zone">
+                <button class="PP bet-area-button" id="pp-bet-${index}">PP</button>
+                <button class="MAIN bet-area bet-area-button" id="main-bet-${index}"></button>
+                <button class="TWENTYONE bet-area-button" id="twentyone-bet-${index}">21+3</button>
+            </div>
+            <div class="bet-input-container">
+                <input type="number" class="side-bet-input" id="pp-bet-input-${index}" placeholder="PP" value="0" min="0" step="100">
+                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main" value="500" min="500" step="500">
+                <input type="number" class="side-bet-input" id="twentyone-bet-input-${index}" placeholder="21+3" value="0" min="0" step="100">
+            </div>
+        `;
+        playerHandsContainer.appendChild(handEl);
+        
+        // Attach event listeners to the new elements
+        const hand = {
+            area: handEl,
+            cardsDiv: document.getElementById(`cards-hand-${index}`),
+            totalSpan: document.getElementById(`total-hand-${index}`),
+            messageSpan: document.getElementById(`message-hand-${index}`),
+            mainBetInput: document.getElementById(`main-bet-input-${index}`),
+            sideTwentyOneBetInput: document.getElementById(`twentyone-bet-input-${index}`),
+            sidePPBetInput: document.getElementById(`pp-bet-input-${index}`),
+            mainBetDisplay: document.getElementById(`main-bet-${index}`),
+            ppBetButton: document.getElementById(`pp-bet-${index}`),
+            twentyOneBetButton: document.getElementById(`twentyone-bet-${index}`)
+        };
+
+        // Add event listeners
+        if (hand.mainBetInput) hand.mainBetInput.addEventListener('focus', () => {
+            activeBetInput = hand.mainBetInput;
+            setSelectedBetButton(hand.mainBetDisplay);
+        });
+        if (hand.sideTwentyOneBetInput) hand.sideTwentyOneBetInput.addEventListener('focus', () => {
+            activeBetInput = hand.sideTwentyOneBetInput;
+            setSelectedBetButton(hand.twentyOneBetButton);
+        });
+        if (hand.sidePPBetInput) hand.sidePPBetInput.addEventListener('focus', () => {
+            activeBetInput = hand.sidePPBetInput;
+            setSelectedBetButton(hand.ppBetButton);
+        });
+
+        if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
+            activeBetInput = hand.mainBetInput;
+            setSelectedBetButton(this);
+            activeBetInput.focus();
+        });
+        if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
+            activeBetInput = hand.sidePPBetInput;
+            setSelectedBetButton(this);
+            activeBetInput.focus();
+        });
+        if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
+            activeBetInput = hand.sideTwentyOneBetInput;
+            setSelectedBetButton(this);
+            activeBetInput.focus();
+        });
+
+        return hand;
+    }
 
     return {
         area: handEl,
@@ -199,16 +268,27 @@ function updateUI(gameState) {
     playerChipsSpan.textContent = `Balance: $${gameState.player_chips}`;
     displayMessage(gameState.game_message);
 
+    const isBettingPhase = gameState.game_phase === "betting";
     let totalCurrentBet = 0;
-    for (let i = 0; i < gameState.num_hands; i++) {
-        const handData = gameState.player_hands[i] || {};
-        const handEl = getOrCreatePlayerHandElement(i);
-        if (!handEl) continue;
+
+    // First, hide all existing hands
+    const existingHands = playerHandsContainer.querySelectorAll('.Player-Area');
+    existingHands.forEach(hand => {
+        hand.style.display = 'none';
+    });
+
+    // Then show and update only the hands we need
+    gameState.player_hands.forEach((handData) => {
+        const handEl = getOrCreatePlayerHandElement(handData.hand_index);
+        if (!handEl) return;
+
+        // Show this hand
+        handEl.area.style.display = 'flex';
 
         clearCards(handEl.cardsDiv);
         addCardImages(handEl.cardsDiv, handData.hand || []);
 
-        if ((handData.total === 0 || handData.total === undefined) && gameState.game_phase === "betting") {
+        if ((handData.total === 0 || handData.total === undefined) && isBettingPhase) {
             handEl.totalSpan.textContent = 'Total:';
         } else {
             handEl.totalSpan.textContent = `Total: ${handData.total || 0}`;
@@ -220,13 +300,13 @@ function updateUI(gameState) {
         if (handEl.ppBetButton) handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
         if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
 
-        if (i === gameState.current_active_hand_index && gameState.game_phase === "player_turns") {
+        // Update active hand highlighting based on is_active flag
+        if (handData.is_active && gameState.game_phase === "player_turns") {
             handEl.area.classList.add('active-hand');
         } else {
             handEl.area.classList.remove('active-hand');
         }
 
-        const isBettingPhase = gameState.game_phase === "betting";
         toggleBetElementsVisibilityForHand(handEl, isBettingPhase);
 
         if (isBettingPhase) {
@@ -236,33 +316,27 @@ function updateUI(gameState) {
         }
 
         totalCurrentBet += (handData.main_bet || 0) + (handData.side_bet_21_3 || 0) + (handData.side_bet_perfect_pair || 0);
-    }
+    });
+
     totalBetDisplaySpan.textContent = `Total Bet: $${totalCurrentBet}`;
 
-    const isBettingPhase = gameState.game_phase === "betting";
     const isPlayerTurn = gameState.game_phase === "player_turns";
     const isRoundOver = gameState.game_phase === "round_over";
 
     setButtonsDisabled([dealBtn], !isBettingPhase);
-    setButtonsDisabled([hitBtn, standBtn, doubleBtn], !isPlayerTurn);
-
-    let activeHandData = null;
-    if (gameState.current_active_hand_index !== -1 && gameState.player_hands[gameState.current_active_hand_index]) {
-        activeHandData = gameState.player_hands[gameState.current_active_hand_index];
-    }
-    setButtonsDisabled([splitBtn], !(isPlayerTurn && activeHandData && activeHandData.can_split));
-
     setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver));
     setButtonsDisabled([collectBtn], !isBettingPhase);
 
-    if (!isPlayerTurn) {
-        setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
+    // Find the active hand data if it exists
+    const activeHandData = gameState.player_hands.find(hand => hand.is_active);
+
+    // Update action buttons based on active hand
+    if (isPlayerTurn && activeHandData) {
+        setButtonsDisabled([hitBtn, standBtn], false);
+        setButtonsDisabled([doubleBtn], !activeHandData.can_double);
+        setButtonsDisabled([splitBtn], !activeHandData.can_split);
     } else {
-        if (activeHandData) {
-            setButtonsDisabled([doubleBtn], !activeHandData.can_double);
-        } else {
-            setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
-        }
+        setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
     }
 
     if (!isBettingPhase) {

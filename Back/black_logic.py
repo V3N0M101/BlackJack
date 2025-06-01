@@ -440,17 +440,19 @@ class BlackjackMultiGame:
             hand_state["can_double"] = False
             hand_state["can_split"] = False
 
-        # Only consider hands with a bet
-        for i, hand_state in enumerate(self.player_hands):
-            if (
-                (hand_state["main_bet"] > 0 or hand_state["side_bet_21_3"] > 0 or hand_state["side_bet_perfect_pair"] > 0)
-                and not hand_state["busted"]
-                and not hand_state["stood"]
-                and not hand_state["blackjack"]
-            ):
-                self.current_active_hand_index = i
+        # Get list of hands with bets
+        hands_with_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
+                          if (hand_state["main_bet"] > 0 or 
+                              hand_state["side_bet_21_3"] > 0 or 
+                              hand_state["side_bet_perfect_pair"] > 0)]
+
+        # Find the first unfinished hand with a bet
+        for bet_index, (hand_index, hand_state) in enumerate(hands_with_bets):
+            if not hand_state["busted"] and not hand_state["stood"] and not hand_state["blackjack"]:
+                self.current_active_hand_index = hand_index
                 hand_state["is_active"] = True
-                self.game_message = f"It's Hand {i+1}'s turn. "
+                # Use bet_index + 1 for display numbering of active hands
+                self.game_message = f"It's Hand {bet_index + 1}'s turn. "
 
                 # Determine can_double eligibility for this specific hand
                 if len(hand_state["hand"]) == 2 and 0 <= hand_value(hand_state["hand"]) <= 11 and hand_state["main_bet"] <= self.player.chips:
@@ -540,18 +542,21 @@ class BlackjackMultiGame:
         current_total = hand_value(hand_state["hand"])
         hand_state["can_double"] = False # Can't double after hitting
 
+        # Get the display index (1-based) for this hand
+        display_index = self._get_display_index(hand_index)
+
         if current_total > 21:
             hand_state["busted"] = True
             hand_state["result_message"] = "Busted!"
-            self.game_message = f"Hand {hand_index+1} busted!"
+            self.game_message = f"Hand {display_index} busted!"
             self.find_next_active_hand() # Move to next hand
         elif current_total == 21:
             hand_state["stood"] = True # Automatically stands on 21
             hand_state["result_message"] = "Stood on 21."
-            self.game_message = f"Hand {hand_index+1} reached 21 and stood."
+            self.game_message = f"Hand {display_index} reached 21 and stood."
             self.find_next_active_hand() # Move to next hand
         else:
-            self.game_message = f"Hand {hand_index+1} hit. " # Keep the turn on this hand
+            self.game_message = f"Hand {display_index} hit. " # Keep the turn on this hand
         
         return True
 
@@ -561,9 +566,10 @@ class BlackjackMultiGame:
             self.game_message = "Cannot stand this hand at this time."
             return False
         
+        display_index = self._get_display_index(hand_index)
         hand_state["stood"] = True
         hand_state["result_message"] = "Stood."
-        self.game_message = f"Hand {hand_index+1} stood."
+        self.game_message = f"Hand {display_index} stood."
         self.find_next_active_hand() # Move to next hand
         return True
 
@@ -578,6 +584,7 @@ class BlackjackMultiGame:
             self.game_message = "Not enough chips to double down this hand."
             return False
 
+        display_index = self._get_display_index(hand_index)
         self.player.chips -= hand_state["main_bet"] # Deduct original bet again
         hand_state["main_bet"] *= 2 # Double the main bet
         hand_state["hand"].extend(self.deck.dealCards(1)) # Player gets one more card
@@ -588,11 +595,11 @@ class BlackjackMultiGame:
         if current_total > 21:
             hand_state["busted"] = True
             hand_state["result_message"] = "Doubled down and busted!"
-            self.game_message = f"Hand {hand_index+1} doubled down and busted!"
+            self.game_message = f"Hand {display_index} doubled down and busted!"
         else:
             hand_state["stood"] = True # Automatically stands after doubling
             hand_state["result_message"] = "Doubled down and stood."
-            self.game_message = f"Hand {hand_index+1} doubled down."
+            self.game_message = f"Hand {display_index} doubled down."
 
         self.find_next_active_hand() # Move to next hand
         return True
@@ -658,31 +665,47 @@ class BlackjackMultiGame:
         # Prepare player hands data
         player_hands_for_display = []
         if self.game_phase == "betting":
-            for hand_state in self.player_hands:
+            for i, hand_state in enumerate(self.player_hands):
                 hand_copy = hand_state.copy()
                 hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
                 hand_copy["total"] = hand_value(hand_state["hand"])
+                hand_copy["hand_index"] = i  # Add the hand index
                 player_hands_for_display.append(hand_copy)
-
         else:
-            for hand_state in self.player_hands:
-                if (
-                    hand_state["main_bet"] > 0
-                    or hand_state["side_bet_21_3"] > 0
-                    or hand_state["side_bet_perfect_pair"] > 0
-                ):
-                    hand_copy = hand_state.copy()
-                    hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
-                    hand_copy["total"] = hand_value(hand_state["hand"])
-                    player_hands_for_display.append(hand_copy)
+            # Get list of hands with bets for proper indexing
+            hands_with_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
+                              if (hand_state["main_bet"] > 0 or 
+                                  hand_state["side_bet_21_3"] > 0 or 
+                                  hand_state["side_bet_perfect_pair"] > 0)]
+            
+            # Create display data for each hand with bets
+            for bet_index, (i, hand_state) in enumerate(hands_with_bets):
+                hand_copy = hand_state.copy()
+                hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
+                hand_copy["total"] = hand_value(hand_state["hand"])
+                hand_copy["hand_index"] = i  # Keep original index for internal tracking
+                hand_copy["display_index"] = bet_index  # Add display index for UI
+                hand_copy["is_active"] = (i == self.current_active_hand_index)  # Set active state
+                player_hands_for_display.append(hand_copy)
 
         return {
             "dealer_hand": dealer_hand_data,
             "dealer_total": dealer_score,
             "player_chips": self.player.chips,
             "num_hands": self.num_hands,
-            "player_hands": player_hands_for_display, # Contains all hand data
+            "player_hands": player_hands_for_display,
             "current_active_hand_index": self.current_active_hand_index,
             "game_phase": self.game_phase,
             "game_message": self.game_message
         }
+
+    def _get_display_index(self, hand_index):
+        """Helper method to get the display index (1-based) for a hand based on its position among hands with bets."""
+        hands_with_bets = [(i, hand) for i, hand in enumerate(self.player_hands)
+                          if hand["main_bet"] > 0 or 
+                             hand["side_bet_21_3"] > 0 or 
+                             hand["side_bet_perfect_pair"] > 0]
+        for display_index, (i, _) in enumerate(hands_with_bets, 1):
+            if i == hand_index:
+                return display_index
+        return hand_index + 1  # Fallback to original index + 1 if not found

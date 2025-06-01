@@ -37,7 +37,7 @@ def send_verification_email(to_email: str, code: str, username: str = "", email_
         email_body = (
             f"Hi {username if username else to_email},\n\n"
             f"Your password reset code is: {code}\n\n"
-            "If you didn’t request this, just ignore this email."
+            "If you didn't request this, just ignore this email."
         )
     else: # Default to "verification"
         message["Subject"] = "Verify Your BlackJack Account"

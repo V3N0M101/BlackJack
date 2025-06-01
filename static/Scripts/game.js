@@ -285,10 +285,10 @@ function updateUI(gameState) {
     const isBettingPhase = gameState.game_phase === "betting";
     let totalCurrentBet = 0;
 
-    // First, hide all existing hands
+    // First, ensure all existing hands are properly hidden
     const existingHands = playerHandsContainer.querySelectorAll('.Player-Area');
     existingHands.forEach(hand => {
-        hand.style.display = 'none';
+        hand.style.cssText = 'display: none !important; visibility: hidden; pointer-events: none;';
     });
 
     // Then show and update only the hands we need
@@ -296,8 +296,8 @@ function updateUI(gameState) {
         const handEl = getOrCreatePlayerHandElement(handData.hand_index);
         if (!handEl) return;
 
-        // Show this hand
-        handEl.area.style.display = 'flex';
+        // Show this hand and ensure it's fully visible
+        handEl.area.style.cssText = 'display: flex !important; visibility: visible; pointer-events: auto;';
 
         clearCards(handEl.cardsDiv);
         addCardImages(handEl.cardsDiv, handData.hand || []);
@@ -310,29 +310,45 @@ function updateUI(gameState) {
 
         handEl.messageSpan.textContent = handData.result_message || "";
 
-        // Always show bet amounts on buttons if they exist
+        // Update bet displays and ensure buttons are visible
         if (handEl.mainBetDisplay) {
+            handEl.mainBetDisplay.style.visibility = 'visible';
             handEl.mainBetDisplay.textContent = handData.main_bet > 0 ? `$${handData.main_bet}` : '';
         }
         if (handEl.ppBetButton) {
+            handEl.ppBetButton.style.visibility = 'visible';
             handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
         }
         if (handEl.twentyOneBetButton) {
+            handEl.twentyOneBetButton.style.visibility = 'visible';
             handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
         }
 
-        // Update active hand highlighting based on is_active flag
+        // Show/hide bet inputs based on phase
+        if (isBettingPhase) {
+            if (handEl.mainBetInput) {
+                handEl.mainBetInput.style.display = 'inline-block';
+                handEl.mainBetInput.value = handData.main_bet || 0;
+            }
+            if (handEl.sideTwentyOneBetInput) {
+                handEl.sideTwentyOneBetInput.style.display = 'inline-block';
+                handEl.sideTwentyOneBetInput.value = handData.side_bet_21_3 || 0;
+            }
+            if (handEl.sidePPBetInput) {
+                handEl.sidePPBetInput.style.display = 'inline-block';
+                handEl.sidePPBetInput.value = handData.side_bet_perfect_pair || 0;
+            }
+        } else {
+            if (handEl.mainBetInput) handEl.mainBetInput.style.display = 'none';
+            if (handEl.sideTwentyOneBetInput) handEl.sideTwentyOneBetInput.style.display = 'none';
+            if (handEl.sidePPBetInput) handEl.sidePPBetInput.style.display = 'none';
+        }
+
+        // Update active hand highlighting
         if (handData.is_active && gameState.game_phase === "player_turns") {
             handEl.area.classList.add('active-hand');
         } else {
             handEl.area.classList.remove('active-hand');
-        }
-
-        // Set default values to 0 for betting phase
-        if (isBettingPhase) {
-            if (handEl.mainBetInput) handEl.mainBetInput.value = handData.main_bet || 0;
-            if (handEl.sideTwentyOneBetInput) handEl.sideTwentyOneBetInput.value = handData.side_bet_21_3 || 0;
-            if (handEl.sidePPBetInput) handEl.sidePPBetInput.value = handData.side_bet_perfect_pair || 0;
         }
 
         totalCurrentBet += (handData.main_bet || 0) + (handData.side_bet_21_3 || 0) + (handData.side_bet_perfect_pair || 0);
@@ -343,14 +359,13 @@ function updateUI(gameState) {
     const isPlayerTurn = gameState.game_phase === "player_turns";
     const isRoundOver = gameState.game_phase === "round_over";
 
+    // Update button states
     setButtonsDisabled([dealBtn], !isBettingPhase);
     setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver));
     setButtonsDisabled([collectBtn], !isBettingPhase);
 
-    // Find the active hand data if it exists
     const activeHandData = gameState.player_hands.find(hand => hand.is_active);
 
-    // Update action buttons based on active hand
     if (isPlayerTurn && activeHandData) {
         setButtonsDisabled([hitBtn, standBtn], false);
         setButtonsDisabled([doubleBtn], !activeHandData.can_double);
@@ -359,23 +374,22 @@ function updateUI(gameState) {
         setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
     }
 
+    // Handle bet button selection
     if (!isBettingPhase) {
         if (activeBetButton) {
             activeBetButton.classList.remove('selected');
         }
         activeBetButton = null;
         activeBetInput = null;
-    } else {
-        if (!activeBetButton && currentGameState.player_hands.length > 0) {
-            const firstHandEl = getOrCreatePlayerHandElement(0);
-            if (firstHandEl && firstHandEl.mainBetDisplay) {
-                setSelectedBetButton(firstHandEl.mainBetDisplay);
-                activeBetInput = firstHandEl.mainBetInput;
-            }
+    } else if (!activeBetButton && gameState.player_hands.length > 0) {
+        const firstHandEl = getOrCreatePlayerHandElement(0);
+        if (firstHandEl && firstHandEl.mainBetDisplay) {
+            setSelectedBetButton(firstHandEl.mainBetDisplay);
+            activeBetInput = firstHandEl.mainBetInput;
         }
     }
 
-    // Bonus UI
+    // Update bonus UI
     updateBonusUI(
         gameState.can_collect_bonus,
         gameState.next_bonus_time,

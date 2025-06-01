@@ -440,14 +440,12 @@ class BlackjackMultiGame:
             hand_state["can_double"] = False
             hand_state["can_split"] = False
 
-        # Get list of hands with bets
-        hands_with_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
-                          if (hand_state["main_bet"] > 0 or 
-                              hand_state["side_bet_21_3"] > 0 or 
-                              hand_state["side_bet_perfect_pair"] > 0)]
+        # Get list of hands with MAIN bets only (not just any bet)
+        hands_with_main_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
+                          if hand_state["main_bet"] > 0]  # Only consider hands with main bets
 
-        # Find the first unfinished hand with a bet
-        for bet_index, (hand_index, hand_state) in enumerate(hands_with_bets):
+        # Find the first unfinished hand with a main bet
+        for bet_index, (hand_index, hand_state) in enumerate(hands_with_main_bets):
             if not hand_state["busted"] and not hand_state["stood"] and not hand_state["blackjack"]:
                 self.current_active_hand_index = hand_index
                 hand_state["is_active"] = True
@@ -665,6 +663,7 @@ class BlackjackMultiGame:
         # Prepare player hands data
         player_hands_for_display = []
         if self.game_phase == "betting":
+            # During betting phase, show all hands
             for i, hand_state in enumerate(self.player_hands):
                 hand_copy = hand_state.copy()
                 hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
@@ -672,14 +671,12 @@ class BlackjackMultiGame:
                 hand_copy["hand_index"] = i  # Add the hand index
                 player_hands_for_display.append(hand_copy)
         else:
-            # Get list of hands with bets for proper indexing
-            hands_with_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
-                              if (hand_state["main_bet"] > 0 or 
-                                  hand_state["side_bet_21_3"] > 0 or 
-                                  hand_state["side_bet_perfect_pair"] > 0)]
+            # During gameplay, only include hands with main bets
+            hands_with_main_bets = [(i, hand_state) for i, hand_state in enumerate(self.player_hands)
+                              if hand_state["main_bet"] > 0]  # Only consider hands with main bets
             
-            # Create display data for each hand with bets
-            for bet_index, (i, hand_state) in enumerate(hands_with_bets):
+            # Create display data for each hand with main bets
+            for bet_index, (i, hand_state) in enumerate(hands_with_main_bets):
                 hand_copy = hand_state.copy()
                 hand_copy["hand"] = [card.to_dict() for card in hand_state["hand"]]
                 hand_copy["total"] = hand_value(hand_state["hand"])
@@ -692,7 +689,7 @@ class BlackjackMultiGame:
             "dealer_hand": dealer_hand_data,
             "dealer_total": dealer_score,
             "player_chips": self.player.chips,
-            "num_hands": self.num_hands,
+            "num_hands": len(player_hands_for_display),  # Only count hands we're actually displaying
             "player_hands": player_hands_for_display,
             "current_active_hand_index": self.current_active_hand_index,
             "game_phase": self.game_phase,
@@ -700,12 +697,10 @@ class BlackjackMultiGame:
         }
 
     def _get_display_index(self, hand_index):
-        """Helper method to get the display index (1-based) for a hand based on its position among hands with bets."""
-        hands_with_bets = [(i, hand) for i, hand in enumerate(self.player_hands)
-                          if hand["main_bet"] > 0 or 
-                             hand["side_bet_21_3"] > 0 or 
-                             hand["side_bet_perfect_pair"] > 0]
-        for display_index, (i, _) in enumerate(hands_with_bets, 1):
+        """Helper method to get the display index (1-based) for a hand based on its position among hands with main bets."""
+        hands_with_main_bets = [(i, hand) for i, hand in enumerate(self.player_hands)
+                          if hand["main_bet"] > 0]  # Only consider hands with main bets
+        for display_index, (i, _) in enumerate(hands_with_main_bets, 1):
             if i == hand_index:
                 return display_index
         return hand_index + 1  # Fallback to original index + 1 if not found

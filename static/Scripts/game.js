@@ -57,12 +57,18 @@ function setButtonsDisabled(buttons, disable) {
 }
 
 function setSelectedBetButton(newSelectedButton) {
+    // Remove selected class from previous button
     if (activeBetButton) {
         activeBetButton.classList.remove('selected');
+        activeBetButton.style.border = '2px solid transparent';
+        activeBetButton.style.boxShadow = 'none';
     }
     activeBetButton = newSelectedButton;
     if (activeBetButton) {
         activeBetButton.classList.add('selected');
+        // Add golden highlight
+        activeBetButton.style.border = '2px solid gold';
+        activeBetButton.style.boxShadow = '0 0 10px gold';
     }
 }
 
@@ -80,13 +86,21 @@ function getOrCreatePlayerHandElement(index) {
                 <span class="hand-message" id="message-hand-${index}"></span>
             </div>
             <div class="Zone">
-                <button class="PP bet-area-button" id="pp-bet-${index}">PP</button>
-                <button class="MAIN bet-area bet-area-button" id="main-bet-${index}"></button>
-                <button class="TWENTYONE bet-area-button" id="twentyone-bet-${index}">21+3</button>
+                <button class="PP bet-area-button" id="pp-bet-${index}">
+                    PP
+                    <div class="tooltip-bubble">Perfect Pairs Payouts:<br>Perfect: 25:1<br>Colored: 12:1<br>Mixed: 6:1</div>
+                </button>
+                <button class="MAIN bet-area bet-area-button" id="main-bet-${index}">
+                    <div class="tooltip-bubble">Main Bet Payouts:<br>Blackjack: 3:2<br>Regular Win: 1:1</div>
+                </button>
+                <button class="TWENTYONE bet-area-button" id="twentyone-bet-${index}">
+                    21+3
+                    <div class="tooltip-bubble">21+3 Payouts:<br>Suited Trips: 100:1<br>Straight Flush: 40:1<br>Three of a Kind: 30:1<br>Straight: 10:1<br>Flush: 5:1</div>
+                </button>
             </div>
             <div class="bet-input-container">
                 <input type="number" class="side-bet-input" id="pp-bet-input-${index}" placeholder="PP" value="0" min="0" step="100">
-                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main" value="500" min="500" step="500">
+                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main" value="0" min="500" step="500">
                 <input type="number" class="side-bet-input" id="twentyone-bet-input-${index}" placeholder="21+3" value="0" min="0" step="100">
             </div>
         `;
@@ -296,9 +310,16 @@ function updateUI(gameState) {
 
         handEl.messageSpan.textContent = handData.result_message || "";
 
-        if (handEl.mainBetDisplay) handEl.mainBetDisplay.textContent = handData.main_bet > 0 ? `$${handData.main_bet}` : '';
-        if (handEl.ppBetButton) handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
-        if (handEl.twentyOneBetButton) handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
+        // Always show bet amounts on buttons if they exist
+        if (handEl.mainBetDisplay) {
+            handEl.mainBetDisplay.textContent = handData.main_bet > 0 ? `$${handData.main_bet}` : '';
+        }
+        if (handEl.ppBetButton) {
+            handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
+        }
+        if (handEl.twentyOneBetButton) {
+            handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
+        }
 
         // Update active hand highlighting based on is_active flag
         if (handData.is_active && gameState.game_phase === "player_turns") {
@@ -307,10 +328,9 @@ function updateUI(gameState) {
             handEl.area.classList.remove('active-hand');
         }
 
-        toggleBetElementsVisibilityForHand(handEl, isBettingPhase);
-
+        // Set default values to 0 for betting phase
         if (isBettingPhase) {
-            if (handEl.mainBetInput) handEl.mainBetInput.value = handData.main_bet || 500;
+            if (handEl.mainBetInput) handEl.mainBetInput.value = handData.main_bet || 0;
             if (handEl.sideTwentyOneBetInput) handEl.sideTwentyOneBetInput.value = handData.side_bet_21_3 || 0;
             if (handEl.sidePPBetInput) handEl.sidePPBetInput.value = handData.side_bet_perfect_pair || 0;
         }
@@ -685,14 +705,44 @@ async function handleRebet() {
         const data = await response.json();
         if (data.success) {
             updateUI(data.game_state);
-            if (data.game_state.game_phase === 'betting' && data.game_state.player_hands.length > 0) {
-                const firstHandEl = getOrCreatePlayerHandElement(0);
-                if (firstHandEl && firstHandEl.mainBetInput && firstHandEl.mainBetDisplay) {
-                    activeBetInput = firstHandEl.mainBetInput;
-                    setSelectedBetButton(firstHandEl.mainBetDisplay);
-                    activeBetInput.focus();
+            
+            // Apply the last bets to the UI
+            if (data.last_bets && Array.isArray(data.last_bets)) {
+                data.last_bets.forEach((bet, index) => {
+                    const handEl = getOrCreatePlayerHandElement(index);
+                    if (!handEl) return;
+
+                    // Update input values
+                    if (handEl.mainBetInput) handEl.mainBetInput.value = bet.main_bet || 0;
+                    if (handEl.sideTwentyOneBetInput) handEl.sideTwentyOneBetInput.value = bet.side_21_3 || 0;
+                    if (handEl.sidePPBetInput) handEl.sidePPBetInput.value = bet.side_pp || 0;
+
+                    // Update display buttons
+                    if (handEl.mainBetDisplay) {
+                        handEl.mainBetDisplay.textContent = bet.main_bet > 0 ? `$${bet.main_bet}` : '';
+                    }
+                    if (handEl.ppBetButton) {
+                        handEl.ppBetButton.textContent = bet.side_pp > 0 ? `$${bet.side_pp}` : 'PP';
+                    }
+                    if (handEl.twentyOneBetButton) {
+                        handEl.twentyOneBetButton.textContent = bet.side_21_3 > 0 ? `$${bet.side_21_3}` : '21+3';
+                    }
+                });
+            }
+
+            // Focus on first hand with a bet
+            if (data.game_state.game_phase === 'betting') {
+                const firstHandWithBet = data.last_bets?.findIndex(bet => bet.main_bet > 0 || bet.side_21_3 > 0 || bet.side_pp > 0);
+                if (firstHandWithBet !== -1) {
+                    const handEl = getOrCreatePlayerHandElement(firstHandWithBet);
+                    if (handEl && handEl.mainBetInput && handEl.mainBetDisplay) {
+                        activeBetInput = handEl.mainBetInput;
+                        setSelectedBetButton(handEl.mainBetDisplay);
+                        activeBetInput.focus();
+                    }
                 }
             }
+
             displayMessage(data.message);
             updateTotalBetDisplay();
         } else {

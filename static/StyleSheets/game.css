@@ -350,7 +350,7 @@ body {
     z-index: auto;
 }
 
-/* OVERLAP “ZONE” DIVS AS CHIPS */
+/* OVERLAP "ZONE" DIVS AS CHIPS */
 .Zone {
     display: flex; /* Make it a flex container */
     justify-content: center; /* Center the buttons horizontally */
@@ -648,34 +648,38 @@ button.disabled {
     gap: 15px; /* Add some space between the Draw and Rules Box */
 }
 
-/* Player Area and its internals */
+/* Make bet input container completely hidden */
 .bet-input-container {
-    display: flex;
-    gap: 5px;
-    margin-top: 10px;
-    justify-content: center;
-    visibility: hidden;
+    display: none !important; /* Use !important to ensure it's always hidden */
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute;
+    pointer-events: none;
 }
 
 /* Styling for the selected bet area button */
 .bet-area-button .selected {
-    border: 5px solid gold; /* Or a glowing effect, different background, etc. */
-    box-shadow: 0 0 10px gold;
+    border: 2px solid gold !important;
+    box-shadow: 0 0 10px gold !important;
 }
 
 /* --- Tooltip Bubble Styles --- */
 
 /* Parent container for positioning relative tooltips */
 .bet-area-button {
-    border: 2px solid transparent; /* This will be the outer border now */
-    border-radius: 8px; /* Apply border-radius to the wrapper */
-    padding: 0; /* No padding on the wrapper */
-    display: flex; /* Make it a flex container to center the button */
+    position: relative;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    cursor: pointer; /* Keep cursor pointer on the wrapper */
-    transition: all 0.2s ease; /* Transition wrapper properties */
-    position: relative; /* Needed for tooltip positioning */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #c3e0d8;
+    color: #000;
+    font-weight: bold;
 }
 
 .bet-area-button button {
@@ -698,44 +702,58 @@ button.disabled {
 
 /* The actual tooltip bubble */
 .tooltip-bubble {
-    visibility: hidden; /* Hidden by default */
-    opacity: 0;         /* Start fully transparent */
-    width: 160px;       /* Adjust width as needed */
-    background-color: rgba(0, 0, 0, 0.85); /* Dark background with some transparency */
-    color: #fff;        /* White text */
-    text-align: center;
-    border-radius: 6px;
-    padding: 8px 10px;
+    visibility: hidden;
     position: absolute;
-    z-index: 1000; /* Ensure it's above other elements */
-    bottom: 120%; /* Position above the button, adjust as needed */
+    bottom: 120%;
     left: 50%;
-    transform: translateX(-50%); /* Center the tooltip horizontally */
-    transition: opacity 0.3s ease, visibility 0.3s ease; /* Smooth transition for appearance/disappearance */
-    font-size: 0.8em; /* Smaller text for the tooltip */
+    transform: translateX(-50%);
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+    width: max-content;
+    text-align: left;
     line-height: 1.4;
-    white-space: normal; /* Allow text to wrap */
 }
 
-/* Arrow for the tooltip bubble (optional, but good for UX) */
 .tooltip-bubble::after {
-    content: "";
+    content: '';
     position: absolute;
-    top: 100%; /* At the bottom of the tooltip */
+    top: 100%;
     left: 50%;
-    margin-left: -5px; /* Half the width of the arrow to center it */
+    margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent; /* Creates a downward-pointing arrow */
+    border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
 }
 
-/* Show the tooltip when hovering over the parent button */
-.bet-area-button:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
-                0 0 8px rgba(255, 255, 255, 0.6);
-    transform: scale(1.1); /* Scale the wrapper */
+.bet-area-button:hover .tooltip-bubble {
+    visibility: visible;
+    opacity: 1;
 }
 
+/* Ensure bet amounts are always visible */
+.Zone .PP,
+.Zone .MAIN,
+.Zone .TWENTYONE {
+    min-width: 70px;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    background: #c3e0d8;
+    border: 2px solid #8cc;
+    padding: 8px;
+    text-align: center;
+    word-break: break-word;
+}
 
 .background-blur {
     position: fixed;

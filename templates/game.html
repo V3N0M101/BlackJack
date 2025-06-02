@@ -71,17 +71,17 @@
               <span class="hand-message" id="message-hand-{{ i }}"></span>
             </div>
             <div class="Zone">
-              <button class="PP bet-area-button" id="pp-bet-{{ i }}">
+              <div class="PP bet-area-button" id="pp-bet-{{ i }}">
                 PP
                 <div class="tooltip-bubble">Perfect Pairs Payouts:<br>Perfect: 25:1<br>Colored: 12:1<br>Mixed: 6:1</div>
-              </button>
-              <button class="MAIN bet-area bet-area-button" id="main-bet-{{ i }}">
+              </div>
+              <div class="MAIN bet-area bet-area-button" id="main-bet-{{ i }}">
                 <div class="tooltip-bubble">Main Bet Payouts:<br>Blackjack: 3:2<br>Regular Win: 1:1</div>
-              </button>
-              <button class="TWENTYONE bet-area-button" id="twentyone-bet-{{ i }}">
+              </div>
+              <div class="TWENTYONE bet-area-button" id="twentyone-bet-{{ i }}">
                 21+3
                 <div class="tooltip-bubble">21+3 Payouts:<br>Suited Trips: 100:1<br>Straight Flush: 40:1<br>Three of a Kind: 30:1<br>Straight: 10:1<br>Flush: 5:1</div>
-              </button>
+              </div>
             </div>
             <div class="bet-input-container">
               <input type="number" class="side-bet-input" id="pp-bet-input-{{ i }}" placeholder="PP" value="0" min="0" step="100">
@@ -153,6 +153,8 @@
   <script src="/static/Scripts/max.js"></script>
   <script src="/static/Scripts/transition.js"></script>
   <script src="/static/Scripts/game.js"></script>
+  
+
   <script>
     window.addEventListener('pageshow', function (event) {
       if (event.persisted) {

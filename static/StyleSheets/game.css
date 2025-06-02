@@ -247,6 +247,51 @@ body {
     margin: 0 8px; /* Reduced from 10px */
 }
 
+/* Bet button text sizing */
+.bet-area-button button {
+    font-size: 0.95em; /* Base font size for all bet buttons */
+    word-break: break-word; /* Allow breaking words to prevent overflow */
+    transition: font-size 0.2s ease; /* Smooth transition for font size changes */
+    hyphens: auto; /* Allow hyphenation for better text wrapping */
+    line-height: 1.1; /* Tighter line height for multi-line text */
+}
+
+/* Smaller text for bet buttons in windowed mode */
+.table-windowed .bet-area-button button {
+    font-size: 0.85em; /* Smaller font size specifically for windowed mode */
+}
+
+/* Adaptive text sizing based on content length */
+.bet-area-button button.has-bet {
+    font-size: 0.75em; /* Smaller font for buttons with bets */
+}
+
+/* Even smaller text for large dollar amounts (likely to wrap) */
+.bet-area-button button.large-bet {
+    font-size: 0.65em; /* Smallest font for larger dollar amounts */
+}
+
+/* Special styling for very large bets (over 10000) */
+.bet-area-button.very-large-bet,
+.Zone .PP.very-large-bet,
+.Zone .MAIN.very-large-bet,
+.Zone .TWENTYONE.very-large-bet {
+    font-size: 1.2em; /* Increased from 0.55em for better readability */
+    letter-spacing: -0.5px; /* Reduce letter spacing to prevent overflow */
+    overflow: visible !important; /* Allow text to overflow its container */
+    white-space: nowrap !important; /* Prevent text from wrapping */
+    z-index: 10 !important; /* Ensure text appears above other elements */
+    position: relative; /* Needed for z-index to work */
+}
+
+/* Additional styling to ensure text doesn't get cut off */
+.Zone .PP.very-large-bet,
+.Zone .MAIN.very-large-bet,
+.Zone .TWENTYONE.very-large-bet {
+    max-width: none !important; /* Remove max-width constraint */
+    width: auto !important; /* Allow width to adjust to content */
+}
+
 .Player-Area.active-hand {
     /* Change the background color to a shade of yellow */
     background-color: #fff5d5a2; /* A common yellow from Bootstrap, or choose your own hex code */
@@ -345,13 +390,13 @@ body {
 }
 
 #dealer-cards img {
-    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.85));
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9)); /* Thicker black shadow for dealer cards */
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 #dealer-cards img:hover {
     transform: translateY(-8px) scale(1.06);
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+    filter: drop-shadow(0 0 10px rgba(0, 150, 255, 0.9)); /* Brighter blue glow on hover */
 }
 
 .Dealer_mid {
@@ -385,8 +430,9 @@ body {
     max-width: 100%;
     margin: 0;
     position: relative;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
     border-radius: 4px; /* Added subtle rounding to cards */
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9)); /* Thicker black shadow for player cards */
 }
 
 /* Make cards overlap */
@@ -396,8 +442,9 @@ body {
 
 /* Hover effect to see covered parts of cards */
 .cards img:hover {
-    transform: translateY(-10px); /* Lift card up slightly */
+    transform: translateY(-10px) scale(1.06); /* Lift card up slightly and scale like dealer cards */
     z-index: 1; /* Bring hovered card to front */
+    filter: drop-shadow(0 0 16px rgba(0, 0, 0, 0.95)); /* Thicker black shadow on hover */
 }
 
 /* Dealer cards specific adjustments */
@@ -597,10 +644,14 @@ body {
 }
 
 /* Hover effects */
-.Zone button:hover {
+.Zone button:hover,
+.Zone .PP:hover,
+.Zone .MAIN:hover,
+.Zone .TWENTYONE:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     z-index: 2; /* Bring hovered button to front */
+    cursor: pointer;
 }
 
 /* Fullscreen mode adjustments */
@@ -656,6 +707,7 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto; /* Allow interaction inside tooltip */
+    display: block;
 }
 
 /* Small arrow for tooltip */
@@ -760,13 +812,13 @@ body {
 
 /* Card visuals */
 #dealer-cards img {
-    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.85));
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9)); /* Thicker black shadow for dealer cards */
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 #dealer-cards img:hover {
     transform: translateY(-8px) scale(1.06);
-    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+    filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9)); /* Brighter blue glow on hover */
 }
 
 /* --- Card Dealing Animation --- */
@@ -945,14 +997,14 @@ button.disabled {
     height: 100%; /* Make button fill its wrapper */
     border: none; /* Remove default button border */
     border-radius: 6px; /* Slightly smaller border-radius for the inner button */
-    font-size: 1.1em; /* Adjust font size */
+    font-size: 1em; /* Adjust font size */
     display: flex; /* Ensure content is centered */
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: background 0.2s ease; /* Only transition background for the inner button */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    pointer-events: none;
+    pointer-events: auto;
 }
 
 /* The actual tooltip bubble */
@@ -968,9 +1020,9 @@ button.disabled {
     border-radius: 6px;
     font-size: 14px;
     white-space: nowrap;
-    z-index: 9999;
+    z-index: 10000;
     opacity: 0;
-    transition: opacity 0.2s, visibility 0.2s;
+    transition: opacity 0.3s, visibility 0.3s;
     width: max-content;
     text-align: left;
     line-height: 1.6;
@@ -1008,11 +1060,12 @@ button.disabled {
     align-items: center;
     justify-content: center;
     font-size: 1.25em;
-    background: #c3e0d8;
-    border: 2px solid #8cc;
+    background: #009269;
+    border: 2px solid rgb(0, 20, 20);
     padding: 8px;
     text-align: center;
-    word-break: break-word;
+    word-break: normal; /* Changed from break-word to allow overflow */
+    position: relative; /* Needed for z-index to work */
 }
 
 .chips {
@@ -1084,12 +1137,4 @@ button.disabled {
     justify-content: space-between;
     align-items: center;
     z-index: auto;
-}
-
-/* === Tooltip Final Override === */
-.bet-area-button:hover > .tooltip-bubble,
-.bet-area-button:focus > .tooltip-bubble,
-.bet-area-button:focus-visible > .tooltip-bubble {
-    visibility: visible !important;
-    opacity: 1 !important;
 }

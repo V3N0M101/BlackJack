@@ -687,6 +687,15 @@ def login():
             session["username"] = user["username"]
             session["chips"] = user["chips"]
             session["login_alert"] = True
+            
+            # Restore game state if it exists
+            try:
+                if "game_state" in user.keys() and user["game_state"]:
+                    game_state = json.loads(user["game_state"])
+                    session["blackjack_game_state"] = game_state
+            except Exception as e:
+                print(f"Error restoring game state for {username}: {e}")
+                
             return redirect("/")
         
         flash("Invalid username or password.") # Use flash for consistency
@@ -708,8 +717,32 @@ def navbar():
 def logout():
     """
     Logs out the user by clearing the session.
+    Saves the game state to the database before logging out.
     Redirects to the login page with a logout alert.
     """
+    # Save game state to database if it exists
+    if "username" in session and "blackjack_game_state" in session:
+        username = session["username"]
+        game_state = json.dumps(session["blackjack_game_state"])
+        conn = get_db_connection()
+        try:
+            # Check if game_state column exists, if not add it
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(users)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if "game_state" not in columns:
+                conn.execute("ALTER TABLE users ADD COLUMN game_state TEXT")
+                conn.commit()
+            
+            # Save game state
+            conn.execute("UPDATE users SET game_state = ? WHERE username = ?", (game_state, username))
+            conn.commit()
+        except Exception as e:
+            print(f"Error saving game state for {username}: {e}")
+        finally:
+            conn.close()
+    
     session.clear()
     session["logout_alert"] = True
     return redirect("/login")

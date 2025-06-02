@@ -2,6 +2,20 @@
 let currentGameState = null; // Stores the current game state from the backend
 let activeBetInput = null; // To track which bet input is currently focused for chip clicks
 let activeBetButton = null; // To track the currently selected circular bet button
+
+// Function to set the selected bet button with gold glow
+function setSelectedBetButton(button) {
+    // Remove gold glow from previously selected button
+    if (activeBetButton) {
+        activeBetButton.style.boxShadow = '';
+    }
+    
+    // Add gold glow to newly selected button
+    activeBetButton = button;
+    if (activeBetButton) {
+        activeBetButton.style.boxShadow = '0 0 15px 5px gold, 0 0 20px 7px rgba(255, 215, 0, 0.5)';
+    }
+}
 let resultSoundsPlayed = false; // Flag to ensure outcome sound plays only once per round
 
 // Get references to all necessary DOM elements
@@ -200,21 +214,21 @@ function getOrCreatePlayerHandElement(index) {
                 <span class="hand-message" id="message-hand-${index}"></span>
             </div>
             <div class="Zone">
-                <button class="PP bet-area-button" id="pp-bet-${index}">
+                <div class="PP bet-area-button" id="pp-bet-${index}">
                     PP
                     <div class="tooltip-bubble">Perfect Pairs Payouts:<br>Perfect: 25:1<br>Colored: 12:1<br>Mixed: 6:1</div>
-                </button>
-                <button class="MAIN bet-area bet-area-button" id="main-bet-${index}">
+                </div>
+                <div class="MAIN bet-area bet-area-button" id="main-bet-${index}">
                     <div class="tooltip-bubble">Main Bet Payouts:<br>Blackjack: 3:2<br>Regular Win: 1:1</div>
-                </button>
-                <button class="TWENTYONE bet-area-button" id="twentyone-bet-${index}">
+                </div>
+                <div class="TWENTYONE bet-area-button" id="twentyone-bet-${index}">
                     21+3
                     <div class="tooltip-bubble">21+3 Payouts:<br>Suited Trips: 100:1<br>Straight Flush: 40:1<br>Three of a Kind: 30:1<br>Straight: 10:1<br>Flush: 5:1</div>
-                </button>
+                </div>
             </div>
             <div class="bet-input-container">
                 <input type="number" class="side-bet-input" id="pp-bet-input-${index}" placeholder="PP" value="0" min="0" step="100">
-                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main" value="0" min="500" step="500">
+                <input type="number" class="main-bet-input" id="main-bet-input-${index}" placeholder="Main" value="500" min="500" step="500">
                 <input type="number" class="side-bet-input" id="twentyone-bet-input-${index}" placeholder="21+3" value="0" min="0" step="100">
             </div>
         `;
@@ -323,13 +337,19 @@ function displayMessage(message, type = 'info') {
 
 // --- Bonus UI Logic ---
 function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerChips) {
+    console.log('updateBonusUI called:', { canCollect, nextBonusTime, bonusCooldownMessage });
+    
     if (playerChipsSpan) {
         playerChipsSpan.textContent = `Balance: $${playerChips}`;
     }
+    
+    // Clear any existing countdown interval
     if (bonusCountdownInterval) {
         clearInterval(bonusCountdownInterval);
         bonusCountdownInterval = null;
     }
+    
+    // Handle the case where the bonus can be collected
     if (canCollect) {
         if (collectBtn) {
             collectBtn.disabled = false;
@@ -337,52 +357,71 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
             collectBtn.classList.remove('btn-disabled'); 
             collectBtn.classList.add('btn-primary');
         }
-        if (Cooldown_msg) Cooldown_msg.textContent = bonusCooldownMessage || "Bonus available!";
-    } else {
-        if (nextBonusTime) {
-            const nextCollectionDate = new Date(nextBonusTime);
-            const updateCountdown = () => {
-                const now = new Date();
-                const timeRemaining = nextCollectionDate.getTime() - now.getTime();
-                if (timeRemaining <= 0) {
-                    if (Cooldown_msg) Cooldown_msg.textContent = "Bonus available!";
-                    if (collectBtn) {
-                        collectBtn.disabled = false;
-                        collectBtn.textContent = 'Collect Bonus!';
-                        collectBtn.classList.remove('btn-disabled'); 
-                        collectBtn.classList.add('btn-primary');
-                    }
-                    clearInterval(bonusCountdownInterval);
-                    bonusCountdownInterval = null;
-                } else {
-                    const totalSeconds = Math.floor(timeRemaining / 1000);
-                    const hours = Math.floor(totalSeconds / 3600);
-                    const minutes = Math.floor((totalSeconds % 3600) / 60);
-                    const seconds = totalSeconds % 60;
-                    const formattedTime =
-                        `${hours.toString().padStart(2, '0')}h ` +
-                        `${minutes.toString().padStart(2, '0')}m ` +
-                        `${seconds.toString().padStart(2, '0')}s`;
-                    if (collectBtn) {
-                        collectBtn.textContent = `Next in ${formattedTime}`;
-                    }
-                    if (Cooldown_msg) {
-                        Cooldown_msg.textContent = `Next bonus in ${formattedTime}`;
-                    }
+        if (Cooldown_msg) {
+            Cooldown_msg.textContent = bonusCooldownMessage || "Bonus available!";
+        }
+        return; // Exit early since we don't need to set up a countdown
+    }
+    
+    // Handle the case where there's a countdown to the next bonus
+    if (nextBonusTime) {
+        const nextCollectionDate = new Date(nextBonusTime);
+        
+        // Define the countdown update function
+        const updateCountdown = () => {
+            const now = new Date();
+            const timeRemaining = nextCollectionDate.getTime() - now.getTime();
+            
+            // If countdown has reached zero, make bonus available
+            if (timeRemaining <= 0) {
+                if (Cooldown_msg) {
+                    Cooldown_msg.textContent = "Bonus available!";
                 }
-            };
-            updateCountdown();
-            bonusCountdownInterval = setInterval(updateCountdown, 1000);
-        } else {
-            if (Cooldown_msg) {
-                Cooldown_msg.textContent = bonusCooldownMessage || "No nextBonusTime provided.";
+                if (collectBtn) {
+                    collectBtn.disabled = false;
+                    collectBtn.textContent = 'Collect Bonus!';
+                    collectBtn.classList.remove('btn-disabled'); 
+                    collectBtn.classList.add('btn-primary');
+                }
+                clearInterval(bonusCountdownInterval);
+                bonusCountdownInterval = null;
+            } else {
+                // Format the remaining time
+                const totalSeconds = Math.floor(timeRemaining / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                const formattedTime =
+                    `${hours.toString().padStart(2, '0')}h ` +
+                    `${minutes.toString().padStart(2, '0')}m ` +
+                    `${seconds.toString().padStart(2, '0')}s`;
+                
+                // Update the button and message
+                if (collectBtn) {
+                    collectBtn.disabled = true;
+                    collectBtn.textContent = `Next in ${formattedTime}`;
+                    collectBtn.classList.add('btn-disabled');
+                    collectBtn.classList.remove('btn-primary');
+                }
+                if (Cooldown_msg) {
+                    Cooldown_msg.textContent = `Next bonus in ${formattedTime}`;
+                }
             }
-            if (collectBtn) {
-                collectBtn.textContent = 'Collect Bonus'; 
-                collectBtn.disabled = true;
-                collectBtn.classList.add('btn-disabled');
-                collectBtn.classList.remove('btn-primary');
-            }
+        };
+        
+        // Run the countdown immediately and then set interval
+        updateCountdown();
+        bonusCountdownInterval = setInterval(updateCountdown, 1000);
+    } else {
+        // Handle the case where there's no next bonus time
+        if (Cooldown_msg) {
+            Cooldown_msg.textContent = bonusCooldownMessage || "Bonus not available";
+        }
+        if (collectBtn) {
+            collectBtn.textContent = 'Collect Bonus'; 
+            collectBtn.disabled = true;
+            collectBtn.classList.add('btn-disabled');
+            collectBtn.classList.remove('btn-primary');
         }
     }
 }
@@ -464,14 +503,17 @@ function updateUI(gameState) {
         if (handEl.mainBetDisplay) {
             handEl.mainBetDisplay.style.visibility = 'visible';
             handEl.mainBetDisplay.textContent = handData.main_bet > 0 ? `$${handData.main_bet}` : '';
+            updateBetButtonTextClass(handEl.mainBetDisplay, handData.main_bet);
         }
         if (handEl.ppBetButton) {
             handEl.ppBetButton.style.visibility = 'visible';
             handEl.ppBetButton.textContent = handData.side_bet_perfect_pair > 0 ? `$${handData.side_bet_perfect_pair}` : 'PP';
+            updateBetButtonTextClass(handEl.ppBetButton, handData.side_bet_perfect_pair);
         }
         if (handEl.twentyOneBetButton) {
             handEl.twentyOneBetButton.style.visibility = 'visible';
             handEl.twentyOneBetButton.textContent = handData.side_bet_21_3 > 0 ? `$${handData.side_bet_21_3}` : '21+3';
+            updateBetButtonTextClass(handEl.twentyOneBetButton, handData.side_bet_21_3);
         }
 
         // Show/hide bet inputs based on phase
@@ -512,30 +554,33 @@ function updateUI(gameState) {
     const isPlayerTurn = gameState.game_phase === "player_turns";
     const isRoundOver = gameState.game_phase === "round_over";
 
-    // Play win/lose/push sounds once per round based on result messages
+    // Play win/lose/push sounds once per round based on net gain/loss
     if (isRoundOver && !resultSoundsPlayed) {
-        let hasWin = false;
-        let hasLose = false;
-        let hasPush = false;
-
+        // Calculate net gain/loss from the round
+        let netGainLoss = 0;
+        
         gameState.player_hands.forEach(hand => {
-            const msg = (hand.result_message || '').toLowerCase();
-            if (msg.includes('you win') || msg.includes('blackjack')) {
-                hasWin = true;
-            } else if (msg.includes('dealer wins') || msg.includes('lose') || msg.includes('busted')) {
-                hasLose = true;
-            } else if (msg.includes('push')) {
-                hasPush = true;
+            // Add winnings (if any)
+            if (hand.winnings) {
+                netGainLoss += hand.winnings;
             }
+            
+            // Subtract original bets
+            netGainLoss -= (hand.main_bet || 0) + (hand.side_bet_21_3 || 0) + (hand.side_bet_perfect_pair || 0);
         });
-
-        if (hasWin) {
+        
+        // Play sound based on net result
+        if (netGainLoss > 0) {
+            // Net win
             playSound('win');
-        } else if (hasLose) {
+        } else if (netGainLoss < 0) {
+            // Net loss
             playSound('lose');
-        } else if (hasPush) {
+        } else if (netGainLoss === 0) {
+            // Push (break even)
             playSound('push');
         }
+        
         resultSoundsPlayed = true;
     }
 
@@ -568,13 +613,17 @@ function updateUI(gameState) {
         }
     }
 
-    // Update bonus UI
-    updateBonusUI(
-        gameState.can_collect_bonus,
-        gameState.next_bonus_time,
-        gameState.bonus_cooldown_message,
-        gameState.player_chips
-    );
+    // Always update bonus UI with the latest state
+    // This ensures the collect button is properly updated after each round
+    if (gameState.hasOwnProperty('can_collect_bonus') && 
+        gameState.hasOwnProperty('next_bonus_time')) {
+        updateBonusUI(
+            gameState.can_collect_bonus,
+            gameState.next_bonus_time,
+            gameState.bonus_cooldown_message || '',
+            gameState.player_chips
+        );
+    }
 }
 
 // --- API Calls ---
@@ -607,6 +656,24 @@ async function fetchGameState(url, options = {}) {
 
 // --- Event Listeners ---
 
+// Tooltip hover handlers
+function handleBetAreaHover(event) {
+    const tooltip = this.querySelector('.tooltip-bubble');
+    if (tooltip) {
+        tooltip.style.visibility = 'visible';
+        tooltip.style.opacity = '1';
+        tooltip.style.display = 'block';
+    }
+}
+
+function handleBetAreaLeave(event) {
+    const tooltip = this.querySelector('.tooltip-bubble');
+    if (tooltip) {
+        tooltip.style.visibility = 'hidden';
+        tooltip.style.opacity = '0';
+    }
+}
+
 function attachHandEventListeners() {
     const numHands = document.querySelectorAll('.Player-Area').length;
     for (let i = 0; i < numHands; i++) {
@@ -626,31 +693,76 @@ function attachHandEventListeners() {
             setSelectedBetButton(hand.ppBetButton);
         });
 
-        if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
-            playSound('button');
-            activeBetInput = hand.mainBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
-        });
-        if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
-            playSound('button');
-            activeBetInput = hand.sidePPBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
-        });
-        if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
-            playSound('button');
-            activeBetInput = hand.sideTwentyOneBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
-        });
+        if (hand.mainBetDisplay) {
+            hand.mainBetDisplay.addEventListener('click', function() {
+                playSound('button');
+                activeBetInput = hand.mainBetInput;
+                setSelectedBetButton(this);
+                activeBetInput.focus();
+            });
+            hand.mainBetDisplay.addEventListener('mouseenter', handleBetAreaHover);
+            hand.mainBetDisplay.addEventListener('mouseleave', handleBetAreaLeave);
+        }
+        if (hand.ppBetButton) {
+            hand.ppBetButton.addEventListener('click', function() {
+                playSound('button');
+                activeBetInput = hand.sidePPBetInput;
+                setSelectedBetButton(this);
+                activeBetInput.focus();
+            });
+            hand.ppBetButton.addEventListener('mouseenter', handleBetAreaHover);
+            hand.ppBetButton.addEventListener('mouseleave', handleBetAreaLeave);
+        }
+        if (hand.twentyOneBetButton) {
+            hand.twentyOneBetButton.addEventListener('click', function() {
+                playSound('button');
+                activeBetInput = hand.sideTwentyOneBetInput;
+                setSelectedBetButton(this);
+                activeBetInput.focus();
+            });
+            hand.twentyOneBetButton.addEventListener('mouseenter', handleBetAreaHover);
+            hand.twentyOneBetButton.addEventListener('mouseleave', handleBetAreaLeave);
+        }
     }
+}
+
+// Function to initialize the game and set up initial state
+function initGame() {
+    console.log('Initializing game...');
+    // Any initial setup can go here
+}
+
+// Function to set up all event listeners
+function setupEventListeners() {
+    console.log('Setting up event listeners...');
+    // Set up chip button event listeners
+    chipButtons.forEach(button => {
+        button.addEventListener('click', handleChipButtonClick);
+    });
+    
+    // Attach event listeners to action buttons
+    if (dealBtn) dealBtn.addEventListener('click', handleDealButtonClick);
+    if (hitBtn) hitBtn.addEventListener('click', handleHitButtonClick);
+    if (standBtn) standBtn.addEventListener('click', handleStandButtonClick);
+    if (doubleBtn) doubleBtn.addEventListener('click', handleDoubleButtonClick);
+    if (splitBtn) splitBtn.addEventListener('click', handleSplitButtonClick);
+    if (clearBetsBtn) clearBetsBtn.addEventListener('click', handleClearBetsButtonClick);
+    if (reBetBtn) reBetBtn.addEventListener('click', handleReBetButtonClick);
+    
+    // Attach hand event listeners
+    attachHandEventListeners();
+}
+
+// Function to load the game state from the server
+function loadGameState() {
+    console.log('Loading game state...');
+    fetchGameState('/api/start_game', { method: 'POST' });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     fetchGameState('/api/start_game', { method: 'POST' });
     attachHandEventListeners();
-
+    
     const initialHandEl = getOrCreatePlayerHandElement(0);
     if (initialHandEl && initialHandEl.mainBetInput && initialHandEl.mainBetDisplay) {
         activeBetInput = initialHandEl.mainBetInput;
@@ -736,9 +848,33 @@ chipButtons.forEach(button => {
             const chipValue = parseInt(button.dataset.chipValue);
             let currentValue = parseInt(activeBetInput.value) || 0;
             let newValue = currentValue + chipValue;
-
-            if (currentGameState.player_chips < newValue) {
-                displayMessage("Not enough chips!", 'error');
+            
+            // Calculate total bet across all zones to check if it exceeds player's balance
+            let totalBetAcrossAllZones = 0;
+            const handElements = playerHandsContainer.querySelectorAll('.Player-Area');
+            handElements.forEach((handElDiv, index) => {
+                const handEl = getOrCreatePlayerHandElement(index);
+                if (!handEl) return;
+                
+                // Add all current bets except the one being modified
+                if (activeBetInput !== handEl.mainBetInput) {
+                    totalBetAcrossAllZones += (parseInt(handEl.mainBetInput.value) || 0);
+                }
+                if (activeBetInput !== handEl.sideTwentyOneBetInput) {
+                    totalBetAcrossAllZones += (parseInt(handEl.sideTwentyOneBetInput.value) || 0);
+                }
+                if (activeBetInput !== handEl.sidePPBetInput) {
+                    totalBetAcrossAllZones += (parseInt(handEl.sidePPBetInput.value) || 0);
+                }
+            });
+            
+            // Add the new value of the current bet being modified
+            totalBetAcrossAllZones += newValue;
+            
+            // Check if total bet exceeds player's chips
+            if (currentGameState.player_chips < totalBetAcrossAllZones) {
+                displayMessage("Not enough chips for total bet!", 'error');
+                playSound('error');
                 return;
             }
 
@@ -749,10 +885,13 @@ chipButtons.forEach(button => {
 
             if (activeBetInput === handEl.mainBetInput) {
                 handEl.mainBetDisplay.textContent = `$${newValue}`;
+                updateBetButtonTextClass(handEl.mainBetDisplay, newValue);
             } else if (activeBetInput === handEl.sidePPBetInput) {
                 handEl.ppBetButton.textContent = `$${newValue}`;
+                updateBetButtonTextClass(handEl.ppBetButton, newValue);
             } else if (activeBetInput === handEl.sideTwentyOneBetInput) {
                 handEl.twentyOneBetButton.textContent = `$${newValue}`;
+                updateBetButtonTextClass(handEl.twentyOneBetButton, newValue);
             }
 
             updateTotalBetDisplay();
@@ -774,6 +913,30 @@ function updateTotalBetDisplay() {
         currentTotalBet += (parseInt(handEl.sidePPBetInput.value) || 0);
     });
     totalBetDisplaySpan.textContent = `Total Bet: $${currentTotalBet}`;
+}
+
+/**
+ * Updates the CSS classes on bet buttons to adjust text size based on content
+ * @param {HTMLElement} buttonElement - The button element to update
+ * @param {number} betAmount - The bet amount (if any)
+ */
+function updateBetButtonTextClass(buttonElement, betAmount) {
+    if (!buttonElement) return;
+    
+    // Remove existing classes
+    buttonElement.classList.remove('has-bet', 'large-bet', 'very-large-bet');
+    
+    // Add appropriate classes based on bet amount
+    if (betAmount > 0) {
+        buttonElement.classList.add('has-bet');
+        
+        // For larger amounts that might need smaller text
+        if (betAmount >= 10000) {
+            buttonElement.classList.add('very-large-bet');
+        } else if (betAmount >= 1000) {
+            buttonElement.classList.add('large-bet');
+        }
+    }
 }
 
 function animateDiscardCards() {
@@ -945,39 +1108,96 @@ clearBetsBtn.addEventListener('click', () => {
 
 reBetBtn.addEventListener('click', () => {
     playSound('button');
-    handleRebet();
+    animateDiscardCards();
+    
+    // Wait for animation to complete before making the API call
+    // Using a shorter delay for better responsiveness
+    setTimeout(() => {
+        handleRebet();
+    }, 800);
 });
 
 // --- Collect Button Handler (NEW) ---
 collectBtn.addEventListener('click', () => {
     playSound('button');
+    // Disable button immediately to prevent multiple clicks
     collectBtn.disabled = true;
+    collectBtn.classList.add('btn-disabled');
+    collectBtn.classList.remove('btn-primary');
     collectBtn.textContent = 'Collecting...';
     if (Cooldown_msg) Cooldown_msg.textContent = '';
+    
     fetch('/api/collect_chips', { method: 'POST' })
         .then(response => {
+            // First handle non-OK responses without trying to parse JSON
             if (!response.ok) {
-                return response.json().then(errData => {
-                    throw new Error(errData.message || `HTTP error! status: ${response.status}`);
-                }).catch(() => {
-                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-                });
+                // For non-JSON responses or network errors
+                if (response.status === 0 || response.type === 'opaque') {
+                    throw new Error('Network error or CORS issue');
+                }
+                
+                // Try to get JSON error message if available
+                return response.json()
+                    .then(errData => {
+                        throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+                    })
+                    .catch(jsonError => {
+                        // If JSON parsing fails, use status text
+                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                    });
             }
             return response.json();
         })
         .then(data => {
+            console.log('Collect bonus response:', data);
+            
             if (data.success) {
                 playSound('bonus');
                 displayMessage(data.message, 'success');
-                updateBonusUI(
-                    data.game_state.can_collect_bonus,
-                    data.game_state.next_bonus_time,
-                    data.game_state.bonus_cooldown_message,
-                    data.game_state.player_chips
-                );
+                
+                // Update UI with the new game state
+                if (data.game_state) {
+                    // Ensure the next_bonus_time is properly formatted
+                    if (data.game_state.next_bonus_time) {
+                        // Make sure it's a valid date string
+                        const nextBonusTime = new Date(data.game_state.next_bonus_time);
+                        if (!isNaN(nextBonusTime.getTime())) {
+                            // Valid date, update UI with countdown
+                            updateBonusUI(
+                                data.game_state.can_collect_bonus,
+                                data.game_state.next_bonus_time,
+                                data.game_state.bonus_cooldown_message,
+                                data.game_state.player_chips
+                            );
+                        } else {
+                            console.error('Invalid next_bonus_time:', data.game_state.next_bonus_time);
+                            // Handle invalid date
+                            collectBtn.disabled = true;
+                            collectBtn.textContent = 'Cooldown Active';
+                            collectBtn.classList.add('btn-disabled');
+                            collectBtn.classList.remove('btn-primary');
+                        }
+                    } else {
+                        // No next_bonus_time provided
+                        updateBonusUI(
+                            data.game_state.can_collect_bonus,
+                            null,
+                            data.game_state.bonus_cooldown_message,
+                            data.game_state.player_chips
+                        );
+                    }
+                } else {
+                    // If no game state was returned, show generic message
+                    collectBtn.disabled = true;
+                    collectBtn.textContent = 'Cooldown Active';
+                    collectBtn.classList.add('btn-disabled');
+                    collectBtn.classList.remove('btn-primary');
+                    if (Cooldown_msg) Cooldown_msg.textContent = 'Bonus collected. Cooldown active.';
+                }
             } else {
                 playSound('error');
                 displayMessage(data.message, 'error');
+                
                 if (data.game_state) {
                     updateBonusUI(
                         data.game_state.can_collect_bonus,
@@ -986,16 +1206,24 @@ collectBtn.addEventListener('click', () => {
                         data.game_state.player_chips
                     );
                 } else {
+                    // If no game state was returned, reset the button
                     collectBtn.disabled = false;
+                    collectBtn.classList.remove('btn-disabled');
+                    collectBtn.classList.add('btn-primary');
                     collectBtn.textContent = 'Collect Bonus';
-                    if (Cooldown_msg) Cooldown_msg.textContent = data.message;
+                    if (Cooldown_msg) Cooldown_msg.textContent = data.message || 'Bonus not available';
                 }
             }
         })
         .catch(error => {
+            console.error('Collect bonus error:', error);
             playSound('error');
             displayMessage(`Failed to collect bonus: ${error.message || 'Network error'}`, 'error');
+            
+            // Reset button state on error
             collectBtn.disabled = false;
+            collectBtn.classList.remove('btn-disabled');
+            collectBtn.classList.add('btn-primary');
             collectBtn.textContent = 'Collect Bonus';
             if (Cooldown_msg) Cooldown_msg.textContent = 'Error during collection.';
         });
@@ -1038,12 +1266,15 @@ async function handleRebet() {
                     // Update display buttons
                     if (handEl.mainBetDisplay) {
                         handEl.mainBetDisplay.textContent = bet.main_bet > 0 ? `$${bet.main_bet}` : '';
+                        updateBetButtonTextClass(handEl.mainBetDisplay, bet.main_bet);
                     }
                     if (handEl.ppBetButton) {
                         handEl.ppBetButton.textContent = bet.side_pp > 0 ? `$${bet.side_pp}` : 'PP';
+                        updateBetButtonTextClass(handEl.ppBetButton, bet.side_pp);
                     }
                     if (handEl.twentyOneBetButton) {
                         handEl.twentyOneBetButton.textContent = bet.side_21_3 > 0 ? `$${bet.side_21_3}` : '21+3';
+                        updateBetButtonTextClass(handEl.twentyOneBetButton, bet.side_21_3);
                     }
                 });
             }

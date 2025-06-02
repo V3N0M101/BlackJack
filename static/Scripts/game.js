@@ -571,90 +571,106 @@ function updateUI(gameState) {
         let playerHasOtherWin = false;   // Player won (not BJ, not vs "Dealer wins")
         let playerHasOtherLoss = false;  // Player lost (e.g., "Bust!", not "Dealer wins")
         let playerHasPush = false;       // Player pushed
+        let totalNetChange = 0;          // Track total net change across all hands
 
-        // Define keywords (lowercase)
-        const playerWinKeywords = ["win", "dealer busts", "perfect pair", "21+3 payout", "suited trips", "straight flush", "three of a kind", "straight", "flush"];
-        const playerLossKeywords = ["bust", "you lose"]; 
-        const pushKeywords = ["push"];
-
-        console.log("--- Evaluating round end sounds ---"); // Overall log start
+        console.log("--- Evaluating round end sounds ---");
         gameState.player_hands.forEach((handData, index) => {
             const message = (handData.result_message || "").toLowerCase().trim();
-            console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`); // Log each message and blackjack flag
+            console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`);
 
+            // Get the actual bet amounts from the UI elements
+            const mainBetEl = document.getElementById(`main-bet-${index}`);
+            const ppBetEl = document.getElementById(`pp-bet-${index}`);
+            const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
+
+            // Extract numeric values from the bet displays (remove $ and parse)
+            const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
+            const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
+            const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
+
+            let handNetChange = 0;
+
+            // Calculate net change based on result
             if (message.includes("blackjack")) {
-                hasBlackjack = true; 
-            } else { 
-                // Track net change based on actual bet amounts
-                let netChange = 0;
-
-                gameState.player_hands.forEach((handData, index) => {
-                    if (!handData.result_message.toLowerCase().includes("blackjack")) {
-                        // Get the actual bet amounts from the UI elements
-                        const mainBetEl = document.getElementById(`main-bet-${index}`);
-                        const ppBetEl = document.getElementById(`pp-bet-${index}`);
-                        const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
-
-                        // Extract numeric values from the bet displays (remove $ and parse)
-                        const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
-                        const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
-                        const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
-
-                        const resultMessage = handData.result_message.toLowerCase().trim();
-                        
-                        // Calculate net change based on result
-                        if (resultMessage.includes("win")) {
-                            netChange += mainBet; // Won the bet amount
-                        } else if (resultMessage.includes("bust") || resultMessage.includes("dealer wins")) {
-                            netChange -= mainBet; // Lost the bet amount
-                        }
-
-                        // Side bet results
-                        if (resultMessage.includes("perfect pair")) {
-                            netChange += ppBet;
-                        } else if (ppBet > 0) {
-                            netChange -= ppBet;
-                        }
-
-                        if (resultMessage.includes("21+3")) {
-                            netChange += twentyOneBet;
-                        } else if (twentyOneBet > 0) {
-                            netChange -= twentyOneBet;
-                        }
-                    }
-                });
-
-                console.log(`Net Change from Bets: ${netChange}`);
-
-                // Play sound based on net change
-                if (netChange > 0) {
-                    playerHasOtherWin = true;
-                    console.log("Result: Win (positive net change)");
-                } else if (netChange < 0) {
+                if (message.includes("dealer has blackjack")) {
+                    console.log('Dealer Blackjack - Bet Amount:', mainBet);
+                    handNetChange = -mainBet; // Show the actual loss amount
                     playerHasOtherLoss = true;
-                    console.log("Result: Loss (negative net change)");
-                } else if (netChange === 0 && gameState.player_hands.some(h => {
-                    const mainBetEl = document.getElementById(`main-bet-${h.hand_index}`);
-                    return mainBetEl && parseInt(mainBetEl.textContent.replace('$', '')) > 0;
-                })) {
-                    playerHasPush = true;
-                    console.log("Result: Push (no net change)");
+                    hasBlackjack = false; // Make sure we don't trigger blackjack sound
+                    console.log('Dealer Blackjack - Net Change:', handNetChange);
+                } else {
+                    handNetChange = Math.floor(mainBet * 1.5); // Player Blackjack pays 3:2 (1.5x)
+                    hasBlackjack = true;
+                    console.log('Player Blackjack - Net Change:', handNetChange);
                 }
+            } else if (message.includes("dealer wins")) {
+                handNetChange = -mainBet; // Lost the bet
+                playerHasOtherLoss = true;
+                console.log('Dealer Wins - Net Change:', handNetChange);
+            } else if (message.includes("busted")) {
+                handNetChange = -mainBet; // Lost the bet
+                playerHasOtherLoss = true;
+                console.log('Player Bust - Net Change:', handNetChange);
+            } else if (message.includes("you win!")) {
+                handNetChange = mainBet; // Won the bet
+                playerHasOtherWin = true;
+                console.log('Player Wins - Net Change:', handNetChange);
+            } else if (message.includes("push")) {
+                handNetChange = 0;
+                playerHasPush = true;
+                console.log('Push - Net Change:', handNetChange);
             }
+
+            // Handle Perfect Pairs results
+            if (message.includes("won $") && message.includes("on perfect pair")) {
+                const match = message.match(/Won \$(\d+)/);
+                if (match) {
+                    handNetChange += parseInt(match[1]);
+                    playerHasOtherWin = true;
+                    console.log('Perfect Pair Win - Additional Change:', parseInt(match[1]));
+                }
+            } else if (message.includes("lost perfect pair")) {
+                handNetChange -= ppBet;
+                playerHasOtherLoss = true;
+                console.log('Perfect Pair Loss - Additional Change:', -ppBet);
+            }
+
+            // Handle 21+3 results
+            if (message.includes("won $") && message.includes("on 21+3")) {
+                const match = message.match(/Won \$(\d+)/);
+                if (match) {
+                    handNetChange += parseInt(match[1]);
+                    playerHasOtherWin = true;
+                    console.log('21+3 Win - Additional Change:', parseInt(match[1]));
+                }
+            } else if (message.includes("lost 21+3")) {
+                handNetChange -= twentyOneBet;
+                playerHasOtherLoss = true;
+                console.log('21+3 Loss - Additional Change:', -twentyOneBet);
+            }
+
+            // Add this hand's net change to total
+            totalNetChange += handNetChange;
+            console.log(`Hand ${index + 1} Final Net Change: ${handNetChange}, Running Total: ${totalNetChange}`);
         });
 
-        console.log(`Final sound flags for round: hasBlackjack=${hasBlackjack}, dealerWinsOverall=${dealerWinsOverall}, playerHasOtherWin=${playerHasOtherWin}, playerHasOtherLoss=${playerHasOtherLoss}, playerHasPush=${playerHasPush}`);
+        // Update game message with total net change
+        const messageType = totalNetChange > 0 ? "success" : totalNetChange < 0 ? "error" : "info";
+        // Format with commas for readability and ensure negative sign shows for losses
+        const formattedChange = totalNetChange < 0 ? 
+            `-$${Math.abs(totalNetChange).toLocaleString('en-US')}` : 
+            `$${totalNetChange.toLocaleString('en-US')}`;
+        displayMessage(`Net ${totalNetChange > 0 ? 'Gain' : totalNetChange < 0 ? 'Loss' : 'Change'}: ${formattedChange}`, messageType);
+
+        // Set sound flags based on total net profit
         if (hasBlackjack) {
             console.log("Sound decision: Player Blackjack. Playing blackjack.wav");
             playSound('blackjack');
-        } else if (dealerWinsOverall) {
-            console.log("Sound decision: Dealer Wins Overall. Playing lose.wav");
-            playSound('lose');
-        } else if (playerHasOtherWin) {
-            console.log("Sound decision: Player Has Other Win. Playing win.wav");
+        } else if (totalNetChange > 0) {
+            console.log("Sound decision: Player Has Win. Playing win.wav");
             playSound('win');
-        } else if (playerHasOtherLoss) {
-            console.log("Sound decision: Player Has Other Loss. Playing lose.wav");
+        } else if (totalNetChange < 0) {
+            console.log("Sound decision: Player Has Loss. Playing lose.wav");
             playSound('lose');
         } else if (playerHasPush) {
             console.log("Sound decision: Player Has Push. Playing push.wav");
@@ -663,7 +679,7 @@ function updateUI(gameState) {
             console.log("Sound decision: No specific conditions met, defaulting to Push. Playing push.wav");
             playSound('push');
         }
-        
+
         resultSoundsPlayed = true;
     }
 
@@ -727,19 +743,114 @@ async function fetchGameState(url, options = {}) {
 
         if (data.success) {
             updateUI(data.game_state);
-            // If there's a message with success, display it as info
-            if (data.message) {
-                displayMessage(data.message, 'info');
+            
+            // Only calculate and display net change if it's round over
+            if (data.game_state.game_phase === "round_over") {
+                let totalNetChange = 0;
+                let playerHasOtherLoss = false;
+                let playerHasOtherWin = false;
+                let hasBlackjack = false;
+                let playerHasPush = false;
+
+                data.game_state.player_hands.forEach((handData, index) => {
+                    const message = (handData.result_message || "").toLowerCase().trim();
+                    console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`);
+
+                    // Get the actual bet amounts from the UI elements
+                    const mainBetEl = document.getElementById(`main-bet-${index}`);
+                    const ppBetEl = document.getElementById(`pp-bet-${index}`);
+                    const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
+
+                    // Extract numeric values from the bet displays
+                    const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
+                    const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
+                    const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
+
+                    let handNetChange = 0;
+
+                    // Calculate net change based on result
+                    if (message.includes("blackjack")) {
+                        if (message.includes("dealer has blackjack")) {
+                            handNetChange = -mainBet;
+                            playerHasOtherLoss = true;
+                        } else {
+                            handNetChange = Math.floor(mainBet * 1.5);
+                            hasBlackjack = true;
+                        }
+                    } else if (message.includes("dealer wins")) {
+                        handNetChange = -mainBet;
+                        playerHasOtherLoss = true;
+                    } else if (message.includes("busted")) {
+                        handNetChange = -mainBet;
+                        playerHasOtherLoss = true;
+                    } else if (message.includes("you win!")) {
+                        handNetChange = mainBet;
+                        playerHasOtherWin = true;
+                    } else if (message.includes("push")) {
+                        handNetChange = 0;
+                        playerHasPush = true;
+                    }
+
+                    // Handle side bets
+                    if (message.includes("won $") && message.includes("on perfect pair")) {
+                        const match = message.match(/Won \$(\d+)/);
+                        if (match) {
+                            handNetChange += parseInt(match[1]);
+                            playerHasOtherWin = true;
+                        }
+                    } else if (message.includes("lost perfect pair")) {
+                        handNetChange -= ppBet;
+                        playerHasOtherLoss = true;
+                    }
+
+                    if (message.includes("won $") && message.includes("on 21+3")) {
+                        const match = message.match(/Won \$(\d+)/);
+                        if (match) {
+                            handNetChange += parseInt(match[1]);
+                            playerHasOtherWin = true;
+                        }
+                    } else if (message.includes("lost 21+3")) {
+                        handNetChange -= twentyOneBet;
+                        playerHasOtherLoss = true;
+                    }
+
+                    totalNetChange += handNetChange;
+                    console.log(`Hand ${index + 1} Net Change: ${handNetChange}, Running Total: ${totalNetChange}`);
+                });
+
+                // Format with commas and ensure negative sign shows for losses
+                const formattedChange = totalNetChange < 0 ? 
+                    `-$${Math.abs(totalNetChange).toLocaleString('en-US')}` : 
+                    `$${totalNetChange.toLocaleString('en-US')}`;
+                
+                // Override the message with our calculated net change
+                displayMessage(`Net ${totalNetChange > 0 ? 'Gain' : totalNetChange < 0 ? 'Loss' : 'Change'}: ${formattedChange}`, 
+                    totalNetChange > 0 ? "success" : totalNetChange < 0 ? "error" : "info");
+
+                // Play appropriate sound
+                if (hasBlackjack) {
+                    playSound('blackjack');
+                } else if (totalNetChange > 0) {
+                    playSound('win');
+                } else if (totalNetChange < 0) {
+                    playSound('lose');
+                } else if (playerHasPush) {
+                    playSound('push');
+                } else {
+                    playSound('push');
+                }
+            } else if (data.message) {
+                // For non-round-over phases, display the original message
+                displayMessage(data.message);
             }
         } else {
             displayMessage(data.message || 'An unspecified error occurred.', 'error');
-            // Still update UI if game_state is provided, as it might contain relevant info (e.g. chips)
             if (data.game_state) {
                 updateUI(data.game_state);
             }
         }
     } catch (error) {
-        console.error('Fetch operation error in fetchGameState:', error); // Added console.error for better debugging
+        console.error('Fetch operation error:', error);
         displayMessage(`Network error: ${error.message}`, 'error');
     }
 }

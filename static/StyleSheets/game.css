@@ -342,7 +342,7 @@ body {
     border: solid rgba(252, 252, 252, 0.514);
     color: #eee;
     justify-content: flex-end;
-    margin: 0 8px; /* Reduced from 10px */
+    margin: 0 8px 40px 8px; /* Reduced from 10px */
 }
 
 /* Bet button text sizing */
@@ -437,7 +437,7 @@ body {
     padding: 12px;
     border-radius: 8px;
     color: #eee;
-    margin-bottom: 1vh;
+    margin-bottom: 13vh;
     border: solid black;
     justify-content: flex-end; /* This remains important to push .Zone to bottom */
 }
@@ -1072,8 +1072,8 @@ button.disabled {
 }
 .actions button img {
     display: block;
-    width: 36px;
-    height: 36px;
+    width: 60px;
+    height: 60px;
     transition: transform 0.2s ease-out; 
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
 }
@@ -1085,77 +1085,49 @@ button.disabled {
 }
 
 /* Specific background colors for action buttons (retains hover/active scaling) */
-.btn-clear {
-    background: linear-gradient(135deg, #FF5722, #D84315);
-    border-color: #D84315;
-} 
+
 .btn-clear:hover:not(.disabled) {
     background: linear-gradient(135deg, #FF7043, #FF5722);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
 }
 
-.btn-re-bet {
-    background: linear-gradient(135deg, #3F51B5, #303F9F);
-    border-color: #303F9F;
-}
+
 .btn-re-bet:hover:not(.disabled) {
     background: linear-gradient(135deg, #5C6BC0, #3F51B5);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(63, 81, 181, 0.5);
 }
 
-.btn-deal {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    border-color: #45a049;
-}
+
 .btn-deal:hover:not(.disabled) {
     background: linear-gradient(135deg, #57c75c, #4CAF50);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 }
 
-.btn-hit {
-    background: linear-gradient(135deg, #e53935, #c62828);
-    border-color: #c62828;
-}
 .btn-hit:hover:not(.disabled) {
     background: linear-gradient(135deg, #f44336, #e53935);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(229, 57, 53, 0.5);
 }
-
-.btn-double {
-    background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
-    border-color: #6A1B9A;
-}
-.btn-double:hover:not(.disabled) {
+-double:hover:not(.disabled) {
     background: linear-gradient(135deg, #9C27B0, #7B1FA2);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(123, 31, 162, 0.5);
 }
 
-.btn-stand {
-    background: linear-gradient(135deg, #FFD700, #FFA000);
-    border-color: #FFA000;
-    color: #000;
-} 
 .btn-stand:hover:not(.disabled) {
     background: linear-gradient(135deg, #FFE57F, #FFD700);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
-.btn-split {
-    background: linear-gradient(135deg, #00BCD4, #0097A7);
-    border-color: #0097A7;
-} 
 .btn-split:hover:not(.disabled) {
     background: linear-gradient(135deg, #26C6DA, #00BCD4);
     transform: scale(1.05);
     box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
 }
-
 
 .btn-collect:hover:not(.disabled) {
     background-color: #5a6268;

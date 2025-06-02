@@ -779,8 +779,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Change icon
         volumeIcon.src = isMuted
-            ? '/static/Images/icons/mute.png'
-            : '/static/Images/icons/vol.png';
+            ? '/static/Images/Icons/mute.png'
+            : '/static/Images/Icons/vol.png';
 
         // Update sound objects
         updateMuteState();

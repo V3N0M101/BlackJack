@@ -2,14 +2,15 @@
 let currentGameState = null; // Stores the current game state from the backend
 let activeBetInput = null; // To track which bet input is currently focused for chip clicks
 let activeBetButton = null; // To track the currently selected circular bet button
+let resultSoundsPlayed = false; // Flag to ensure outcome sound plays only once per round
 
 // Get references to all necessary DOM elements
 const dealerCardsDiv = document.getElementById('dealer-cards');
 const dealerTotalSpan = document.getElementById('dealer-total');
+const playerHandsContainer = document.querySelector('.player'); // The div containing all Player-Area elements
 const playerChipsSpan = document.getElementById('player-chips');
 const totalBetDisplaySpan = document.getElementById('total-bet-display');
 const gameMessageDiv = document.getElementById('game-message');
-const playerHandsContainer = document.querySelector('.player'); // The div containing all Player-Area elements
 
 // Action Buttons (keep these global as they are fixed)
 const dealBtn = document.getElementById('dealBtn');
@@ -27,6 +28,65 @@ let bonusCountdownInterval;
 // Chip Buttons
 const chipButtons = document.querySelectorAll('.chips button');
 
+/* --- Deal Sound Tracker --- */
+let lastTotalCards = 0;
+
+// --- Global trackers for per-hand card counts ---
+let lastDealerCardCount = 0;
+let lastPlayerHandCardCounts = [];
+
+function countTotalCards(gameState) {
+    let total = 0;
+    if (gameState.dealer_hand) {
+        total += gameState.dealer_hand.length;
+    }
+    if (Array.isArray(gameState.player_hands)) {
+        gameState.player_hands.forEach(hand => {
+            if (Array.isArray(hand.cards)) {
+                total += hand.cards.length;
+            } else if (Array.isArray(hand)) {
+                total += hand.length;
+            }
+        });
+    }
+    return total;
+}
+
+/* --- Sound Effects Setup --- */
+let isMuted = false; // Global toggle for sound
+
+const sounds = {
+    blackjack: new Audio('/static/Sounds/blackjack.wav'),
+    bonus: new Audio('/static/Sounds/bonus.wav'),
+    button: new Audio('/static/Sounds/button.wav'),
+    chip: new Audio('/static/Sounds/chip.wav'),
+    deal: new Audio('/static/Sounds/deal.wav'),
+    error: new Audio('/static/Sounds/error.wav'),
+    lose: new Audio('/static/Sounds/lose.wav'),
+    push: new Audio('/static/Sounds/push.wav'),
+    win: new Audio('/static/Sounds/win.wav')
+};
+
+Object.values(sounds).forEach(audio => {
+    audio.preload = 'auto';
+    audio.muted = isMuted;
+});
+
+function updateMuteState() {
+    Object.values(sounds).forEach(audio => {
+        audio.muted = isMuted;
+    });
+}
+
+function playSound(name) {
+    if (isMuted) return;
+    const base = sounds[name];
+    if (base) {
+        const s = base.cloneNode();
+        s.play().catch(() => {});
+    }
+}
+
 // --- Helper Functions ---
 
 function clearCards(container) {
@@ -34,13 +94,67 @@ function clearCards(container) {
 }
 
 function addCardImages(container, cardsArray) {
-    cardsArray.forEach(card => {
-        const img = document.createElement('img');
-        img.src = `/static/Images/cards/${card.filename}`;
-        img.alt = `${card.rank}${card.suit}`;
-        img.classList.add('card');
-        container.appendChild(img);
+    const drawImg = document.querySelector('.Draw img');
+    const drawRect = drawImg ? drawImg.getBoundingClientRect() : null;
+
+    cardsArray.forEach((card, idx) => {
+        setTimeout(() => {
+            const img = document.createElement('img');
+            img.src = `/static/Images/cards/${card.filename}`;
+            img.alt = `${card.rank}${card.suit}`;
+            img.dataset.filename = card.filename;
+            img.classList.add('card');
+            img.style.opacity = '0';
+            container.appendChild(img);
+
+            requestAnimationFrame(() => {
+                const cardRect = img.getBoundingClientRect();
+                if (drawRect) {
+                    const dx = drawRect.left - cardRect.left;
+                    const dy = drawRect.top - cardRect.top;
+                    img.style.transform = `translate(${dx}px, ${dy}px) scale(0.4)`;
+                }
+
+                img.style.transition = 'none';
+
+                requestAnimationFrame(() => {
+                    img.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
+                    img.style.transform = 'translate(0, 0) scale(1)';
+                    img.style.opacity = '1';
+
+                    // After animation finishes, remove inline transform so CSS :hover works
+                    img.addEventListener('transitionend', () => {
+                        img.style.transform = '';
+                    }, { once: true });
+                });
+            });
+        }, idx * 150);
     });
+}
+
+function syncCards(container, cardsArray) {
+    let existing = container.children.length;
+    if (cardsArray.length < existing) {
+        // reset if fewer cards (new round)
+        clearCards(container);
+        existing = 0;
+    }
+    if (cardsArray.length > existing) {
+        addCardImages(container, cardsArray.slice(existing));
+    }
+}
+
+function updateCardFaces(container, cardsArray) {
+    const imgs = container.children;
+    const len = Math.min(imgs.length, cardsArray.length);
+    for (let i = 0; i < len; i++) {
+        const imgEl = imgs[i];
+        const newFile = cardsArray[i].filename;
+        if (imgEl.dataset.filename !== newFile) {
+            imgEl.dataset.filename = newFile;
+            imgEl.src = `/static/Images/cards/${newFile}`;
+        }
+    }
 }
 
 function setButtonsDisabled(buttons, disable) {
@@ -135,16 +249,19 @@ function getOrCreatePlayerHandElement(index) {
         });
 
         if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.mainBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
         });
         if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.sidePPBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
         });
         if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.sideTwentyOneBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
@@ -195,6 +312,10 @@ function displayMessage(message, type = 'info') {
         gameMessageDiv.textContent = message;
         gameMessageDiv.className = `status-item game-message ${type}`;
         gameMessageDiv.style.display = "";
+
+        if (type === 'error') {
+            playSound('error');
+        }
     } else {
         alert(message);
     }
@@ -213,19 +334,11 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
         if (collectBtn) {
             collectBtn.disabled = false;
             collectBtn.textContent = 'Collect Bonus!';
-            collectBtn.classList.remove('btn-disabled');
+            collectBtn.classList.remove('btn-disabled'); 
             collectBtn.classList.add('btn-primary');
         }
-        if (Cooldown_msg) {
-            Cooldown_msg.textContent = bonusCooldownMessage || "Bonus available!";
-        }
+        if (Cooldown_msg) Cooldown_msg.textContent = bonusCooldownMessage || "Bonus available!";
     } else {
-        if (collectBtn) {
-            collectBtn.disabled = true;
-            collectBtn.classList.add('btn-disabled');
-            collectBtn.classList.remove('btn-primary');
-            collectBtn.textContent = 'Loading cooldown...';
-        }
         if (nextBonusTime) {
             const nextCollectionDate = new Date(nextBonusTime);
             const updateCountdown = () => {
@@ -236,7 +349,7 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
                     if (collectBtn) {
                         collectBtn.disabled = false;
                         collectBtn.textContent = 'Collect Bonus!';
-                        collectBtn.classList.remove('btn-disabled');
+                        collectBtn.classList.remove('btn-disabled'); 
                         collectBtn.classList.add('btn-primary');
                     }
                     clearInterval(bonusCountdownInterval);
@@ -264,6 +377,12 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
             if (Cooldown_msg) {
                 Cooldown_msg.textContent = bonusCooldownMessage || "No nextBonusTime provided.";
             }
+            if (collectBtn) {
+                collectBtn.textContent = 'Collect Bonus'; 
+                collectBtn.disabled = true;
+                collectBtn.classList.add('btn-disabled');
+                collectBtn.classList.remove('btn-primary');
+            }
         }
     }
 }
@@ -275,14 +394,33 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
 function updateUI(gameState) {
     currentGameState = gameState;
 
-    clearCards(dealerCardsDiv);
-    addCardImages(dealerCardsDiv, gameState.dealer_hand);
+    // Play deal sound if new cards have appeared
+    const totalCards = countTotalCards(gameState);
+    if (totalCards > lastTotalCards) {
+        playSound('deal');
+    }
+    lastTotalCards = totalCards;
+
+    // Dealer cards incremental update
+    if (gameState.dealer_hand.length < lastDealerCardCount) {
+        // New round, reset
+        clearCards(dealerCardsDiv);
+        addCardImages(dealerCardsDiv, gameState.dealer_hand);
+    } else if (gameState.dealer_hand.length > lastDealerCardCount) {
+        addCardImages(dealerCardsDiv, gameState.dealer_hand.slice(lastDealerCardCount));
+    }
+    updateCardFaces(dealerCardsDiv, gameState.dealer_hand); // ensure reveal
+    lastDealerCardCount = gameState.dealer_hand.length;
+
     dealerTotalSpan.textContent = `Dealer: ${gameState.dealer_total}`;
 
     playerChipsSpan.textContent = `Balance: $${gameState.player_chips}`;
     displayMessage(gameState.game_message);
 
     const isBettingPhase = gameState.game_phase === "betting";
+    if (isBettingPhase) {
+        resultSoundsPlayed = false; // Reset outcome sound flag for a new betting phase
+    }
     let totalCurrentBet = 0;
 
     // First, ensure all existing hands are properly hidden
@@ -292,15 +430,27 @@ function updateUI(gameState) {
     });
 
     // Then show and update only the hands we need
-    gameState.player_hands.forEach((handData) => {
+    gameState.player_hands.forEach((handData, i) => {
         const handEl = getOrCreatePlayerHandElement(handData.hand_index);
         if (!handEl) return;
 
         // Show this hand and ensure it's fully visible
         handEl.area.style.cssText = 'display: flex !important; visibility: visible; pointer-events: auto;';
 
-        clearCards(handEl.cardsDiv);
-        addCardImages(handEl.cardsDiv, handData.hand || []);
+        const cardsArr = handData.hand || [];
+        if (!lastPlayerHandCardCounts[i]) {
+            lastPlayerHandCardCounts[i] = 0;
+        }
+
+        if (cardsArr.length < lastPlayerHandCardCounts[i]) {
+            // reset on fewer cards (e.g., new round)
+            clearCards(handEl.cardsDiv);
+            addCardImages(handEl.cardsDiv, cardsArr);
+        } else if (cardsArr.length > lastPlayerHandCardCounts[i]) {
+            addCardImages(handEl.cardsDiv, cardsArr.slice(lastPlayerHandCardCounts[i]));
+        }
+
+        lastPlayerHandCardCounts[i] = cardsArr.length;
 
         if ((handData.total === 0 || handData.total === undefined) && isBettingPhase) {
             handEl.totalSpan.textContent = 'Total:';
@@ -352,6 +502,9 @@ function updateUI(gameState) {
         }
 
         totalCurrentBet += (handData.main_bet || 0) + (handData.side_bet_21_3 || 0) + (handData.side_bet_perfect_pair || 0);
+
+        // Ensure faces updated (for splits etc.)
+        updateCardFaces(handEl.cardsDiv, cardsArr);
     });
 
     totalBetDisplaySpan.textContent = `Total Bet: $${totalCurrentBet}`;
@@ -359,10 +512,36 @@ function updateUI(gameState) {
     const isPlayerTurn = gameState.game_phase === "player_turns";
     const isRoundOver = gameState.game_phase === "round_over";
 
+    // Play win/lose/push sounds once per round based on result messages
+    if (isRoundOver && !resultSoundsPlayed) {
+        let hasWin = false;
+        let hasLose = false;
+        let hasPush = false;
+
+        gameState.player_hands.forEach(hand => {
+            const msg = (hand.result_message || '').toLowerCase();
+            if (msg.includes('you win') || msg.includes('blackjack')) {
+                hasWin = true;
+            } else if (msg.includes('dealer wins') || msg.includes('lose') || msg.includes('busted')) {
+                hasLose = true;
+            } else if (msg.includes('push')) {
+                hasPush = true;
+            }
+        });
+
+        if (hasWin) {
+            playSound('win');
+        } else if (hasLose) {
+            playSound('lose');
+        } else if (hasPush) {
+            playSound('push');
+        }
+        resultSoundsPlayed = true;
+    }
+
     // Update button states
     setButtonsDisabled([dealBtn], !isBettingPhase);
     setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver));
-    setButtonsDisabled([collectBtn], !isBettingPhase);
 
     const activeHandData = gameState.player_hands.find(hand => hand.is_active);
 
@@ -383,7 +562,7 @@ function updateUI(gameState) {
         activeBetInput = null;
     } else if (!activeBetButton && gameState.player_hands.length > 0) {
         const firstHandEl = getOrCreatePlayerHandElement(0);
-        if (firstHandEl && firstHandEl.mainBetDisplay) {
+        if (firstHandEl && firstHandEl.mainBetInput && firstHandEl.mainBetDisplay) {
             setSelectedBetButton(firstHandEl.mainBetDisplay);
             activeBetInput = firstHandEl.mainBetInput;
         }
@@ -409,14 +588,20 @@ async function fetchGameState(url, options = {}) {
 
         if (data.success) {
             updateUI(data.game_state);
+            // If there's a message with success, display it as info
+            if (data.message) {
+                displayMessage(data.message, 'info');
+            }
         } else {
-            displayMessage(`Error: ${data.message}`);
+            displayMessage(data.message || 'An unspecified error occurred.', 'error');
+            // Still update UI if game_state is provided, as it might contain relevant info (e.g. chips)
             if (data.game_state) {
                 updateUI(data.game_state);
             }
         }
     } catch (error) {
-        displayMessage(`Network error: ${error.message}`);
+        console.error('Fetch operation error in fetchGameState:', error); // Added console.error for better debugging
+        displayMessage(`Network error: ${error.message}`, 'error');
     }
 }
 
@@ -442,16 +627,19 @@ function attachHandEventListeners() {
         });
 
         if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.mainBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
         });
         if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.sidePPBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
         });
         if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
+            playSound('button');
             activeBetInput = hand.sideTwentyOneBetInput;
             setSelectedBetButton(this);
             activeBetInput.focus();
@@ -473,34 +661,74 @@ document.addEventListener('DOMContentLoaded', () => {
     const volumeButton = document.getElementById('volumeButton');
     const volumeIcon = document.getElementById('volumeIcon');
 
-    let isMuted = false; // Global toggle
-
-    if (volumeButton && volumeIcon) {
     volumeButton.addEventListener('click', () => {
+        playSound('button');
         isMuted = !isMuted;
 
         // Change icon
         volumeIcon.src = isMuted
-        ? '/static/Images/icons/mute.png'
-        : '/static/Images/icons/vol.png';
+            ? '/static/Images/icons/mute.png'
+            : '/static/Images/icons/vol.png';
 
-        // Update all audio elements (if any exist)
-        const audios = document.querySelectorAll('audio');
-        audios.forEach(audio => {
-        audio.muted = isMuted;
-        });
+        // Update sound objects
+        updateMuteState();
 
         // Optional: Show message
         displayMessage(isMuted ? "Sound muted." : "Sound on.");
     });
+
+    // Ensure discard pile has a back card image
+    const discardDiv = document.querySelector('.Discard');
+    if (discardDiv && !discardDiv.querySelector('img')) {
+        const backImg = document.createElement('img');
+        backImg.src = '/static/Images/cards/back.png';
+        backImg.alt = 'Discard Pile';
+        discardDiv.appendChild(backImg);
     }
+
+    // Ensure tooltips are shown on hover and focus
+    const betAreaButtons = document.querySelectorAll('.bet-area-button');
+    betAreaButtons.forEach(button => {
+        button.addEventListener('mouseenter', () => {
+            const tooltip = button.querySelector('.tooltip-bubble');
+            if (tooltip) {
+                tooltip.style.visibility = 'visible';
+                tooltip.style.opacity = '1';
+                console.log('Tooltip shown on hover');
+            }
+        });
+        button.addEventListener('mouseleave', () => {
+            const tooltip = button.querySelector('.tooltip-bubble');
+            if (tooltip) {
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+                console.log('Tooltip hidden on leave');
+            }
+        });
+        button.addEventListener('focus', () => {
+            const tooltip = button.querySelector('.tooltip-bubble');
+            if (tooltip) {
+                tooltip.style.visibility = 'visible';
+                tooltip.style.opacity = '1';
+                console.log('Tooltip shown on focus');
+            }
+        });
+        button.addEventListener('blur', () => {
+            const tooltip = button.querySelector('.tooltip-bubble');
+            if (tooltip) {
+                tooltip.style.visibility = 'hidden';
+                tooltip.style.opacity = '0';
+                console.log('Tooltip hidden on blur');
+            }
+        });
+    });
 });
 
 // Chip buttons click handler
 chipButtons.forEach(button => {
     button.addEventListener('click', () => {
         if (!currentGameState || currentGameState.game_phase !== 'betting') {
-            displayMessage("You can only place bets during the betting phase.");
+            displayMessage("You can only place bets during the betting phase.", 'error');
             return;
         }
 
@@ -510,7 +738,7 @@ chipButtons.forEach(button => {
             let newValue = currentValue + chipValue;
 
             if (currentGameState.player_chips < newValue) {
-                displayMessage("Not enough chips!");
+                displayMessage("Not enough chips!", 'error');
                 return;
             }
 
@@ -528,9 +756,9 @@ chipButtons.forEach(button => {
             }
 
             updateTotalBetDisplay();
-
+            playSound('chip');
         } else {
-            displayMessage("Please select a bet area (PP, Main, or 21+3) first.");
+            displayMessage("Please select a bet area (PP, Main, or 21+3) first.", 'error');
         }
     });
 });
@@ -548,31 +776,94 @@ function updateTotalBetDisplay() {
     totalBetDisplaySpan.textContent = `Total Bet: $${currentTotalBet}`;
 }
 
+function animateDiscardCards() {
+    const discardImg = document.querySelector('.Discard img');
+    if (!discardImg) return;
+    const targetRect = discardImg.getBoundingClientRect();
+
+    const cardImgs = document.querySelectorAll('.cards img, #dealer-cards img');
+    if (cardImgs.length === 0) return;
+
+    cardImgs.forEach((original, idx) => {
+        const rect = original.getBoundingClientRect();
+        const clone = original.cloneNode(true);
+        clone.style.position = 'absolute';
+        clone.style.left = `${rect.left}px`;
+        clone.style.top = `${rect.top}px`;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        clone.style.transition = 'transform 1.4s cubic-bezier(0.34,1.56,0.64,1), opacity 1.4s';
+        document.body.appendChild(clone);
+
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                const dx = targetRect.left + 20 - rect.left;
+                const dy = targetRect.top + 20 - rect.top;
+                clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
+                clone.style.opacity = '0';
+            });
+        }, idx * 200); // slower stagger discard
+
+        clone.addEventListener('transitionend', () => clone.remove(), { once: true });
+    });
+
+    // Remove originals after a slight delay to allow clones to start animating
+    setTimeout(() => {
+        cardImgs.forEach(img => img.remove());
+    }, 200);
+}
+
 dealBtn.addEventListener('click', () => {
+    playSound('deal');
     const bets = [];
     let hasValidBet = false;
-    const numHandsToCollectBetsFrom = playerHandsContainer.children.length;
+    const numHandsToCollectBetsFrom = currentGameState ? currentGameState.num_hands : playerHandsContainer.children.length;
 
+    // Ensure bets array always has length equal to numHandsToCollectBetsFrom
     for (let i = 0; i < numHandsToCollectBetsFrom; i++) {
         const handEl = getOrCreatePlayerHandElement(i);
-        if (!handEl) continue;
+        if (!handEl) {
+            // If element missing, push zero bets to maintain length
+            bets.push({ main_bet: 0, side_21_3: 0, side_pp: 0 });
+            continue;
+        }
+
         const mainBet = parseInt(handEl.mainBetInput.value) || 0;
-        const sideTwentyOne = parseInt(handEl.sideTwentyOneBetInput.value) || 0;
-        const sidePP = parseInt(handEl.sidePPBetInput.value) || 0;
+        let sideTwentyOne = parseInt(handEl.sideTwentyOneBetInput.value) || 0;
+        let sidePP = parseInt(handEl.sidePPBetInput.value) || 0;
+
+        if (mainBet === 0) {
+            // Clear side bets if no main bet for this hand
+            sideTwentyOne = 0;
+            sidePP = 0;
+
+            // Reflect in UI
+            if (handEl.sideTwentyOneBetInput) {
+                handEl.sideTwentyOneBetInput.value = 0;
+            }
+            if (handEl.twentyOneBetButton) {
+                handEl.twentyOneBetButton.textContent = '21+3';
+            }
+            if (handEl.sidePPBetInput) {
+                handEl.sidePPBetInput.value = 0;
+            }
+            if (handEl.ppBetButton) {
+                handEl.ppBetButton.textContent = 'PP';
+            }
+        } else {
+            hasValidBet = true;
+        }
 
         bets.push({
             main_bet: mainBet,
             side_21_3: sideTwentyOne,
             side_pp: sidePP
         });
-
-        if (mainBet > 0) {
-            hasValidBet = true;
-        }
     }
 
     if (!hasValidBet) {
-        displayMessage("You must place a main bet on at least one hand.");
+        playSound('error');
+        displayMessage("You must place a main bet on at least one hand.", 'error');
         return;
     }
 
@@ -586,50 +877,56 @@ dealBtn.addEventListener('click', () => {
 });
 
 hitBtn.addEventListener('click', () => {
+    playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
             body: JSON.stringify({ action: 'hit', hand_index: currentGameState.current_active_hand_index })
         });
     } else {
-        displayMessage("No active hand to hit.");
+        displayMessage("No active hand to hit.", 'error');
     }
 });
 
 standBtn.addEventListener('click', () => {
+    playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
             body: JSON.stringify({ action: 'stand', hand_index: currentGameState.current_active_hand_index })
         });
     } else {
-        displayMessage("No active hand to stand.");
+        displayMessage("No active hand to stand.", 'error');
     }
 });
 
 doubleBtn.addEventListener('click', () => {
+    playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
             body: JSON.stringify({ action: 'double', hand_index: currentGameState.current_active_hand_index })
         });
     } else {
-        displayMessage("No active hand to double down.");
+        displayMessage("No active hand to double down.", 'error');
     }
 });
 
 splitBtn.addEventListener('click', () => {
+    playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
             body: JSON.stringify({ action: 'split', hand_index: currentGameState.current_active_hand_index })
         });
     } else {
-        displayMessage("No active hand to split.");
+        displayMessage("No active hand to split.", 'error');
     }
 });
 
 clearBetsBtn.addEventListener('click', () => {
+    playSound('button');
+    animateDiscardCards();
     const numHandsInDOM = playerHandsContainer.children.length;
     for (let i = 0; i < numHandsInDOM; i++) {
         const handEl = getOrCreatePlayerHandElement(i);
@@ -647,25 +944,30 @@ clearBetsBtn.addEventListener('click', () => {
 });
 
 reBetBtn.addEventListener('click', () => {
+    playSound('button');
     handleRebet();
 });
 
 // --- Collect Button Handler (NEW) ---
 collectBtn.addEventListener('click', () => {
+    playSound('button');
     collectBtn.disabled = true;
     collectBtn.textContent = 'Collecting...';
     if (Cooldown_msg) Cooldown_msg.textContent = '';
     fetch('/api/collect_chips', { method: 'POST' })
         .then(response => {
             if (!response.ok) {
-                return response.json().then(errorData => {
-                    throw new Error(errorData.message || `Server error with status ${response.status}.`);
+                return response.json().then(errData => {
+                    throw new Error(errData.message || `HTTP error! status: ${response.status}`);
+                }).catch(() => {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
                 });
             }
             return response.json();
         })
         .then(data => {
             if (data.success) {
+                playSound('bonus');
                 displayMessage(data.message, 'success');
                 updateBonusUI(
                     data.game_state.can_collect_bonus,
@@ -674,6 +976,7 @@ collectBtn.addEventListener('click', () => {
                     data.game_state.player_chips
                 );
             } else {
+                playSound('error');
                 displayMessage(data.message, 'error');
                 if (data.game_state) {
                     updateBonusUI(
@@ -690,7 +993,8 @@ collectBtn.addEventListener('click', () => {
             }
         })
         .catch(error => {
-            displayMessage(`Failed to collect bonus: ${error.message || 'Network error.'}`, 'error');
+            playSound('error');
+            displayMessage(`Failed to collect bonus: ${error.message || 'Network error'}`, 'error');
             collectBtn.disabled = false;
             collectBtn.textContent = 'Collect Bonus';
             if (Cooldown_msg) Cooldown_msg.textContent = 'Error during collection.';
@@ -757,12 +1061,12 @@ async function handleRebet() {
                 }
             }
 
-            displayMessage(data.message);
+            displayMessage(data.message, 'success');
             updateTotalBetDisplay();
         } else {
-            displayMessage("Error rebetting: " + data.message);
+            displayMessage("Error rebetting: " + data.message, 'error');
         }
     } catch (error) {
-        displayMessage("An error occurred during rebet.");
+        displayMessage("An error occurred during rebet: " + error.message, 'error');
     }
 }

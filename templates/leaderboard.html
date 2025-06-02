@@ -17,7 +17,7 @@
       <li>
         <span class="rank">{{ loop.index }}. {{ user.username }} </span>
         <span class="divider">|</span>
-        <span class="score">{{ "{:,}".format(user.chips) }} pts</span> {# Format chips with commas #}
+        <span class="score">{{ "{:,}".format(user.chips) }} chips</span> {# Format chips with commas #}
       </li>
       {% endfor %}
       {# If no users are found, display a message #}

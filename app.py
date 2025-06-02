@@ -55,7 +55,7 @@ def send_verification_email(to_email: str, code: str, username: str = "", email_
         server.send_message(message)
 
 app = Flask(__name__)
-app.secret_key = 'secretkey123'  # 🔐 required for sessions, flash, etc.
+app.secret_key = 'secretkey123'  # required for sessions, flash, etc.
 
 # users.db 
 def get_db_connection():
@@ -101,36 +101,16 @@ def start_game():
         player_chips = user_data["chips"] # Get actual chips from DB
         last_bonus_collection_str = user_data["last_bonus_collection"]
 
-        game = None
-        game_forfeit_message = None
-
-        # --- THIS BLOCK HANDLES CHIP FORFEITURE AND LOADS EXISTING GAME STATE ---
+        # --- LOAD EXISTING GAME OR CREATE NEW ONE ---
         if "blackjack_game_state" in session:
-            previous_game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
-
-            if previous_game.game_phase not in ["betting", "round_over"]:
-                total_bets = sum(hand.bet_amount for hand in previous_game.player.hands if hand.bet_amount > 0)
-                if total_bets > 0:
-                    player_chips -= total_bets
-                    game_forfeit_message = f"You left an active round. Forfeited ${total_bets} in active bets."
-                    if not save_chips_to_db(player_username, player_chips, update_bonus_time=False):
-                        print(f"Warning: Failed to save forfeited chips for {player_username}")
-                session.pop("blackjack_game_state", None) # Clear old game state
-                print(f"Player {player_username} forfeited chips. Old game state cleared.")
-
-        # Initialize or retrieve game (after potential forfeiture/clearing)
-        if "blackjack_game_state" not in session:
-            # Create a NEW game if no state in session (or cleared due to forfeiture)
-            game = BlackjackMultiGame(player_chips=player_chips)
-            if game_forfeit_message:
-                game.game_message = game_forfeit_message
-        else:
-            # LOAD existing game from session
+            # Load existing ongoing game to preserve state across page reloads/fullscreen toggles
             game = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
-            game.player.chips = player_chips # Sync chips with latest from DB
-            if game_forfeit_message:
-                game.game_message = game_forfeit_message
-
+            game.player.chips = player_chips  # Keep chips in sync with latest DB value
+            game.game_message = "Game resumed." if game.game_phase not in ["betting", "round_over"] else game.game_message
+        else:
+            # No existing game – start a fresh one in betting phase
+            game = BlackjackMultiGame(player_username, initial_chips=player_chips, num_hands=3)
+            game.game_message = "New game started. Place your bets!"
         session["blackjack_game_state"] = game.to_dict()
 
         # --- THIS BLOCK CALCULATES BONUS STATUS ---
@@ -160,7 +140,7 @@ def start_game():
         current_game_state["bonus_cooldown_message"] = bonus_cooldown_message
         current_game_state["player_chips"] = player_chips # Ensure this is always accurate
 
-        initial_message = game_forfeit_message if game_forfeit_message else "Game started/loaded."
+        initial_message = game.game_message or "Game started/loaded."
 
         return jsonify({
             "success": True,
@@ -515,19 +495,21 @@ def home():
 @app.route("/game")
 def game():
     """
-    Always resets the game to the betting phase with default values on reload.
+    Renders the Blackjack game page, preserving any existing game state (e.g., when toggling fullscreen). A new game is created only if none exists.
     """
     fullscreen = request.args.get("fullscreen", "").lower() == "true"
-    initial_chips = session.get("chips", 1000)  # Use chips from session or default to 1000
 
-    # Always create a new game in betting phase with 3 hands
-    player_username = session.get("username", "Player")
-    game_obj = BlackjackMultiGame(player_username, initial_chips=initial_chips, num_hands=3)
-    game_obj.reset_round()  # Ensures betting phase and 3 hands
+    # Retrieve existing game state if present; otherwise start a new one
+    if "blackjack_game_state" in session:
+        game_obj = BlackjackMultiGame.from_dict(session["blackjack_game_state"])
+    else:
+        initial_chips = session.get("chips", 1000)
+        player_username = session.get("username", "Player")
+        game_obj = BlackjackMultiGame(player_username, initial_chips=initial_chips, num_hands=3)
+        game_obj.reset_round()
 
-    # Save this new state to session
+    # Persist (or update) the game state in the session
     session["blackjack_game_state"] = game_obj.to_dict()
-
     # Prepare game state for template
     game_state_for_display = game_obj.get_game_state(reveal_dealer_card=False)
     game_state_for_display["num_hands"] = game_obj.num_hands

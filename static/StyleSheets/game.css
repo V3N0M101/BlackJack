@@ -208,7 +208,7 @@ body {
     justify-content: space-between; /* Space out dealer and player */
     align-items: center;
     box-sizing: border-box;
-    overflow: hidden; /* Changed from 'auto' to 'hidden' to prevent scrollbars unless explicitly needed */
+    overflow: visible; /* Changed from 'hidden' to 'visible' to allow tooltips to show */
     z-index: 2; /* Above the fixed .table background */
 }
 
@@ -270,9 +270,9 @@ body {
 /* === Fullscreen Mode Player Area === */
 .table-fullscreen .player {
     position: absolute; /* Positioned relative to .table-content */
-    bottom: 10%; /* Adjust as needed */
+    top: 60%; /* Adjusted to lower the player area a bit */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     display: flex;
     gap: 30px; /* Adjusted gap for fullscreen, can be same as windowed if desired */
     justify-content: center;
@@ -322,9 +322,46 @@ body {
     font-weight: bold;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
 }
 
+.dealer-total:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(185, 124, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+/* Card visuals */
+#dealer-cards {
+    background: rgba(0, 0, 0, 0.45); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.7), 0 0 18px rgba(185, 124, 255, 0.35);
+    padding: 18px 26px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#dealer-cards img {
+    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.85));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#dealer-cards img:hover {
+    transform: translateY(-8px) scale(1.06);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+}
+
+.Dealer_mid {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+}
 
 /* Standard card and hand display */
 .cards {
@@ -514,26 +551,27 @@ body {
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
-    min-width: 70px;
-    min-height: 70px;
+    min-width: 85px;
+    min-height: 85px;
+    max-width: 100px;
+    max-height: 100px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.1em;
+    font-size: 1.25em;
     background: #c3e0d8;
     border: 2px solid #8cc;
     padding: 8px;
     text-align: center;
     word-break: break-word;
-    position: relative;
 }
 
 /* Common styles for all bet buttons */
 .Zone button {
     flex: 1; /* Allow buttons to grow equally */
-    min-width: 60px; /* Minimum width for buttons */
-    height: 60px; /* Fixed height for consistency */
+    min-width: 70px; /* Minimum width for buttons */
+    height: 70px; /* Fixed height for consistency */
     border: 2px solid transparent;
     border-radius: 8px;
     background: #c3e0d8;
@@ -553,7 +591,7 @@ body {
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
-    max-width: 80px; /* Maximum width to prevent buttons from getting too large */
+    max-width: 100px; /* Maximum width to prevent buttons from getting too large */
     background: #c3e0d8;
     border: 2px solid #8cc;
 }
@@ -569,6 +607,16 @@ body {
 .table-fullscreen .Zone {
     height: 120px; /* Slightly larger for fullscreen */
     gap: 12px; /* Larger gap in fullscreen */
+}
+
+.table-fullscreen .Zone .PP,
+.table-fullscreen .Zone .MAIN,
+.table-fullscreen .Zone .TWENTYONE {
+    min-width: 100px;
+    min-height: 100px;
+    max-width: 120px;
+    max-height: 120px;
+    font-size: 1.25em;
 }
 
 .table-fullscreen .Zone button {
@@ -599,29 +647,32 @@ body {
 
 /* Tooltip adjustments */
 .bet-area-button {
-    position: relative;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    background: #c3e0d8;
-    color: #000;
-    font-weight: bold;
-    min-width: 70px;
-    min-height: 70px;
-    z-index: 1;
-    opacity: 1; /* Ensure full opacity by default */
-    visibility: visible; /* Ensure visibility by default */
+    position: relative; /* Needed so the tooltip bubble can position absolutely inside */
 }
 
+.bet-area-button:hover > .tooltip-bubble,
+.bet-area-button:focus > .tooltip-bubble,
+.bet-area-button:focus-visible > .tooltip-bubble {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto; /* Allow interaction inside tooltip */
+}
+
+/* Small arrow for tooltip */
+.tooltip-bubble::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 6px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
+}
+
+/* The actual tooltip bubble */
 .tooltip-bubble {
-    visibility: hidden; /* Changed from display: none */
-    opacity: 0;
+    visibility: hidden;
     position: absolute;
     bottom: 120%;
     left: 50%;
@@ -632,98 +683,94 @@ body {
     border-radius: 6px;
     font-size: 14px;
     white-space: nowrap;
-    margin-bottom: 10px;
-    z-index: 9999; /* Increased z-index */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.2s ease;
     width: max-content;
-    transition: visibility 0s, opacity 0.2s ease; /* Added transition */
-    pointer-events: none; /* Prevent tooltip from interfering with clicks */
-}
-
-.tooltip-bubble::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
-}
-
-.bet-area-button:hover .tooltip-bubble {
-    visibility: visible;
-    opacity: 1;
-}
-
-/* Hide buttons completely when disabled */
-button.disabled {
-    display: none; /* Changed from opacity: 0 */
-}
-
-/* Hide Player-Area completely when not in use */
-.Player-Area[style*="display: none"] {
-    display: none !important;
-    visibility: hidden;
     pointer-events: none;
 }
 
-/* === STATUS BAR === */
-.status {
+/* Ensure bet amounts are always visible */
+.Zone .PP,
+.Zone .MAIN,
+.Zone .TWENTYONE {
+    min-width: 85px;
+    min-height: 85px;
     display: flex;
-    gap: 20px;
-    justify-content: center;
-    z-index: auto;
-}
-
-.status-item {
-    min-width: 80px;
-    padding: 8px 16px;
-    background: #444;
-    border-radius: 6px;
-    text-align: center;
-}
-
-/* === CONTROLS & CHIP BUTTONS === */
-.controls {
-    display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    z-index: auto;
+    justify-content: center;
+    font-size: 1.25em;
+    background: #c3e0d8;
+    border: 2px solid #8cc;
+    padding: 8px;
+    text-align: center;
+    word-break: break-word;
 }
 
-.chips {
-    display: flex;
-    gap: 10px;
+.background-blur {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    background: url("../Images/Backgrounds/Trippy.png") center center / cover no-repeat;
+    filter: blur(6.9px);
 }
-
-.chips button {
-    background: none;
-    border: none;
-    padding: 0;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.chips button img {
-    display: block;
-    width: 100%;
-    height: auto;
-    transition: filter 0.2s ease;
-}
-
-.chips button:hover {
-    transform: scale(1.15);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
-        0 0 8px rgba(255, 215, 0, 0.8);
+body {
+    position: relative;
     z-index: 1;
+    /* Remove background image from body if present */
+    background: none !important;
 }
 
-.chips button:hover img {
-    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
+/* === Enhanced Dealer Area Styling === */
+/* Glassy backdrop should apply to the card container itself, not the whole dealer wrapper */
+#dealer-cards {
+    background: rgba(0, 0, 0, 0.45); /* Semi-transparent dark overlay */
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.7), 0 0 18px rgba(185, 124, 255, 0.35);
+    padding: 18px 26px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
+
+/* Dealer total / hand info counters */
+.dealer-total,
+.hand-info {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    padding: 6px 16px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.dealer-total:hover,
+.hand-info:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(185, 124, 255, 0.5), 0 0 8px rgba(255, 255, 255, 0.25);
+}
+
+/* Card visuals */
+#dealer-cards img {
+    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.85));
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+#dealer-cards img:hover {
+    transform: translateY(-8px) scale(1.06);
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+}
+
+/* --- Card Dealing Animation --- */
+/* --- (legacy) card animation class retained for older browsers, currently unused --- */
 
 /* === ACTION BUTTONS === */
 button {
@@ -741,7 +788,7 @@ button {
 
 button:hover:not(.disabled) {
     /* Added :not(.disabled) to prevent hover on disabled buttons */
-    transform: scale(1.05); /* Enlarge slightly on hover */
+    transform: scale(1.06); /* Slightly smoother hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
 
@@ -942,22 +989,25 @@ button.disabled {
     border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
 }
 
-.bet-area-button:hover .tooltip-bubble {
-    visibility: visible;
-    opacity: 1;
+.bet-area-button:hover > .tooltip-bubble,
+.bet-area-button:focus > .tooltip-bubble,
+.bet-area-button:focus-visible > .tooltip-bubble {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto;
 }
 
 /* Ensure bet amounts are always visible */
 .Zone .PP,
 .Zone .MAIN,
 .Zone .TWENTYONE {
-    min-width: 70px;
-    min-height: 70px;
+    min-width: 85px;
+    min-height: 85px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.1em;
+    font-size: 1.25em;
     background: #c3e0d8;
     border: 2px solid #8cc;
     padding: 8px;
@@ -965,20 +1015,81 @@ button.disabled {
     word-break: break-word;
 }
 
-.background-blur {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 0;
-    background: url("../Images/Backgrounds/Trippy.png") center center / cover no-repeat;
-    filter: blur(8px);
-    /* Optional: darken or add overlay for better contrast */
-    /* background-color: rgba(0,0,0,0.2); */
+.chips {
+    display: flex;
+    gap: 10px;
 }
-body {
-    position: relative;
+
+.chips button {
+    background: none;
+    border: none;
+    padding: 0;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease; /* smoother */
+}
+
+.chips button img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: filter 0.2s ease;
+}
+
+.chips button:hover {
+    transform: scale(1.13); /* smoother */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
+        0 0 8px rgba(255, 215, 0, 0.8);
     z-index: 1;
-    /* Remove background image from body if present */
-    background: none !important;
+}
+
+.chips button:hover img {
+    filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.9));
+}
+
+/* === STATUS BAR === */
+.status {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 20px;
+    background: transparent;
+    border-radius: 12px;
+}
+
+.status-item {
+    min-width: 90px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.767);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 8px;
+    text-align: center;
+    color: #ffffff;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 8px rgba(185, 124, 255, 0.6);
+}
+
+/* === CONTROLS & CHIP BUTTONS === */
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: auto;
+}
+
+/* === Tooltip Final Override === */
+.bet-area-button:hover > .tooltip-bubble,
+.bet-area-button:focus > .tooltip-bubble,
+.bet-area-button:focus-visible > .tooltip-bubble {
+    visibility: visible !important;
+    opacity: 1 !important;
 }

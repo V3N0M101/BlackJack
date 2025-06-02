@@ -1,5 +1,6 @@
 body {
-  background-color: #015519;
+  background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)), url("../Images/Backgrounds/Trippy.png") repeat-y center center / cover;
+  background-attachment: fixed;
 }
 
 :root {
@@ -32,15 +33,16 @@ body {
 }
 
 .side-nav ul li a {
-  color: white;
+  color: #000;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 900;
+  font-size: 1.1rem;
   transition: color 0.3s ease;
 }
 
 .side-nav ul li a:hover {
-  color: #25fff0;
-  transform: scale(1.2);
+  color: #007acc;
+  transform: scale(1.15);
 }
 
 .layout {

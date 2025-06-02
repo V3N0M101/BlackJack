@@ -3,7 +3,7 @@ const hoverBack = document.querySelector('.hover-back');
 
 navButtons.forEach(btn => {
   btn.addEventListener('mouseenter', () => {
-    if (!hoverBack) return; // Add this line
+    if (!hoverBack) return; // Prevent errors if hoverBack is null
     const rect = btn.getBoundingClientRect();
     const navRect = btn.parentElement.getBoundingClientRect();
     hoverBack.style.left = (rect.left - navRect.left) + "px";
@@ -19,7 +19,7 @@ if (navBar && hoverBack) {
 }
 
 document.querySelector('.nav-bar').addEventListener('mouseleave', () => {
-  hoverBack.style.width = "0";
+  if (hoverBack) hoverBack.style.width = "0";
 });
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -532,18 +532,27 @@ class BlackjackMultiGame:
 
     def hit(self, hand_index):
         hand_state = self._get_hand_by_index(hand_index)
-        if not hand_state or self.game_phase != "player_turns" or not hand_state["is_active"] or hand_state["busted"] or hand_state["stood"] or hand_state["blackjack"]:
+        if not hand_state or self.game_phase != "player_turns" or not hand_state["is_active"] or hand_state["busted"] or hand_state["stood"]:
             self.game_message = "Cannot hit this hand at this time."
             return False
-
+        
+        # Check if the hand is a blackjack before hitting
+        was_blackjack = hand_state.get("blackjack", False)
+        
         hand_state["hand"].extend(self.deck.dealCards(1))
         current_total = hand_value(hand_state["hand"])
         hand_state["can_double"] = False # Can't double after hitting
 
         # Get the display index (1-based) for this hand
         display_index = self._get_display_index(hand_index)
-
-        if current_total > 21:
+        
+        if was_blackjack:
+            # If it was a blackjack, auto-stand after hitting
+            hand_state["stood"] = True
+            hand_state["result_message"] = "Auto-stood after blackjack."
+            self.game_message = f"Hand {display_index} had blackjack and auto-stood after hitting."
+            self.find_next_active_hand() # Move to next hand
+        elif current_total > 21:
             hand_state["busted"] = True
             hand_state["result_message"] = "Busted!"
             self.game_message = f"Hand {display_index} busted!"

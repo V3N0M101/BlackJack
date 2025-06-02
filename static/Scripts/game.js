@@ -49,6 +49,16 @@ let lastTotalCards = 0;
 let lastDealerCardCount = 0;
 let lastPlayerHandCardCounts = [];
 
+// --- Click Throttling Timers ---
+let dealBtnLastClick = 0;
+let hitBtnLastClick = 0;
+let standBtnLastClick = 0;
+let doubleBtnLastClick = 0;
+let splitBtnLastClick = 0;
+let clearBetsBtnLastClick = 0;
+let reBetBtnLastClick = 0;
+const CLICK_THROTTLE_DELAY = 200; // ms
+
 function countTotalCards(gameState) {
     let total = 0;
     if (gameState.dealer_hand) {
@@ -554,30 +564,103 @@ function updateUI(gameState) {
     const isPlayerTurn = gameState.game_phase === "player_turns";
     const isRoundOver = gameState.game_phase === "round_over";
 
-    // Play win/lose/push sounds once per round based on net gain/loss
+    // Play win/lose/push sounds once per round based on hand messages
     if (isRoundOver && !resultSoundsPlayed) {
-        // Calculate net gain/loss from the round
-        let netGainLoss = 0;
-        
-        gameState.player_hands.forEach(hand => {
-            // Add winnings (if any)
-            if (hand.winnings) {
-                netGainLoss += hand.winnings;
+        let hasBlackjack = false;        // Player got Blackjack or "Win 1.5x"
+        let dealerWinsOverall = false;   // "Dealer wins." message appeared on any hand
+        let playerHasOtherWin = false;   // Player won (not BJ, not vs "Dealer wins")
+        let playerHasOtherLoss = false;  // Player lost (e.g., "Bust!", not "Dealer wins")
+        let playerHasPush = false;       // Player pushed
+
+        // Define keywords (lowercase)
+        const playerWinKeywords = ["win", "dealer busts", "perfect pair", "21+3 payout", "suited trips", "straight flush", "three of a kind", "straight", "flush"];
+        const playerLossKeywords = ["bust", "you lose"]; 
+        const pushKeywords = ["push"];
+
+        console.log("--- Evaluating round end sounds ---"); // Overall log start
+        gameState.player_hands.forEach((handData, index) => {
+            const message = (handData.result_message || "").toLowerCase().trim();
+            console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`); // Log each message and blackjack flag
+
+            if (message.includes("blackjack")) {
+                hasBlackjack = true; 
+            } else { 
+                // Track net change based on actual bet amounts
+                let netChange = 0;
+
+                gameState.player_hands.forEach((handData, index) => {
+                    if (!handData.result_message.toLowerCase().includes("blackjack")) {
+                        // Get the actual bet amounts from the UI elements
+                        const mainBetEl = document.getElementById(`main-bet-${index}`);
+                        const ppBetEl = document.getElementById(`pp-bet-${index}`);
+                        const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
+
+                        // Extract numeric values from the bet displays (remove $ and parse)
+                        const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
+                        const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
+                        const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
+
+                        const resultMessage = handData.result_message.toLowerCase().trim();
+                        
+                        // Calculate net change based on result
+                        if (resultMessage.includes("win")) {
+                            netChange += mainBet; // Won the bet amount
+                        } else if (resultMessage.includes("bust") || resultMessage.includes("dealer wins")) {
+                            netChange -= mainBet; // Lost the bet amount
+                        }
+
+                        // Side bet results
+                        if (resultMessage.includes("perfect pair")) {
+                            netChange += ppBet;
+                        } else if (ppBet > 0) {
+                            netChange -= ppBet;
+                        }
+
+                        if (resultMessage.includes("21+3")) {
+                            netChange += twentyOneBet;
+                        } else if (twentyOneBet > 0) {
+                            netChange -= twentyOneBet;
+                        }
+                    }
+                });
+
+                console.log(`Net Change from Bets: ${netChange}`);
+
+                // Play sound based on net change
+                if (netChange > 0) {
+                    playerHasOtherWin = true;
+                    console.log("Result: Win (positive net change)");
+                } else if (netChange < 0) {
+                    playerHasOtherLoss = true;
+                    console.log("Result: Loss (negative net change)");
+                } else if (netChange === 0 && gameState.player_hands.some(h => {
+                    const mainBetEl = document.getElementById(`main-bet-${h.hand_index}`);
+                    return mainBetEl && parseInt(mainBetEl.textContent.replace('$', '')) > 0;
+                })) {
+                    playerHasPush = true;
+                    console.log("Result: Push (no net change)");
+                }
             }
-            
-            // Subtract original bets
-            netGainLoss -= (hand.main_bet || 0) + (hand.side_bet_21_3 || 0) + (hand.side_bet_perfect_pair || 0);
         });
-        
-        // Play sound based on net result
-        if (netGainLoss > 0) {
-            // Net win
-            playSound('win');
-        } else if (netGainLoss < 0) {
-            // Net loss
+
+        console.log(`Final sound flags for round: hasBlackjack=${hasBlackjack}, dealerWinsOverall=${dealerWinsOverall}, playerHasOtherWin=${playerHasOtherWin}, playerHasOtherLoss=${playerHasOtherLoss}, playerHasPush=${playerHasPush}`);
+        if (hasBlackjack) {
+            console.log("Sound decision: Player Blackjack. Playing blackjack.wav");
+            playSound('blackjack');
+        } else if (dealerWinsOverall) {
+            console.log("Sound decision: Dealer Wins Overall. Playing lose.wav");
             playSound('lose');
-        } else if (netGainLoss === 0) {
-            // Push (break even)
+        } else if (playerHasOtherWin) {
+            console.log("Sound decision: Player Has Other Win. Playing win.wav");
+            playSound('win');
+        } else if (playerHasOtherLoss) {
+            console.log("Sound decision: Player Has Other Loss. Playing lose.wav");
+            playSound('lose');
+        } else if (playerHasPush) {
+            console.log("Sound decision: Player Has Push. Playing push.wav");
+            playSound('push');
+        } else {
+            console.log("Sound decision: No specific conditions met, defaulting to Push. Playing push.wav");
             playSound('push');
         }
         
@@ -586,7 +669,14 @@ function updateUI(gameState) {
 
     // Update button states
     setButtonsDisabled([dealBtn], !isBettingPhase);
-    setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver));
+    
+    // Check if all hands are effectively completed (stood, busted, or blackjack)
+    const allHandsCompleted = gameState.player_hands.every(hand => 
+        hand.stood || hand.busted || hand.blackjack
+    );
+    
+    // Enable rebet and clear buttons during betting phase, round over, or when all hands are completed
+    setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver || allHandsCompleted));
 
     const activeHandData = gameState.player_hands.find(hand => hand.is_active);
 
@@ -779,8 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Change icon
         volumeIcon.src = isMuted
-            ? '/static/Images/icons/mute.png'
-            : '/static/Images/icons/vol.png';
+            ? '/static/Images/Icons/mute.png'
+            : '/static/Images/Icons/vol.png';
 
         // Update sound objects
         updateMuteState();
@@ -977,6 +1067,13 @@ function animateDiscardCards() {
 }
 
 dealBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - dealBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Deal button click throttled");
+        return;
+    }
+    dealBtnLastClick = now;
+
     playSound('deal');
     const bets = [];
     let hasValidBet = false;
@@ -1040,6 +1137,13 @@ dealBtn.addEventListener('click', () => {
 });
 
 hitBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - hitBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Hit button click throttled");
+        return;
+    }
+    hitBtnLastClick = now;
+
     playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
@@ -1052,6 +1156,13 @@ hitBtn.addEventListener('click', () => {
 });
 
 standBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - standBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Stand button click throttled");
+        return;
+    }
+    standBtnLastClick = now;
+
     playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
@@ -1064,6 +1175,13 @@ standBtn.addEventListener('click', () => {
 });
 
 doubleBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - doubleBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Double button click throttled");
+        return;
+    }
+    doubleBtnLastClick = now;
+
     playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
@@ -1076,6 +1194,13 @@ doubleBtn.addEventListener('click', () => {
 });
 
 splitBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - splitBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Split button click throttled");
+        return;
+    }
+    splitBtnLastClick = now;
+
     playSound('button');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
@@ -1088,6 +1213,13 @@ splitBtn.addEventListener('click', () => {
 });
 
 clearBetsBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - clearBetsBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("Clear Bets button click throttled");
+        return;
+    }
+    clearBetsBtnLastClick = now;
+
     playSound('button');
     animateDiscardCards();
     const numHandsInDOM = playerHandsContainer.children.length;
@@ -1107,6 +1239,13 @@ clearBetsBtn.addEventListener('click', () => {
 });
 
 reBetBtn.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - reBetBtnLastClick < CLICK_THROTTLE_DELAY) {
+        console.log("ReBet button click throttled");
+        return;
+    }
+    reBetBtnLastClick = now;
+
     playSound('button');
     animateDiscardCards();
     

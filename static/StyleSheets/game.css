@@ -101,10 +101,108 @@
     width: 20vh;
 }
 
-.Discard img,
-.Draw img {
+.Discard img { /* Apply hover_black animation specifically to Discard image */
     width: 100%;
     height: auto;
+    animation: hover_black 2s infinite ease-in-out;
+}
+
+.Draw img { /* Styles for Draw image, without hover_black */
+    width: 60%;
+    height: auto;
+    margin-left: 3.5vw;
+}
+
+.Discard {
+    animation: rotate 10s infinite linear;
+    position: relative; /* Added for pseudo-element positioning */
+    z-index: 0;         /* To allow pseudo-elements to be behind */
+    border-radius: 8px; /* Rounded corners for card/glow shape, matching .Draw */
+}
+
+@keyframes hover_black {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-1vh);
+    }
+}
+@keyframes rotate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Define custom properties for animation (if not already globally available) */
+@property --angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --angle2 {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* Keyframes for the spinning border effect (if not already globally available) */
+@keyframes spin-border {
+  from {
+    --angle: 0deg;
+    --angle2: 0deg;
+  }
+  to {
+    --angle: 360deg;
+    --angle2: 360deg;
+  }
+}
+
+/* Update .Draw or add new rule for styling */
+.Draw {
+    /* width: 20vh; /* Assuming this is already set, will not override unless necessary. If it's in a combined rule, it's fine. */
+    position: relative;
+    z-index: 0; /* To allow pseudo-elements to be behind */
+    border-radius: 8px; /* Rounded corners for card/glow shape */
+}
+
+.Draw img {border-radius: 4px;}
+
+.Draw::before,
+.Draw::after {
+  content: "";
+  position: absolute;
+  top: -1vh;      /* Adjust glow spread outwards */
+  left: 3vw;
+  right: -0.25vh;
+  bottom: -1vh;
+  border-radius: inherit; /* Inherit border-radius from .Draw */
+  background: conic-gradient(from var(--angle2, 0deg), rgba(156,211,230), rgb(171, 247, 255), rgb(255, 187, 237), rgb(255, 209, 243), rgb(255, 190, 238), rgb(136, 243, 255), rgba(156,211,230,1));
+  filter: blur(12px); /* Softness of the glow */
+  opacity: 0.9;      /* Visibility of the glow */
+  z-index: -1;       /* Place glow behind the .Draw element's content */
+  animation: spin-border 4s linear infinite; /* Animation speed */
+}
+
+/* Styles for .Discard glow */
+.Discard::before,
+.Discard::after {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: 15px; /* As per your modification for .Draw */
+  right: 15px;
+  bottom: 15px;
+  border-radius: 200px; /* Inherit border-radius from .Discard */
+  background: conic-gradient(from var(--angle2, 0deg), rgb(14, 1, 73), rgb(8, 0, 12), rgb(14, 1, 73)); /* Placeholder colors */
+  filter: blur(12px); /* Softness of the glow */
+  opacity: 0.9;      /* Visibility of the glow */
+  z-index: -1;       /* Place glow behind the .Discard element's content */
+  animation: spin-border 4s linear infinite; /* Animation speed */
 }
 
 /* === RULES BOX === */
@@ -591,13 +689,13 @@ body {
 
 .table-fullscreen .btn {
     transform: scale(1.25); /* Scale buttons by 1.25 */
-    margin: 6px 12px; /* Add more margin to prevent overlap */
+    margin: 5px 7.5px; /* Add more margin to prevent overlap */
     transform-origin: center; /* Scale from center */
 }
 
 .table-fullscreen .action-buttons .btn {
     font-size: 110%; /* Slightly larger font */
-    padding: 10px 20px; /* Larger padding */
+    padding: 7.5px 10.8px; /* Larger padding */
 }
 
 .table-fullscreen .chip-button,
@@ -641,6 +739,7 @@ body {
     margin-top: 10px;
     z-index: 2;
 }
+
 
 /* Style for the bet buttons */
 .Zone .PP,
@@ -913,13 +1012,40 @@ button.disabled {
 
 .actions button {
     padding: 10px 16px;
-    background: #ffffff; /* Set a default background for action buttons */
     color: #fff;
     font-weight: bold;
     cursor: pointer;
-    border: none;
-    border-radius: 10px; /* Remove individual button radius if part of a group with rounded ends */
-    box-shadow: none; /* Remove individual button shadows for a flatter look within the group */
+    border: 2px solid transparent;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.actions button::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: inherit;
+    border: 2px solid transparent;
+    animation: borderPulse 1.5s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes borderPulse {
+    0% {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    50% {
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+    100% {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
 }
 
 .actions button:first-child {
@@ -934,11 +1060,8 @@ button.disabled {
 
 
 .actions button:hover:not(.disabled) {
-    /* Apply scaling to action buttons too */
-    background: #888888; /* Slightly lighter on hover */
-    transform: scale(1.05); /* Enlarge slightly on hover */
-    /* Add a subtle shadow for hover on action buttons too, if desired */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05); 
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2); /* More pronounced hover shadow */
 }
 
 .actions button:active:not(.disabled) {
@@ -951,31 +1074,87 @@ button.disabled {
     display: block;
     width: 36px;
     height: 36px;
+    transition: transform 0.2s ease-out; 
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
+}
+
+/* Add hover effect for icon */
+.actions button:hover:not(.disabled) img {
+    transform: scale(1.1); 
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
 }
 
 /* Specific background colors for action buttons (retains hover/active scaling) */
 .btn-clear {
-    background-color: #ff5722;
-} /* Example color */
+    background: linear-gradient(135deg, #FF5722, #D84315);
+    border-color: #D84315;
+} 
+.btn-clear:hover:not(.disabled) {
+    background: linear-gradient(135deg, #FF7043, #FF5722);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
+}
+
 .btn-re-bet {
-    background-color: #4CAF50;
-} /* Example color */
+    background: linear-gradient(135deg, #3F51B5, #303F9F);
+    border-color: #303F9F;
+}
+.btn-re-bet:hover:not(.disabled) {
+    background: linear-gradient(135deg, #5C6BC0, #3F51B5);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(63, 81, 181, 0.5);
+}
+
 .btn-deal {
-    background-color: #2196F3;
-} /* Example color */
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    border-color: #45a049;
+}
+.btn-deal:hover:not(.disabled) {
+    background: linear-gradient(135deg, #57c75c, #4CAF50);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
+}
+
 .btn-hit {
-    background-color: #f44336;
-} /* Example color */
+    background: linear-gradient(135deg, #e53935, #c62828);
+    border-color: #c62828;
+}
+.btn-hit:hover:not(.disabled) {
+    background: linear-gradient(135deg, #f44336, #e53935);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(229, 57, 53, 0.5);
+}
+
 .btn-double {
-    background-color: #9C27B0;
-} /* Example color */
+    background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
+    border-color: #6A1B9A;
+}
+.btn-double:hover:not(.disabled) {
+    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(123, 31, 162, 0.5);
+}
+
 .btn-stand {
-    background-color: #FFC107;
-    color: #333;
-} /* Example color, black text for yellow */
+    background: linear-gradient(135deg, #FFD700, #FFA000);
+    border-color: #FFA000;
+    color: #000;
+} 
+.btn-stand:hover:not(.disabled) {
+    background: linear-gradient(135deg, #FFE57F, #FFD700);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
 .btn-split {
-    background-color: #00BCD4;
-} /* Example color */
+    background: linear-gradient(135deg, #00BCD4, #0097A7);
+    border-color: #0097A7;
+} 
+.btn-split:hover:not(.disabled) {
+    background: linear-gradient(135deg, #26C6DA, #00BCD4);
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+}
 
 
 .btn-collect:hover:not(.disabled) {
@@ -1125,14 +1304,13 @@ button.disabled {
     background: none;
     border: none;
     padding: 0;
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     cursor: pointer;
-    transition: transform 0.25s ease, box-shadow 0.25s ease; /* smoother */
+    transition: transform 0.25s ease
 }
 
 .chips button img {
-    display: block;
     width: 100%;
     height: auto;
     transition: filter 0.2s ease;
@@ -1140,8 +1318,6 @@ button.disabled {
 
 .chips button:hover {
     transform: scale(1.13); /* smoother */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25),
-        0 0 8px rgba(255, 215, 0, 0.8);
     z-index: 1;
 }
 

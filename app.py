@@ -13,8 +13,8 @@ from secure import EMAIL_PASS_SECURE
 
 # It's assumed 'Black_logic.py' exists within the 'Back' directory
 from Back.black_logic import BlackjackMultiGame
-BONUS_COOLDOWN_SECONDS = 15
-BONUS_AMOUNT = 5000
+BONUS_COOLDOWN_SECONDS = 30
+BONUS_AMOUNT = 10000
 
 # so you can `import deck, player, Black_logic` directly
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'Back'))

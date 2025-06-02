@@ -171,7 +171,7 @@ body {
     top: 0;
     left: 0;
     width: 100vw;
-    height: 90vh; /* Takes up 90% of viewport height */
+    height: 100vh; /* Takes up 100% of viewport height */
     background: transparent; /* Background for the table area */
     z-index: 1; /* Below header/footer */
     display: flex; /* Use flex to center the .table-content */
@@ -571,8 +571,56 @@ body {
 /* Fullscreen adjustments */
 .table-fullscreen .hand-info,
 .table-fullscreen .dealer-total {
-    font-size: 1.4em;
-    padding: 15px 25px;
+    font-size: 1.75em; /* Increased by 25% from 1.4em */
+    padding: 18px 30px; /* Increased padding by 25% */
+}
+
+/* Scale up status, chips, and buttons in fullscreen mode */
+.table-fullscreen .status-item {
+    font-size: 125%; /* Increase font size by 25% */
+    padding: 12px 25px; /* Larger padding */
+    transform: scale(1.25);
+    margin: 5px 10px; /* More margin to prevent overlap */
+}
+
+.table-fullscreen #playerChips {
+    font-size: 125%; /* Increase font size by 25% */
+    padding: 12px;
+    transform: scale(1.25);
+}
+
+.table-fullscreen .btn {
+    transform: scale(1.25); /* Scale buttons by 1.25 */
+    margin: 6px 12px; /* Add more margin to prevent overlap */
+    transform-origin: center; /* Scale from center */
+}
+
+.table-fullscreen .action-buttons .btn {
+    font-size: 110%; /* Slightly larger font */
+    padding: 10px 20px; /* Larger padding */
+}
+
+.table-fullscreen .chip-button,
+.table-fullscreen .chips button {
+    transform: scale(1.25); /* Scale chip buttons */
+    margin: 8px; /* More margin */
+}
+
+.table-fullscreen .bet-display {
+    font-size: 125%; /* Larger bet display text */
+    transform: scale(1.25);
+}
+
+.table-fullscreen .bet-input {
+    font-size: 125%; /* Larger bet input */
+    padding: 8px; /* More padding */
+    transform: scale(1.25);
+}
+
+.table-fullscreen #gameStatus {
+    font-size: 125%; /* Larger game status */
+    padding: 12px;
+    transform: scale(1.25);
 }
 
 /* Windowed mode adjustments */

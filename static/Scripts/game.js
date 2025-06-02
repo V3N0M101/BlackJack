@@ -704,6 +704,12 @@ function updateUI(gameState) {
         setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
     }
 
+    // Show/hide chip buttons based on game phase
+    const chipsContainer = document.querySelector('.chips');
+    if (chipsContainer) {
+        chipsContainer.style.display = isBettingPhase ? 'flex' : 'none';
+    }
+
     // Handle bet button selection
     if (!isBettingPhase) {
         if (activeBetButton) {
@@ -1332,6 +1338,9 @@ clearBetsBtn.addEventListener('click', () => {
     clearBetsBtnLastClick = now;
 
     playSound('button');
+    if (currentGameState && currentGameState.game_phase === "round_over") {
+        playSound('deal');
+    }
     animateDiscardCards();
     const numHandsInDOM = playerHandsContainer.children.length;
     for (let i = 0; i < numHandsInDOM; i++) {
@@ -1358,6 +1367,9 @@ reBetBtn.addEventListener('click', () => {
     reBetBtnLastClick = now;
 
     playSound('button');
+    if (currentGameState && currentGameState.game_phase === "round_over") {
+        playSound('deal');
+    }
     animateDiscardCards();
     
     // Wait for animation to complete before making the API call

@@ -896,7 +896,7 @@ def verify():
         flash("No pending registration. Please register first.")
         return redirect('/register')
 
-    return render_template('Verify.html')
+    return render_template('verify.html')
 
 
 if __name__ == '__main__':

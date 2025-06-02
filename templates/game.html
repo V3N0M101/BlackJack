@@ -20,7 +20,7 @@
       document.getElementById('fsBtn')?.style.setProperty('display', 'none');
     }
   </script>
-  <div class="Game-Container">
+  <div class="Game-Container {% if not fullscreen %}game-windowed-mode{% endif %}">
     <header class="Game-head">
       <div class="head-left">
         <div class="Logo">BLACK HUB</div>

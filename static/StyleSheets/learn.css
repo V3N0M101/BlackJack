@@ -12,15 +12,18 @@ body {
 .side-nav {
   min-height: calc(100vh);
   width: var(--sidenav-width);
-  background: linear-gradient(45deg, #2e8b56d2 0%, #50c878d2 100%);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   padding: 10px;
   border-radius: 20px;
-  color: white;
-  /* fix height */
+  color: #e6e6e6;
   position: sticky;
   top: 0;
   height: calc(100vh);
   overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
 }
 
 .side-nav ul {
@@ -33,16 +36,39 @@ body {
 }
 
 .side-nav ul li a {
-  color: #000;
+  color: #50c878;
   text-decoration: none;
   font-weight: 900;
   font-size: 1.1rem;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  display: block;
+  padding: 0.5rem;
 }
 
 .side-nav ul li a:hover {
-  color: #007acc;
-  transform: scale(1.15);
+  color: #7dcea0;
+  transform: translateX(5px);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Customize scrollbar for the side nav */
+.side-nav::-webkit-scrollbar {
+  width: 8px;
+}
+
+.side-nav::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.side-nav::-webkit-scrollbar-thumb {
+  background: #50c878;
+  border-radius: 4px;
+}
+
+.side-nav::-webkit-scrollbar-thumb:hover {
+  background: #7dcea0;
 }
 
 .layout {
@@ -54,11 +80,14 @@ body {
 
 .page-content {
   flex: 1;
-  background-color: #2e8b567e;
-  padding: 20px; /* more padding all around */
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 20px;
   border-radius: 20px;
-  color: white;
+  color: #e6e6e6;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 section {
@@ -77,12 +106,47 @@ section {
 
 section {
   padding: 2rem 1.5rem;
-  line-height: 1.6;
+  line-height: 1.8;
 }
 
 section h2 {
   margin-bottom: 1rem;
-  color: #ffffff;
+  color: #50c878;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 2rem;
+}
+
+section h3 {
+  color: #7dcea0;
+  margin-top: 1.5rem;
+  margin-bottom: 1rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+strong {
+  color: #50c878;
+  font-weight: bold;
+}
+
+ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+ul li {
+  margin-bottom: 0.5rem;
+}
+
+.page-content p, 
+.page-content li {
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #50c878, transparent);
+  margin: 2rem 0;
 }
 
 .side-nav ul {

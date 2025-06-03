@@ -1,82 +1,133 @@
 * {
     margin: 0;
     text-decoration: none;
-    margin-bottom: 100px;
+}
+
+html, body {
+    min-height: 100vh;
+    overflow-x: hidden;
 }
 
 body {
-  background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)), url("../Images/Backgrounds/Trippy.png") repeat-y center center / cover;
-  background-attachment: fixed;
+    background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)), url("../Images/Backgrounds/Trippy.png") no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
 }
 
 .news-page {
     display: flex;
-    min-height: calc(100vh) ; /* Ensure it fills remaining viewport height */
+    min-height: calc(100vh - 80px);
+    padding: 20px;
+    gap: 30px;
+    margin-top: 60px;
 }
 
 .news-leaderboard {
-  width: fit-content;
-  background-color: #1e1e1e;
-  color: white;
-  padding: 20px;
-  border-radius: 10px;
-  height: 100%; /* adjust if needed */
-  overflow-y: auto;
-  margin-top: 50px;
-  border: solid 8px white;
+    width: 320px;
+    background: transparent;
+    position: sticky;
+    top: 80px;
+    height: calc(100vh - 100px);
+    align-self: flex-start;
 }
 
 .news-content {
-  flex: 1;
-  padding: 20px;
-  margin-top: 30px;
+    flex: 1;
+    padding: 20px;
 }
 
 .news-content h2 {
     text-align: center;
-    color: white;
+    color: #50c878;
     font-size: 48px;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
+
 .wrap_head {
-    border: solid 8px wheat;
-    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 40px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
 
 .square-card {
-    background: blueviolet;
-    margin: 20px 0 0 0;
-    padding: 20px;
-    border: solid black 10px;
-    border-radius: 40px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    margin: 0 0 30px 0;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
     gap: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.square-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(80, 200, 120, 0.3);
+    background: rgba(0, 0, 0, 0.75);
 }
 
 .square-card h3 {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 800;
     text-align: center;
-    color: wheat;
+    color: #50c878;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .card-body {
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
+    display: flex;
+    gap: 30px;
+    align-items: center;
 }
 
 .card-body p {
-  flex: 1;
-  color: white;
-  font-size: 24px;
-  margin: 0;
+    flex: 1;
+    color: #e6e6e6;
+    font-size: 18px;
+    line-height: 1.6;
+    margin: 0;
+    text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
 .card-body img {
-  width: 30%;
-  height: auto;
-  border-radius: 10px;
-  border: 5px solid #1e1e1e;
+    width: 300px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+}
+
+.card-body img:hover {
+    transform: scale(1.05);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #50c878;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #7dcea0;
 }

@@ -15,14 +15,18 @@
       {# Loop through the users data passed from Flask #}
       {% for user in users %}
       <li>
-        <span class="rank">{{ loop.index }}. {{ user.username }} </span>
-        <span class="divider">|</span>
-        <span class="score">{{ "{:,}".format(user.chips) }} chips</span> {# Format chips with commas #}
+        <span class="rank">{{ loop.index }}.</span>
+        <span class="username">{{ user.username }}</span>
+        <span class="score">{{ "{:,}".format(user.chips) }}</span>
       </li>
       {% endfor %}
       {# If no users are found, display a message #}
       {% if not users %}
-      <li>No users found on the leaderboard.</li>
+      <li>
+        <span class="rank">-</span>
+        <span class="username">No users found</span>
+        <span class="score">0</span>
+      </li>
       {% endif %}
     </ul>
   </div>

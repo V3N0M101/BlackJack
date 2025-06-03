@@ -3,19 +3,11 @@ let currentGameState = null; // Stores the current game state from the backend
 let activeBetInput = null; // To track which bet input is currently focused for chip clicks
 let activeBetButton = null; // To track the currently selected circular bet button
 
-// Function to set the selected bet button with gold glow
-function setSelectedBetButton(button) {
-    // Remove gold glow from previously selected button
-    if (activeBetButton) {
-        activeBetButton.style.boxShadow = '';
-    }
-    
-    // Add gold glow to newly selected button
-    activeBetButton = button;
-    if (activeBetButton) {
-        activeBetButton.style.boxShadow = '0 0 15px 5px gold, 0 0 20px 7px rgba(255, 215, 0, 0.5)';
-    }
-}
+// Animation Speed Configuration
+const CARD_DRAW_ANIMATION_SPEED = 500; // ms, duration of the card flying animation
+const CARD_DISCARD_ANIMATION_SPEED = 500; // ms, duration of discard animation (if applicable)
+const CARD_ANIMATION_DELAY_BETWEEN_CARDS = 150; // ms, delay between drawing/discarding each card
+
 let resultSoundsPlayed = false; // Flag to ensure outcome sound plays only once per round
 
 // Get references to all necessary DOM elements
@@ -58,6 +50,9 @@ let splitBtnLastClick = 0;
 let clearBetsBtnLastClick = 0;
 let reBetBtnLastClick = 0;
 const CLICK_THROTTLE_DELAY = 200; // ms
+
+// Bet-All Mode Toggle
+const betAllToggle = document.getElementById('betAllToggle');
 
 function countTotalCards(gameState) {
     let total = 0;
@@ -142,7 +137,7 @@ function addCardImages(container, cardsArray) {
                 img.style.transition = 'none';
 
                 requestAnimationFrame(() => {
-                    img.style.transition = 'transform 0.5s ease-out, opacity 0.5s ease-out';
+                    img.style.transition = `transform ${CARD_DRAW_ANIMATION_SPEED / 1000}s ease-out, opacity ${CARD_DRAW_ANIMATION_SPEED / 1000}s ease-out`;
                     img.style.transform = 'translate(0, 0) scale(1)';
                     img.style.opacity = '1';
 
@@ -152,7 +147,7 @@ function addCardImages(container, cardsArray) {
                     }, { once: true });
                 });
             });
-        }, idx * 150);
+        }, idx * CARD_ANIMATION_DELAY_BETWEEN_CARDS); // Use the new delay variable
     });
 }
 
@@ -194,20 +189,82 @@ function setButtonsDisabled(buttons, disable) {
     });
 }
 
-function setSelectedBetButton(newSelectedButton) {
-    // Remove selected class from previous button
-    if (activeBetButton) {
-        activeBetButton.classList.remove('selected');
-        activeBetButton.style.border = '2px solid transparent';
-        activeBetButton.style.boxShadow = 'none';
+function setSelectedBetButton(newSelectedButton, betTypeClass = null) {
+    // If Bet-All mode is OFF, or no betTypeClass is provided, behave as before
+    if (!betAllToggle.checked || !betTypeClass) {
+        // Remove selected class from previous button(s)
+        if (activeBetButton) {
+            if (Array.isArray(activeBetButton)) { // Handles Bet-All mode being turned OFF
+                activeBetButton.forEach(btn => {
+                    if (btn) {
+                        btn.classList.remove('selected');
+                        btn.style.border = '2px solid transparent'; // Or your default border
+                        btn.style.boxShadow = 'none'; // Or your default box-shadow
+                    }
+                });
+            } else {
+                activeBetButton.classList.remove('selected');
+                activeBetButton.style.border = '2px solid transparent';
+                activeBetButton.style.boxShadow = 'none';
+            }
+        }
+        activeBetButton = newSelectedButton;
+        if (activeBetButton) {
+            activeBetButton.classList.add('selected');
+            activeBetButton.style.border = '2px solid gold';
+            activeBetButton.style.boxShadow = '0 0 10px gold';
+        }
+        return;
     }
-    activeBetButton = newSelectedButton;
-    if (activeBetButton) {
-        activeBetButton.classList.add('selected');
-        // Add golden highlight
-        activeBetButton.style.border = '2px solid gold';
-        activeBetButton.style.boxShadow = '0 0 10px gold';
-    }
+
+    // Bet-All mode is ON and a betTypeClass is provided
+    // Deselect all currently active buttons first
+    document.querySelectorAll('.Player-Area .bet-area-button.selected').forEach(btn => {
+        btn.classList.remove('selected');
+        btn.style.border = '2px solid transparent';
+        btn.style.boxShadow = 'none';
+    });
+
+    const buttonsToSelect = [];
+    const inputsToFocus = [];
+
+    const playerHandElements = playerHandsContainer.querySelectorAll('.Player-Area');
+    playerHandElements.forEach((handDiv, handIndex) => {
+        const handElements = getOrCreatePlayerHandElement(handIndex);
+        let targetButton = null;
+        let targetInput = null;
+
+        if (betTypeClass === 'PP') {
+            targetButton = handElements.ppBetButton;
+            targetInput = handElements.sidePPBetInput;
+        } else if (betTypeClass === 'MAIN') {
+            targetButton = handElements.mainBetDisplay;
+            targetInput = handElements.mainBetInput;
+        } else if (betTypeClass === 'TWENTYONE') {
+            targetButton = handElements.twentyOneBetButton;
+            targetInput = handElements.sideTwentyOneBetInput;
+        }
+
+        if (targetButton) {
+            targetButton.classList.add('selected');
+            targetButton.style.border = '2px solid gold';
+            targetButton.style.boxShadow = '0 0 10px gold';
+            buttonsToSelect.push(targetButton);
+        }
+        if (targetInput) {
+            inputsToFocus.push(targetInput);
+        }
+    });
+
+    activeBetButton = buttonsToSelect; // Store as an array
+    // In Bet-All mode, activeBetInput will also be an array of inputs corresponding to the selected buttons.
+    // The chip application logic will need to handle this.
+    activeBetInput = inputsToFocus;
+
+    // Optionally, focus the first input of the selected type if needed for accessibility or UX
+    // if (inputsToFocus.length > 0) {
+    //     inputsToFocus[0].focus(); 
+    // }
 }
 
 function getOrCreatePlayerHandElement(index) {
@@ -260,35 +317,61 @@ function getOrCreatePlayerHandElement(index) {
 
         // Add event listeners
         if (hand.mainBetInput) hand.mainBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.mainBetInput;
-            setSelectedBetButton(hand.mainBetDisplay);
+            // When focusing an input directly (e.g., tabbing), select its button.
+            // If Bet-All is on, it will select all of that type.
+            setSelectedBetButton(hand.mainBetDisplay, 'MAIN'); 
+            if (!betAllToggle.checked) { // If not bet all, ensure activeBetInput is just this one.
+                 activeBetInput = hand.mainBetInput;
+            }
         });
         if (hand.sideTwentyOneBetInput) hand.sideTwentyOneBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.sideTwentyOneBetInput;
-            setSelectedBetButton(hand.twentyOneBetButton);
+            setSelectedBetButton(hand.twentyOneBetButton, 'TWENTYONE');
+            if (!betAllToggle.checked) {
+                 activeBetInput = hand.sideTwentyOneBetInput;
+            }
         });
         if (hand.sidePPBetInput) hand.sidePPBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.sidePPBetInput;
-            setSelectedBetButton(hand.ppBetButton);
+            setSelectedBetButton(hand.ppBetButton, 'PP');
+            if (!betAllToggle.checked) {
+                 activeBetInput = hand.sidePPBetInput;
+            }
         });
 
         if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
             playSound('button');
-            activeBetInput = hand.mainBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
+            const betType = 'MAIN';
+            setSelectedBetButton(this, betType);
+            // If Bet-All is on, activeBetInput is already an array from setSelectedBetButton.
+            // If not, set it to the corresponding single input.
+            if (!betAllToggle.checked) {
+                activeBetInput = hand.mainBetInput;
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                 // Optionally focus the first input in the array for bet-all
+                 // activeBetInput[0].focus();
+            }
         });
         if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
             playSound('button');
-            activeBetInput = hand.sidePPBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
+            const betType = 'PP';
+            setSelectedBetButton(this, betType);
+            if (!betAllToggle.checked) {
+                activeBetInput = hand.sidePPBetInput;
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                // activeBetInput[0].focus();
+            }
         });
         if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
             playSound('button');
-            activeBetInput = hand.sideTwentyOneBetInput;
-            setSelectedBetButton(this);
-            activeBetInput.focus();
+            const betType = 'TWENTYONE';
+            setSelectedBetButton(this, betType);
+            if (!betAllToggle.checked) {
+                activeBetInput = hand.sideTwentyOneBetInput;
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                // activeBetInput[0].focus();
+            }
         });
 
         return hand;
@@ -390,7 +473,7 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
                 if (collectBtn) {
                     collectBtn.disabled = false;
                     collectBtn.textContent = 'Collect Bonus!';
-                    collectBtn.classList.remove('btn-disabled'); 
+                    collectBtn.classList.remove('btn-disabled');
                     collectBtn.classList.add('btn-primary');
                 }
                 clearInterval(bonusCountdownInterval);
@@ -449,6 +532,21 @@ function updateUI(gameState) {
         playSound('deal');
     }
     lastTotalCards = totalCards;
+
+    // Adjust lastPlayerHandCardCounts if the number of hands has changed
+    if (gameState.player_hands.length !== lastPlayerHandCardCounts.length) {
+        // If hands were removed (e.g. new round after multiple splits), shorten the array
+        if (gameState.player_hands.length < lastPlayerHandCardCounts.length) {
+            lastPlayerHandCardCounts = lastPlayerHandCardCounts.slice(0, gameState.player_hands.length);
+        }
+        // For new hands (e.g. after a split), ensure counts are initialized.
+        // Existing counts for persistent hands are preserved.
+        const newCardCounts = [];
+        for (let i = 0; i < gameState.player_hands.length; i++) {
+            newCardCounts[i] = lastPlayerHandCardCounts[i] !== undefined ? lastPlayerHandCardCounts[i] : 0;
+        }
+        lastPlayerHandCardCounts = newCardCounts;
+    }
 
     // Dealer cards incremental update
     if (gameState.dealer_hand.length < lastDealerCardCount) {
@@ -691,8 +789,14 @@ function updateUI(gameState) {
         hand.stood || hand.busted || hand.blackjack
     );
     
-    // Enable rebet and clear buttons during betting phase, round over, or when all hands are completed
-    setButtonsDisabled([clearBetsBtn, reBetBtn], !(isBettingPhase || isRoundOver || allHandsCompleted));
+    // New logic for Re-Bet and Clear Bets button visibility
+    // Re-Bet Button: Visible during betting, round_over, or if all hands are completed.
+    const showReBet = isBettingPhase || isRoundOver || allHandsCompleted;
+    setButtonsDisabled([reBetBtn], !showReBet);
+
+    // Clear Bets Button: Visible during betting or if all hands are completed, but NOT during round_over.
+    const showClearBets = (isBettingPhase || allHandsCompleted) && !isRoundOver;
+    setButtonsDisabled([clearBetsBtn], !showClearBets);
 
     const activeHandData = gameState.player_hands.find(hand => hand.is_active);
 
@@ -710,10 +814,20 @@ function updateUI(gameState) {
         chipsContainer.style.display = isBettingPhase ? 'flex' : 'none';
     }
 
+    // Show/hide Bet-All toggle based on game phase
+    const betAllToggleWrap = document.querySelector('.bet-all-toggle-wrap');
+    if (betAllToggleWrap) {
+        betAllToggleWrap.style.display = isBettingPhase ? 'flex' : 'none';
+    }
+
     // Handle bet button selection
     if (!isBettingPhase) {
         if (activeBetButton) {
-            activeBetButton.classList.remove('selected');
+            activeBetButton.forEach(btn => {
+                if (btn) {
+                    btn.classList.remove('selected');
+                }
+            });
         }
         activeBetButton = null;
         activeBetInput = null;
@@ -888,48 +1002,62 @@ function attachHandEventListeners() {
         if (!hand) continue;
 
         if (hand.mainBetInput) hand.mainBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.mainBetInput;
-            setSelectedBetButton(hand.mainBetDisplay);
+            // When focusing an input directly (e.g., tabbing), select its button.
+            // If Bet-All is on, it will select all of that type.
+            setSelectedBetButton(hand.mainBetDisplay, 'MAIN'); 
+            if (!betAllToggle.checked) { // If not bet all, ensure activeBetInput is just this one.
+                 activeBetInput = hand.mainBetInput;
+            }
         });
         if (hand.sideTwentyOneBetInput) hand.sideTwentyOneBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.sideTwentyOneBetInput;
-            setSelectedBetButton(hand.twentyOneBetButton);
+            setSelectedBetButton(hand.twentyOneBetButton, 'TWENTYONE');
+            if (!betAllToggle.checked) {
+                 activeBetInput = hand.sideTwentyOneBetInput;
+            }
         });
         if (hand.sidePPBetInput) hand.sidePPBetInput.addEventListener('focus', () => {
-            activeBetInput = hand.sidePPBetInput;
-            setSelectedBetButton(hand.ppBetButton);
+            setSelectedBetButton(hand.ppBetButton, 'PP');
+            if (!betAllToggle.checked) {
+                 activeBetInput = hand.sidePPBetInput;
+            }
         });
 
-        if (hand.mainBetDisplay) {
-            hand.mainBetDisplay.addEventListener('click', function() {
-                playSound('button');
+        if (hand.mainBetDisplay) hand.mainBetDisplay.addEventListener('click', function() {
+            playSound('button');
+            const betType = 'MAIN';
+            setSelectedBetButton(this, betType);
+            // If Bet-All is on, activeBetInput is already an array from setSelectedBetButton.
+            // If not, set it to the corresponding single input.
+            if (!betAllToggle.checked) {
                 activeBetInput = hand.mainBetInput;
-                setSelectedBetButton(this);
-                activeBetInput.focus();
-            });
-            hand.mainBetDisplay.addEventListener('mouseenter', handleBetAreaHover);
-            hand.mainBetDisplay.addEventListener('mouseleave', handleBetAreaLeave);
-        }
-        if (hand.ppBetButton) {
-            hand.ppBetButton.addEventListener('click', function() {
-                playSound('button');
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                 // Optionally focus the first input in the array for bet-all
+                 // activeBetInput[0].focus();
+            }
+        });
+        if (hand.ppBetButton) hand.ppBetButton.addEventListener('click', function() {
+            playSound('button');
+            const betType = 'PP';
+            setSelectedBetButton(this, betType);
+            if (!betAllToggle.checked) {
                 activeBetInput = hand.sidePPBetInput;
-                setSelectedBetButton(this);
-                activeBetInput.focus();
-            });
-            hand.ppBetButton.addEventListener('mouseenter', handleBetAreaHover);
-            hand.ppBetButton.addEventListener('mouseleave', handleBetAreaLeave);
-        }
-        if (hand.twentyOneBetButton) {
-            hand.twentyOneBetButton.addEventListener('click', function() {
-                playSound('button');
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                // activeBetInput[0].focus();
+            }
+        });
+        if (hand.twentyOneBetButton) hand.twentyOneBetButton.addEventListener('click', function() {
+            playSound('button');
+            const betType = 'TWENTYONE';
+            setSelectedBetButton(this, betType);
+            if (!betAllToggle.checked) {
                 activeBetInput = hand.sideTwentyOneBetInput;
-                setSelectedBetButton(this);
-                activeBetInput.focus();
-            });
-            hand.twentyOneBetButton.addEventListener('mouseenter', handleBetAreaHover);
-            hand.twentyOneBetButton.addEventListener('mouseleave', handleBetAreaLeave);
-        }
+                if (activeBetInput) activeBetInput.focus();
+            } else if (Array.isArray(activeBetInput) && activeBetInput.length > 0) {
+                // activeBetInput[0].focus();
+            }
+        });
     }
 }
 
@@ -980,21 +1108,82 @@ document.addEventListener('DOMContentLoaded', () => {
     const volumeButton = document.getElementById('volumeButton');
     const volumeIcon = document.getElementById('volumeIcon');
 
-    volumeButton.addEventListener('click', () => {
-        playSound('button');
-        isMuted = !isMuted;
+    if (volumeButton && volumeIcon) { // Add null check
+        volumeButton.addEventListener('click', () => {
+            playSound('button');
+            isMuted = !isMuted;
+    
+            // Change icon
+            volumeIcon.src = isMuted
+                ? '/static/Images/Icons/mute.png'
+                : '/static/Images/Icons/vol.png';
+    
+            // Update sound objects
+            updateMuteState();
+    
+            // Optional: Show message
+            displayMessage(isMuted ? "Sound muted." : "Sound on.");
+        });
+    }
 
-        // Change icon
-        volumeIcon.src = isMuted
-            ? '/static/Images/Icons/mute.png'
-            : '/static/Images/Icons/vol.png';
-
-        // Update sound objects
-        updateMuteState();
-
-        // Optional: Show message
-        displayMessage(isMuted ? "Sound muted." : "Sound on.");
-    });
+    // Bet-All Toggle Logic
+    if (betAllToggle) { // Add null check
+        betAllToggle.addEventListener('change', () => {
+            if (!betAllToggle.checked) {
+                // If Bet-All is turned off, deselect all buttons and clear activeBetInput
+                if (activeBetButton) {
+                    if (Array.isArray(activeBetButton)) {
+                        activeBetButton.forEach(btn => {
+                            if (btn) {
+                                btn.classList.remove('selected');
+                                btn.style.border = '2px solid transparent';
+                                btn.style.boxShadow = 'none';
+                            }
+                        });
+                    } else {
+                        activeBetButton.classList.remove('selected');
+                        activeBetButton.style.border = '2px solid transparent';
+                        activeBetButton.style.boxShadow = 'none';
+                    }
+                }
+                activeBetButton = null;
+                activeBetInput = null;
+            } else {
+                // If Bet-All is turned on, and a single button was selected, 
+                // expand selection to all of its type.
+                if (activeBetButton && !Array.isArray(activeBetButton)) {
+                    let betTypeClass = null;
+                    if (activeBetButton.classList.contains('PP')) betTypeClass = 'PP';
+                    else if (activeBetButton.classList.contains('MAIN')) betTypeClass = 'MAIN';
+                    else if (activeBetButton.classList.contains('TWENTYONE')) betTypeClass = 'TWENTYONE';
+                    
+                    if (betTypeClass) {
+                        setSelectedBetButton(activeBetButton, betTypeClass); // Reselect with Bet-All logic
+                    }
+                } else {
+                  // If nothing was selected, or already in bet-all mode, clear selections
+                  // to avoid weird states. User must click again to select all of a type.
+                   if (activeBetButton) {
+                        if (Array.isArray(activeBetButton)) {
+                            activeBetButton.forEach(btn => {
+                                if (btn) {
+                                    btn.classList.remove('selected');
+                                    btn.style.border = '2px solid transparent';
+                                    btn.style.boxShadow = 'none';
+                                }
+                            });
+                        } else {
+                            activeBetButton.classList.remove('selected');
+                            activeBetButton.style.border = '2px solid transparent';
+                            activeBetButton.style.boxShadow = 'none';
+                        }
+                    }
+                    activeBetButton = null;
+                    activeBetInput = null;
+                }
+            }
+        });
+    }
 
     // Ensure discard pile has a back card image
     const discardDiv = document.querySelector('.Discard');
@@ -1051,55 +1240,78 @@ chipButtons.forEach(button => {
             return;
         }
 
-        if (activeBetInput && !activeBetInput.disabled) {
+        if (activeBetInput && (!Array.isArray(activeBetInput) || activeBetInput.length > 0)) {
             const chipValue = parseInt(button.dataset.chipValue);
-            let currentValue = parseInt(activeBetInput.value) || 0;
-            let newValue = currentValue + chipValue;
-            
-            // Calculate total bet across all zones to check if it exceeds player's balance
-            let totalBetAcrossAllZones = 0;
+            let totalBetAcrossAllZonesAfterThisChip = 0;
+
+            // First, calculate the sum of all bets *not* being modified by this chip click
             const handElements = playerHandsContainer.querySelectorAll('.Player-Area');
             handElements.forEach((handElDiv, index) => {
                 const handEl = getOrCreatePlayerHandElement(index);
                 if (!handEl) return;
-                
-                // Add all current bets except the one being modified
-                if (activeBetInput !== handEl.mainBetInput) {
-                    totalBetAcrossAllZones += (parseInt(handEl.mainBetInput.value) || 0);
-                }
-                if (activeBetInput !== handEl.sideTwentyOneBetInput) {
-                    totalBetAcrossAllZones += (parseInt(handEl.sideTwentyOneBetInput.value) || 0);
-                }
-                if (activeBetInput !== handEl.sidePPBetInput) {
-                    totalBetAcrossAllZones += (parseInt(handEl.sidePPBetInput.value) || 0);
-                }
+
+                const inputsToCheck = [
+                    { input: handEl.mainBetInput, type: 'MAIN' }, 
+                    { input: handEl.sideTwentyOneBetInput, type: 'TWENTYONE' }, 
+                    { input: handEl.sidePPBetInput, type: 'PP' }
+                ];
+
+                inputsToCheck.forEach(item => {
+                    let isCurrentlyActiveTarget = false;
+                    if (betAllToggle.checked && Array.isArray(activeBetInput)) {
+                        // Check if this input is part of the activeBetInput array
+                        if (activeBetInput.includes(item.input)) {
+                            isCurrentlyActiveTarget = true;
+                        }
+                    } else if (activeBetInput === item.input) {
+                        isCurrentlyActiveTarget = true;
+                    }
+
+                    if (!isCurrentlyActiveTarget) {
+                        totalBetAcrossAllZonesAfterThisChip += (parseInt(item.input.value) || 0);
+                    }
+                });
             });
             
-            // Add the new value of the current bet being modified
-            totalBetAcrossAllZones += newValue;
+            // Now, calculate the sum of the bets *being* modified, including the new chip
+            let sumOfModifiedBets = 0;
+            const inputsToUpdate = Array.isArray(activeBetInput) ? activeBetInput : [activeBetInput];
             
-            // Check if total bet exceeds player's chips
-            if (currentGameState.player_chips < totalBetAcrossAllZones) {
+            for (const input of inputsToUpdate) {
+                if (input && !input.disabled) {
+                     sumOfModifiedBets += (parseInt(input.value) || 0) + chipValue;
+                }
+            }
+            totalBetAcrossAllZonesAfterThisChip += sumOfModifiedBets;
+
+            if (currentGameState.player_chips < totalBetAcrossAllZonesAfterThisChip) {
                 displayMessage("Not enough chips for total bet!", 'error');
                 playSound('error');
                 return;
             }
 
-            activeBetInput.value = newValue;
+            // If balance check passes, apply the chip to the active input(s)
+            inputsToUpdate.forEach(input => {
+                if (input && !input.disabled) {
+                    let currentValue = parseInt(input.value) || 0;
+                    let newValue = currentValue + chipValue;
+                    input.value = newValue;
 
-            const handIndex = parseInt(activeBetInput.closest('.Player-Area').id.replace('hand-', ''));
-            const handEl = getOrCreatePlayerHandElement(handIndex);
+                    const handIndex = parseInt(input.closest('.Player-Area').id.replace('hand-', ''));
+                    const handEl = getOrCreatePlayerHandElement(handIndex);
 
-            if (activeBetInput === handEl.mainBetInput) {
-                handEl.mainBetDisplay.textContent = `$${newValue}`;
-                updateBetButtonTextClass(handEl.mainBetDisplay, newValue);
-            } else if (activeBetInput === handEl.sidePPBetInput) {
-                handEl.ppBetButton.textContent = `$${newValue}`;
-                updateBetButtonTextClass(handEl.ppBetButton, newValue);
-            } else if (activeBetInput === handEl.sideTwentyOneBetInput) {
-                handEl.twentyOneBetButton.textContent = `$${newValue}`;
-                updateBetButtonTextClass(handEl.twentyOneBetButton, newValue);
-            }
+                    if (input === handEl.mainBetInput) {
+                        handEl.mainBetDisplay.textContent = `$${newValue}`;
+                        updateBetButtonTextClass(handEl.mainBetDisplay, newValue);
+                    } else if (input === handEl.sidePPBetInput) {
+                        handEl.ppBetButton.textContent = `$${newValue}`;
+                        updateBetButtonTextClass(handEl.ppBetButton, newValue);
+                    } else if (input === handEl.sideTwentyOneBetInput) {
+                        handEl.twentyOneBetButton.textContent = `$${newValue}`;
+                        updateBetButtonTextClass(handEl.twentyOneBetButton, newValue);
+                    }
+                }
+            });
 
             updateTotalBetDisplay();
             playSound('chip');
@@ -1162,7 +1374,7 @@ function animateDiscardCards() {
         clone.style.top = `${rect.top}px`;
         clone.style.width = `${rect.width}px`;
         clone.style.height = `${rect.height}px`;
-        clone.style.transition = 'transform 1.4s cubic-bezier(0.34,1.56,0.64,1), opacity 1.4s';
+        clone.style.transition = `transform ${CARD_DISCARD_ANIMATION_SPEED / 1000}s cubic-bezier(0.34,1.56,0.64,1), opacity ${CARD_DISCARD_ANIMATION_SPEED / 1000}s`;
         document.body.appendChild(clone);
 
         setTimeout(() => {
@@ -1172,7 +1384,7 @@ function animateDiscardCards() {
                 clone.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
                 clone.style.opacity = '0';
             });
-        }, idx * 200); // slower stagger discard
+        }, idx * CARD_ANIMATION_DELAY_BETWEEN_CARDS); // Use the new delay variable
 
         clone.addEventListener('transitionend', () => clone.remove(), { once: true });
     });
@@ -1180,7 +1392,7 @@ function animateDiscardCards() {
     // Remove originals after a slight delay to allow clones to start animating
     setTimeout(() => {
         cardImgs.forEach(img => img.remove());
-    }, 200);
+    }, CARD_ANIMATION_DELAY_BETWEEN_CARDS); // Use delay here too for consistency
 }
 
 dealBtn.addEventListener('click', () => {

@@ -251,7 +251,8 @@ body {
 /* Styles for windowed mode header */
 .game-windowed-mode .Game-head {
     transform: scale(0.9); /* Adjust scale factor as needed */
-    transform-origin: top center; /* Adjust origin as needed */
+    transform-origin: top left; /* Align to screen left when scaled */
+    justify-content: flex-start; /* Align children to the left */
     /* You might need to adjust padding or margins if scaling causes layout issues */
 }
 
@@ -277,6 +278,20 @@ body {
 .game-windowed-mode .Game-head .vol img {
     width: 20px; /* Adjust as needed */
     height: 20px; /* Adjust as needed */
+}
+
+/* Windowed mode specific alignment for head-left */
+.game-windowed-mode .Game-head .head-left {
+    margin-left: 0; /* Ensure alignment to the far left of the parent */
+}
+
+/* Windowed mode specific alignment and sizing for head-center */
+.game-windowed-mode .Game-head .head-center {
+    flex: initial; /* Don't expand, take natural width */
+    text-align: left; /* Align text to the left */
+    margin-left: 0; /* Ensure no unintended left margin */
+    /* Add a small right margin if .head-left and .head-center need some separation */
+    /* margin-right: 10px; */ 
 }
 
 .game-windowed-mode .Game-head .Draw img {
@@ -362,6 +377,7 @@ body {
     justify-content: space-between; /* Space out dealer and player */
     align-items: center;
     box-sizing: border-box;
+    position: relative; /* Added to establish positioning context for absolute children */
     overflow: visible; /* Changed from 'hidden' to 'visible' to allow tooltips to show */
     z-index: 2; /* Above the fixed .table background */
 }
@@ -1213,6 +1229,7 @@ button.disabled {
     gap: 8px;
 }
 
+
 .Game-head .head-center {
     flex: 1; /* Allows it to take available space */
     margin-left: 0;
@@ -1453,4 +1470,64 @@ button.disabled {
 
 .table-windowed .Game-head .rules-box p {
     font-size: 0.8rem; /* Adjust as needed */
+}
+
+/* === Bet-All Mode Toggle === */
+.bet-all-toggle-wrap {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px; /* Space below the toggle */
+    /* If you want to push it to one side, use margin-left: auto or margin-right: auto */
+    /* For example, to center it if .controls is a flex container and allows it: */ 
+}
+
+.bet-all-toggle {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #fff;
+    padding: 5px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s ease;
+}
+
+.bet-all-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.bet-all-toggle input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+    /* Basic styling for the checkbox, can be enhanced */
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #ddd;
+    border: 1px solid #aaa;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    position: relative;
+    outline: none;
+}
+
+.bet-all-toggle input[type="checkbox"]:checked {
+    background-color: #4CAF50; /* Green when checked */
+    border-color: #4CAF50;
+}
+
+.bet-all-toggle input[type="checkbox"]:checked::before {
+    content: '\2714'; /* Checkmark character */
+    font-size: 12px;
+    color: white;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.bet-all-toggle span {
+    user-select: none; /* Prevent text selection on click */
 }

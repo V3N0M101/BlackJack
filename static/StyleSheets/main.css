@@ -1,17 +1,17 @@
 /* --- Base Styles & Utilities --- */
 :root {
-    /* Color Palette - Adjusted some values for better glow intensity */
-    --primary-glow-color-1: #9e00ff; /* Purple */
-    --primary-glow-color-2: #00d0ff; /* Light Blue */
-    --accent-color-hover: #4116ff; /* A vibrant blue for hover effects */
+    /* Color Palette - Updated to green theme */
+    --primary-glow-color-1: #00ff88; /* Bright Green */
+    --primary-glow-color-2: #00522c; /* Darker Green */
+    --accent-color-hover: #50c878; /* Emerald Green for hover effects */
     --text-color-light: #fff;
     --text-color-dark: #000;
-    --navbar-bg-dark: rgba(25, 25, 25, 0.7); /* Slightly darker, more transparent for depth */
+    --navbar-bg-dark: rgba(25, 25, 25, 0.9); /* Darker, more opaque background */
 
     /* Spacing - Standardized for consistency */
     --spacing-xs: 0.5rem; /* 8px */
     --spacing-sm: 1rem;   /* 16px */
-    --spacing-md: 1.5rem; /* 24px */
+    --spacing-md: 1.5rem; /* 24px */    
     --spacing-nav: 5vh;   /* 32px */
     --spacing-lgt: 12vh; 
     --spacing-lgb: 0; 
@@ -131,7 +131,7 @@ html, body {
     position: relative;
     z-index: 2;
     color: var(--text-color-light);
-    text-shadow: 0 0 12px var(--primary-glow-color-2), 0 0 15px var(--primary-glow-color-1); /* More intense text glow */
+    text-shadow: 0 0 12px var(--primary-glow-color-1), 0 0 15px var(--primary-glow-color-2); /* More intense text glow */
     display: flex; /* Ensure it's a flex container for alignment */
     align-items: center; /* Center content vertically */
 }
@@ -206,7 +206,7 @@ html, body {
     left: -8px;
     right: -8px;
     bottom: -8px;
-    background: linear-gradient(135deg, #2c0092, var(--accent-color-hover), #0d25ff); /* Using variable for consistency */
+    background: linear-gradient(135deg, #004d29, var(--accent-color-hover), #00ff88);
     z-index: -1;
     border-radius: 12px; /* Slightly larger radius for hover glow */
     opacity: 0;
@@ -241,7 +241,7 @@ html, body {
     transition: transform var(--animation-duration-fast) ease, filter var(--animation-duration-fast) ease;
     position: relative;
     color: var(--text-color-light);
-    text-shadow: 0 0 10px var(--primary-glow-color-2), 0 0 12px var(--primary-glow-color-1);
+    text-shadow: 0 0 10px var(--primary-glow-color-1), 0 0 12px var(--primary-glow-color-2);
     display: flex;
     align-items: center;
     justify-content: center;

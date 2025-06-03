@@ -1,7 +1,7 @@
 body {
     padding: 0;
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', Courier, monospace;
     background: transparent;
     color: #e6e6e6;
     overflow-x: hidden;
@@ -19,7 +19,7 @@ body {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     color: #e6e6e6;
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', Courier, monospace;
     width: 100%;
     max-width: 280px;
     border-radius: 15px;

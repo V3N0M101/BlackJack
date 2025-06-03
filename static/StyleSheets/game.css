@@ -406,7 +406,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: calc(15px * 0.85); /* Scaled down */
-    background: rgba(128, 0, 128, 0.288);
+    background: rgba(0, 110, 64, 0.74);
     padding: calc(20px * 0.85); /* Scaled down */
     border-radius: 12px;
     border: 1px solid rgba(252, 252, 252, 0.514); /* SYNTAX FIX APPLIED */
@@ -466,24 +466,16 @@ body {
     width: auto !important; /* Allow width to adjust to content */
 }
 
-.Player-Area.active-hand {
-    /* Change the background color to a shade of yellow */
-    background-color: #fff5d5a2; /* A common yellow from Bootstrap, or choose your own hex code */
-    /* You might also want to adjust the border color for consistency */
-    border-color: #e0a800; /* A darker yellow for the border */
-    /* Add a subtle box-shadow for emphasis, if you like */
-    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7); /* Yellow glow */
-}
 
 /* If you have different active-hand styles for fullscreen vs windowed,
    you might need to target them specifically: */
 
 .table-windowed .Player-Area.active-hand,
 .table-fullscreen .Player-Area.active-hand {
-    background-color: #002fafab; /* A common yellow from Bootstrap, or choose your own hex code */
+    background-color: rgba(255, 179, 102, 0.5); /* Light orange with some transparency */
     /* You might also want to adjust the border color for consistency */
-    border-color: rgb(149, 165, 255); /* A darker yellow for the border */
-    box-shadow: 0 0 15px 5px rgba(255, 193, 7, 0.7);
+    border-color: rgb(255, 140, 0); /* Darker orange for the border */
+    box-shadow: 0 0 15px 5px rgba(255, 140, 0, 0.4);
 }
 
 /* === Fullscreen Mode Player Area === */
@@ -509,7 +501,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: rgba(128, 0, 128, 0.288);
+    background: rgba(0, 110, 64, 0.685);
     padding: 12px;
     border-radius: 8px;
     color: #eee;
@@ -822,10 +814,9 @@ body {
     margin-top: 10px;
     z-index: 2;
     transition: transform 0.5s ease, height 0.5s ease, gap 0.5s ease;
-    background: rgba(0, 0, 0, 0.45);
     backdrop-filter: blur(8px) saturate(140%);
     -webkit-backdrop-filter: blur(8px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(0, 0, 0, 0.404);
     border-radius: 14px;
 }
 
@@ -842,7 +833,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 2em;
-    background: rgba(0, 146, 105, 0.45);
+    background: rgba(0, 58, 146, 0.459);
     border: 2px solid rgba(0, 20, 20, 0.5);
     padding: 8px;
     text-align: center;
@@ -1600,6 +1591,34 @@ button.disabled {
         0 6px 20px rgba(0, 0, 0, 0.3),
         0 0 30px rgba(255, 215, 0, 0.3),
         inset 0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #1F1F21;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #00ff88;
+    border-radius: 10px;
+    border: 3px solid #1F1F21;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #00cc6e;
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #00ff88 #1F1F21;
 }
 
 

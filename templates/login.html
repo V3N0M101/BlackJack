@@ -9,6 +9,7 @@
     <!-- CSS Files -->
     <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
     <link rel="stylesheet" href="/static/StyleSheets/login.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/box-display.css" />
 
     <!-- Scripts -->
     <script src="/static/Scripts/transition.js"></script>
@@ -23,6 +24,10 @@
             <span>Home</span>
         </a>
     </div>
+
+    <!-- Message box for notifications -->
+    {% include 'display_box.html' %}
+
     <div class = "page-transition">
         <div class="center-container">
         <div class = "wrapper">
@@ -50,47 +55,9 @@
                     <p>Don't have an account?<a href = "/register"> Register</a></p>
                 </div>
             </form>
-            {% if success_message %}
-                <script>
-                    alert("{{ success_message }}");
-                </script>
-            {% endif %}
         </div>
         </div>
     </div>
-    <script>
-    window.addEventListener("DOMContentLoaded", () => {
-    loadComponent("navbar", "navbar.html"); 
-    });
-    </script>
-
-    <script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-        // Page was loaded from back/forward cache — reload it
-        window.location.reload();
-    }
-});    
-</script>
-{% if login_in_alert %}
-    <script>
-        alert("Logged in successfully.");
-    </script>
-{% endif %}
-{% if logout_alert %}
-    <script>
-        alert("You have successfully logged out!");
-    </script>
-{% endif %}
-{% if register_alert %}
-<script>
-    alert("You have successfully registered! You can now log in.");
-</script>
-{% endif %}
-{% if alert_message %}
-<script>
-    alert("{{ alert_message }}");
-</script>
-{% endif %}
+    <script src="/static/Scripts/login.js"></script>
 </body>
 </html>

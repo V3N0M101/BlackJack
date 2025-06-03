@@ -7,8 +7,10 @@
     <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
     <link rel="stylesheet" href="/static/StyleSheets/login.css" />
     <link rel="stylesheet" href="/static/StyleSheets/forgot.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/box-display.css" />
     <script src="/static/Scripts/transition.js" defer></script>
-    <script src="/static/Scripts/verify.js" defer></script> </head>
+    
+</head>
 <body>
     <div class="overlay-transition"></div>
 
@@ -19,16 +21,17 @@
         </a>
     </div>
 
+    <!-- Message box for notifications -->
+    {% include 'display_box.html' %}
+
     <div class="page-transition">
         <div class="center-container">
-
             <div class="verify-wrapper">
                 <div class="verification-title">Verify Your Account</div>
                 <p class="verification-message">
                     A verification code has been sent to your email. Please enter it below to complete registration.
                 </p>
-                <form onsubmit="event.preventDefault(); submitVerificationCode();">
-                    
+                <form id="verification-form" onsubmit="event.preventDefault(); submitVerificationCode();">
                     <div class="verification-boxes">
                         <input name="d1" type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required autofocus>
                         <input name="d2" type="tel" maxlength="1" pattern="[0-9]" inputmode="numeric" required>
@@ -41,21 +44,8 @@
                     <button type="submit" class="Btn">Verify</button>
                 </form>
             </div>
-
         </div>
     </div>
-
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    {% for message in messages %}
-                        alert("{{ message }}");
-                    {% endfor %}
-                });
-            </script>
-        {% endif %}
-    {% endwith %}
-
+    <script src="/static/Scripts/verify.js" defer></script>
 </body>
 </html>

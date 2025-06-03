@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
     <link rel="stylesheet" href="/static/StyleSheets/main.css" />
     <link rel="stylesheet" href="/static/StyleSheets/StyleSheets/game.css">
+    <link rel="stylesheet" href="/static/StyleSheets/box-display.css">
 
     <!-- Favicon -->
     <link rel="icon" href="/static/Images/Assets/Osama.png" />
@@ -19,9 +20,15 @@
     <!-- Scripts -->
     <script src="/static/Scripts/main.js" defer></script>
     <script src="/static/Scripts/inject.js" defer></script>
-    
+    <script>
+        var isLoggedIn = {{ logged_in | tojson }};
+        var isFirstLogin = {{ first_login | default(false) | tojson }};
+    </script>
 </head>
 <body>
+    <!-- Message box for notifications -->
+    {% include 'display_box.html' %}
+
     <div class="overlay-transition"></div>
     <div class="page-transition">
         <section class="header"></section>
@@ -33,7 +40,7 @@
         <div class="game-preview-outer">
         <div class="game-preview-inner">
         <iframe
-        src="/game"
+        src="{{ '/game' if logged_in else '/logged_out_page' }}"
         class="game-frame"
         id="game-preview"
         allowfullscreen
@@ -43,23 +50,27 @@
         </button>
         </div>
         </div>
-
-
     </div>
+
     <!--Body Scripts -->
     <script src="/static/Scripts/transition.js"></script>
-<script>
-window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-        // Page was loaded from back/forward cache — reload it
-        window.location.reload();
-    }
-});
-</script>
-{% if login_in_alert %}
     <script>
-        alert("You have successfully logged in!");
+    window.addEventListener('DOMContentLoaded', function() {
+        if (isFirstLogin) {
+            const msgText = document.querySelector('.msg-text');
+            const okBtn = document.querySelector('.ok-btn');
+            msgText.textContent = "Welcome to BlackHub! Check out Learn or News to stay updated.";
+            okBtn.textContent = "OK";
+            okBtn.onclick = hideMessageBox;
+            showMessageBox();
+        }
+    });
+
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
     </script>
-{% endif %}
 </body>
 </html>

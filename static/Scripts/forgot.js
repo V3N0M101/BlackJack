@@ -28,50 +28,58 @@ input.addEventListener('keydown', (e) => {
 
 // Only allow 0-9 in each box
 document.addEventListener('DOMContentLoaded', () => {
-    const verificationBoxes = document.querySelector('#code-section .verification-boxes'); // Target code-section specifically
+    const verificationBoxes = document.querySelector('#code-section .verification-boxes');
     if (verificationBoxes) {
         const inputs = Array.from(verificationBoxes.querySelectorAll('input[type="tel"]'));
 
-        inputs.forEach((input, index) => {
-            // Event listener for 'input' (when value changes, e.g., after typing a digit)
-            input.addEventListener('input', (e) => {
-                // Ensure only one digit is in the box and it's a number
-                e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 1);
-
-                // Move to next input if current one is filled
-                if (e.target.value.length === e.target.maxLength) {
-                    if (index < inputs.length - 1) {
-                        inputs[index + 1].focus();
+        // Handle paste event on any input
+        inputs.forEach(input => {
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                
+                // Distribute the pasted numbers across the inputs
+                for (let i = 0; i < inputs.length; i++) {
+                    if (i < pastedData.length) {
+                        inputs[i].value = pastedData[i];
                     }
+                }
+
+                // Focus the next empty input or the last input if all filled
+                const nextEmptyIndex = inputs.findIndex(input => !input.value);
+                if (nextEmptyIndex !== -1) {
+                    inputs[nextEmptyIndex].focus();
+                } else {
+                    inputs[inputs.length - 1].focus();
+                }
+            });
+        });
+
+        inputs.forEach((input, index) => {
+            // Handle regular input
+            input.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 1);
+                if (e.target.value.length === e.target.maxLength && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
                 }
             });
 
-            // Event listener for 'keydown' (for Backspace and Arrow keys)
+            // Handle keyboard navigation
             input.addEventListener('keydown', (e) => {
-                // Move to previous input on Backspace if current one is empty
                 if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
-                    e.preventDefault(); // Prevent default backspace behavior (going back in history)
+                    e.preventDefault();
                     inputs[index - 1].focus();
-                    // Optionally clear the previous input as well if you want to delete
-                    // inputs[index - 1].value = '';
                 }
-
-                // Arrow Right navigation
                 if (e.key === 'ArrowRight' && index < inputs.length - 1) {
-                    e.preventDefault(); // Prevent default browser scroll
+                    e.preventDefault();
                     inputs[index + 1].focus();
                 }
-
-                // Arrow Left navigation
                 if (e.key === 'ArrowLeft' && index > 0) {
-                    e.preventDefault(); // Prevent default browser scroll
+                    e.preventDefault();
                     inputs[index - 1].focus();
                 }
-
-                // Submit on Enter key press
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // Prevent default form submission
-                    // Trigger the submitVerificationCode function
+                    e.preventDefault();
                     submitVerificationCode();
                 }
             });
@@ -141,5 +149,96 @@ function submitVerificationCode() {
 }
 
 function showCustomMessageBox(message, type = "info") {
-    alert(message); // Or your custom modal logic
+    console.log(`CustomMessage: [${type}] ${message}`); // Replaced alert with console.log
+    // If you have a custom modal element, you would activate it here instead.
+}
+
+// Function to submit email for reset code
+function submitEmailForm() {
+    const form = document.getElementById('email-form');
+    const formData = new FormData(form);
+
+    fetch('/send-reset-code', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        
+        if (data.success) {
+            msgText.textContent = "Password reset link sent";
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                hideMessageBox();
+                // Show code section and hide email section
+                document.getElementById('email-section').style.display = 'none';
+                document.getElementById('code-section').style.display = 'block';
+                // Focus on first code input
+                document.querySelector('.verification-boxes input').focus();
+            };
+        } else {
+            msgText.textContent = data.message || "Email not found";
+            okBtn.textContent = "OK";
+            okBtn.onclick = hideMessageBox;
+        }
+        showMessageBox();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        msgText.textContent = "An error occurred. Please try again.";
+        okBtn.textContent = "OK";
+        okBtn.onclick = hideMessageBox;
+        showMessageBox();
+    });
+}
+
+// Function to submit verification code
+function submitVerificationCode() {
+    const inputs = document.querySelectorAll("#code-section .verification-boxes input");
+    const code = Array.from(inputs).map(input => input.value).join("");
+
+    fetch('/api/verify-code', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: code })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        
+        if (data.success) {
+            msgText.textContent = "Code verified successfully!";
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                hideMessageBox();
+                window.location.href = "/reset-password";
+            };
+        } else {
+            msgText.textContent = "Wrong verification code entered";
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                hideMessageBox();
+                // Clear inputs and refocus on first one
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            };
+        }
+        showMessageBox();
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        msgText.textContent = "An error occurred. Please try again.";
+        okBtn.textContent = "OK";
+        okBtn.onclick = hideMessageBox;
+        showMessageBox();
+    });
 }

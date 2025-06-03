@@ -1,28 +1,18 @@
 // static/Scripts/verify.js
 // Function to show the custom message box
 function showCustomMessageBox(message) {
-    const customMessageBox = document.getElementById('customMessageBox');
-    const messageBoxText = document.getElementById('messageBoxText');
-    const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+    const msgBoxContainer = document.getElementById('msgBoxContainer');
+    const msgText = document.querySelector('.msg-text');
+    const okBtn = document.querySelector('.ok-btn');
 
-    if (!customMessageBox || !messageBoxText || !messageBoxCloseBtn) {
-        console.error("Custom message box elements not found!");
-        alert(message); // Fallback to browser alert if elements are missing
+    if (!msgBoxContainer || !msgText || !okBtn) {
+        console.error("Message box elements not found! Message was: ", message);
         return;
     }
 
-    messageBoxText.textContent = message;
-    customMessageBox.classList.add('show');
-
-    messageBoxCloseBtn.onclick = function() {
-        customMessageBox.classList.remove('show');
-    };
-
-    window.onclick = function(event) {
-        if (event.target == customMessageBox) {
-            customMessageBox.classList.remove('show');
-        }
-    };
+    msgText.textContent = message;
+    okBtn.textContent = "OK";
+    showMessageBox(); // Use the global showMessageBox function from display_box.html
 }
 
 // Function for auto-tabbing and backspace navigation in code inputs
@@ -31,75 +21,147 @@ document.addEventListener('DOMContentLoaded', () => {
     if (verificationBoxes) {
         const inputs = Array.from(verificationBoxes.querySelectorAll('input[type="tel"]'));
 
+        // Handle paste event on any input
+        inputs.forEach(input => {
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                
+                // Distribute the pasted numbers across the inputs
+                for (let i = 0; i < inputs.length; i++) {
+                    if (i < pastedData.length) {
+                        inputs[i].value = pastedData[i];
+                    }
+                }
+
+                // Focus the next empty input or the last input if all filled
+                const nextEmptyIndex = inputs.findIndex(input => !input.value);
+                if (nextEmptyIndex !== -1) {
+                    inputs[nextEmptyIndex].focus();
+                } else {
+                    inputs[inputs.length - 1].focus();
+                }
+            });
+        });
+
         inputs.forEach((input, index) => {
             input.addEventListener('input', (e) => {
-                // Move to next input if current one is filled
-                if (e.target.value.length === e.target.maxLength) {
-                    if (index < inputs.length - 1) {
-                        inputs[index + 1].focus();
-                    }
+                // Handle regular input
+                e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 1);
+                if (e.target.value.length === e.target.maxLength && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
                 }
             });
 
             input.addEventListener('keydown', (e) => {
-                // Move to previous input on Backspace if current one is empty
                 if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    e.preventDefault();
                     inputs[index - 1].focus();
+                }
+                if (e.key === 'ArrowRight' && index < inputs.length - 1) {
+                    e.preventDefault();
+                    inputs[index + 1].focus();
+                }
+                if (e.key === 'ArrowLeft' && index > 0) {
+                    e.preventDefault();
+                    inputs[index - 1].focus();
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitVerificationCode();
                 }
             });
         });
     }
+
+    // Show code section if verify=true in URL
+    if (window.location.search.includes("verify=true")) {
+        const emailSection = document.getElementById("email-section");
+        const codeSection = document.getElementById("code-section");
+        if (emailSection) emailSection.style.display = "none";
+        if (codeSection) {
+            codeSection.style.display = "block";
+            const firstCodeInput = codeSection.querySelector('input[type="tel"]');
+            if (firstCodeInput) firstCodeInput.focus();
+        }
+    }
 });
 
-// Main function to submit verification code via fetch API
+// Auto-advance to next input and handle backspace
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.verification-boxes').addEventListener('keyup', function(e) {
+        const target = e.target;
+        const key = e.key;
+
+        if (key === 'Backspace' || key === 'Delete') {
+            if (target.value === '') {
+                const prev = target.previousElementSibling;
+                if (prev) {
+                    prev.focus();
+                }
+            }
+        } else if (target.value.length === target.maxLength) {
+            const next = target.nextElementSibling;
+            if (next) {
+                next.focus();
+            }
+        }
+    });
+});
+
 function submitVerificationCode() {
-    let inputs = document.querySelectorAll(".verification-boxes input");
-    let code = Array.from(inputs).map(input => input.value).join("");
+    const inputs = document.querySelectorAll('.verification-boxes input');
+    const code = Array.from(inputs).map(input => input.value).join('');
+    
+    if (code.length !== 6 || !/^\d+$/.test(code)) {
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        msgText.textContent = "Please enter a valid 6-digit code";
+        okBtn.textContent = "OK";
+        okBtn.onclick = hideMessageBox;
+        showMessageBox();
+        return;
+    }
 
-    console.log("Frontend DEBUG (verify.js): Attempting to submit code:", code);
-    console.log("Frontend DEBUG (verify.js): Sending payload to /verify:", JSON.stringify({ code: code }));
-
-    // --- MODIFIED LINE: Changed endpoint to /verify ---
-    fetch('/verify', { // This is now the registration verification endpoint
+    fetch('/verify', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
         },
         body: JSON.stringify({ code: code })
     })
-    .then(res => {
-        console.log("Frontend DEBUG (verify.js): Received response status:", res.status);
-        // Ensure to parse JSON even if response is not 'ok' to get error messages
-        return res.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log("Frontend DEBUG (verify.js): Received response data:", data);
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        
         if (data.success) {
-            console.log("Code verification successful!");
-            // Use showCustomMessageBox for a consistent UI
-            showCustomMessageBox(data.message || "Verification successful!"); 
-            
-            // Redirect based on the 'type' of verification (registration vs. password reset)
-            // The Flask /verify route for registration sends 'type': 'registration' and 'redirect_url'
-            if (data.type === 'registration' && data.redirect_url) {
-                window.location.href = data.redirect_url; // Redirect to login after successful registration
-            } else if (data.type === 'reset_password' && data.redirect_url) { // This part is for /verify-code, which is not called here
-                window.location.href = data.redirect_url; 
-            } else {
-                // Fallback if type or redirect_url is missing, but success is true
-                window.location.href = "/login"; // Default redirect for successful registration
-            }
+            msgText.textContent = data.message || "Verification successful!";
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                hideMessageBox();
+                window.location.href = data.redirect_url || '/login';
+            };
         } else {
-            console.error("Code verification failed. Message:", data.message || "Unknown error.");
-            showCustomMessageBox(data.message || "Incorrect verification code. Please try again."); // Use custom message box
-            // Clear inputs and refocus on the first one for retry
-            inputs.forEach(input => input.value = '');
-            inputs[0].focus();
+            msgText.textContent = "Wrong verification code entered";
+            okBtn.textContent = "OK";
+            okBtn.onclick = function() {
+                hideMessageBox();
+                // Clear inputs and focus on first one
+                inputs.forEach(input => input.value = '');
+                inputs[0].focus();
+            };
         }
+        showMessageBox();
     })
     .catch(error => {
-        console.error("Frontend DEBUG (verify.js): Error during code verification fetch:", error);
-        showCustomMessageBox("An unexpected error occurred during verification. Please try again later."); // Use custom message box
+        console.error('Error:', error);
+        const msgText = document.querySelector('.msg-text');
+        const okBtn = document.querySelector('.ok-btn');
+        msgText.textContent = "An error occurred. Please try again.";
+        okBtn.textContent = "OK";
+        okBtn.onclick = hideMessageBox;
+        showMessageBox();
     });
 }
 

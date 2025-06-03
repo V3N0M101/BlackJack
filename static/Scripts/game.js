@@ -54,6 +54,10 @@ const CLICK_THROTTLE_DELAY = 200; // ms
 // Bet-All Mode Toggle
 const betAllToggle = document.getElementById('betAllToggle');
 
+// Add these at the top with other global variables
+let previousBalance = 0;
+let previousBet = 0;
+
 function countTotalCards(gameState) {
     let total = 0;
     if (gameState.dealer_hand) {
@@ -78,12 +82,14 @@ const sounds = {
     blackjack: new Audio('/static/Sounds/blackjack.wav'),
     bonus: new Audio('/static/Sounds/bonus.wav'),
     button: new Audio('/static/Sounds/button.wav'),
+    button_hover: new Audio('/static/Sounds/button_hover.wav'),
     chip: new Audio('/static/Sounds/chip.wav'),
     deal: new Audio('/static/Sounds/deal.wav'),
     error: new Audio('/static/Sounds/error.wav'),
     lose: new Audio('/static/Sounds/lose.wav'),
     push: new Audio('/static/Sounds/push.wav'),
-    win: new Audio('/static/Sounds/win.wav')
+    win: new Audio('/static/Sounds/win.wav'),
+    carddeal: new Audio('/static/Sounds/carddeal.ogg')
 };
 
 Object.values(sounds).forEach(audio => {
@@ -420,11 +426,10 @@ function displayMessage(message, type = 'info') {
         gameMessageDiv.className = `status-item game-message ${type}`;
         gameMessageDiv.style.display = "";
 
-        if (type === 'error') {
+        // Only play error sound for actual errors, not losses
+        if (type === 'error' && !message.startsWith('Net:')) {
             playSound('error');
         }
-    } else {
-        alert(message);
     }
 }
 
@@ -526,88 +531,83 @@ function updateBonusUI(canCollect, nextBonusTime, bonusCooldownMessage, playerCh
 function updateUI(gameState) {
     currentGameState = gameState;
 
-    // Play deal sound if new cards have appeared
     const totalCards = countTotalCards(gameState);
-    if (totalCards > lastTotalCards) {
+    if (totalCards > lastTotalCards && gameState.game_phase === "dealing") {
         playSound('deal');
+        // Store the previous balance right before placing bets
+        previousBalance = parseInt(playerChipsSpan.textContent.replace(/[^0-9-]/g, '')) || 0;
+        // Store in localStorage for persistence
+        localStorage.setItem('previousBalance', previousBalance.toString());
+        console.log('Storing previous balance:', previousBalance);
     }
     lastTotalCards = totalCards;
 
-    // Adjust lastPlayerHandCardCounts if the number of hands has changed
+    // Adjust hand tracking
     if (gameState.player_hands.length !== lastPlayerHandCardCounts.length) {
-        // If hands were removed (e.g. new round after multiple splits), shorten the array
-        if (gameState.player_hands.length < lastPlayerHandCardCounts.length) {
-            lastPlayerHandCardCounts = lastPlayerHandCardCounts.slice(0, gameState.player_hands.length);
-        }
-        // For new hands (e.g. after a split), ensure counts are initialized.
-        // Existing counts for persistent hands are preserved.
-        const newCardCounts = [];
+        const newCounts = [];
         for (let i = 0; i < gameState.player_hands.length; i++) {
-            newCardCounts[i] = lastPlayerHandCardCounts[i] !== undefined ? lastPlayerHandCardCounts[i] : 0;
+            newCounts[i] = lastPlayerHandCardCounts[i] || 0;
         }
-        lastPlayerHandCardCounts = newCardCounts;
+        lastPlayerHandCardCounts = newCounts;
     }
 
-    // Dealer cards incremental update
+    // Dealer cards
     if (gameState.dealer_hand.length < lastDealerCardCount) {
-        // New round, reset
         clearCards(dealerCardsDiv);
         addCardImages(dealerCardsDiv, gameState.dealer_hand);
     } else if (gameState.dealer_hand.length > lastDealerCardCount) {
         addCardImages(dealerCardsDiv, gameState.dealer_hand.slice(lastDealerCardCount));
     }
-    updateCardFaces(dealerCardsDiv, gameState.dealer_hand); // ensure reveal
+    updateCardFaces(dealerCardsDiv, gameState.dealer_hand);
     lastDealerCardCount = gameState.dealer_hand.length;
 
     dealerTotalSpan.textContent = `Dealer: ${gameState.dealer_total}`;
-
     playerChipsSpan.textContent = `Balance: $${gameState.player_chips}`;
     displayMessage(gameState.game_message);
 
     const isBettingPhase = gameState.game_phase === "betting";
-    if (isBettingPhase) {
-        resultSoundsPlayed = false; // Reset outcome sound flag for a new betting phase
-    }
-    let totalCurrentBet = 0;
+    const isRoundOver = gameState.game_phase === "round_over";
+    const isPlayerTurn = gameState.game_phase === "player_turns";
 
-    // First, ensure all existing hands are properly hidden
-    const existingHands = playerHandsContainer.querySelectorAll('.Player-Area');
-    existingHands.forEach(hand => {
+    if (isBettingPhase) resultSoundsPlayed = false;
+
+    // Hide all hand containers
+    playerHandsContainer.querySelectorAll('.Player-Area').forEach(hand => {
         hand.style.cssText = 'display: none !important; visibility: hidden; pointer-events: none;';
     });
 
-    // Then show and update only the hands we need
+    let totalCurrentBet = 0;
+
+    // Show and update hands
     gameState.player_hands.forEach((handData, i) => {
         const handEl = getOrCreatePlayerHandElement(handData.hand_index);
         if (!handEl) return;
 
-        // Show this hand and ensure it's fully visible
         handEl.area.style.cssText = 'display: flex !important; visibility: visible; pointer-events: auto;';
-
         const cardsArr = handData.hand || [];
-        if (!lastPlayerHandCardCounts[i]) {
-            lastPlayerHandCardCounts[i] = 0;
-        }
 
         if (cardsArr.length < lastPlayerHandCardCounts[i]) {
-            // reset on fewer cards (e.g., new round)
             clearCards(handEl.cardsDiv);
             addCardImages(handEl.cardsDiv, cardsArr);
         } else if (cardsArr.length > lastPlayerHandCardCounts[i]) {
             addCardImages(handEl.cardsDiv, cardsArr.slice(lastPlayerHandCardCounts[i]));
         }
-
         lastPlayerHandCardCounts[i] = cardsArr.length;
 
-        if ((handData.total === 0 || handData.total === undefined) && isBettingPhase) {
-            handEl.totalSpan.textContent = 'Total:';
-        } else {
-            handEl.totalSpan.textContent = `Total: ${handData.total || 0}`;
-        }
+        handEl.totalSpan.textContent = `Total: ${handData.total || 0}`;
+        // Format the result message
+        let resultMessage = handData.result_message || "";
+        // Replace side bet loss messages with simpler format
+        resultMessage = resultMessage
+            .replace(/Lost \$\d+ on 21\+3/g, 'Lost 21+3')
+            .replace(/Lost \$\d+ on Perfect Pair/g, 'Lost PP')
+            // Format all Perfect Pair win messages (Mixed, Colored, Perfect)
+            .replace(/Won \$(\d+) on Perfect Pair \((Mixed|Colored|Perfect) Pair\)/g, 'Won $$$1 ($2 Pair)')
+            // Format all 21+3 win messages
+            .replace(/Won \$(\d+) on 21\+3 \((Suited Trips|Straight Flush|Three of a Kind|Straight|Flush)\)/g, 'Won $$$1 ($2)');
+        handEl.messageSpan.textContent = resultMessage;
 
-        handEl.messageSpan.textContent = handData.result_message || "";
-
-        // Update bet displays and ensure buttons are visible
+        // Update bet displays
         if (handEl.mainBetDisplay) {
             handEl.mainBetDisplay.style.visibility = 'visible';
             handEl.mainBetDisplay.textContent = handData.main_bet > 0 ? `$${handData.main_bet}` : '';
@@ -624,225 +624,114 @@ function updateUI(gameState) {
             updateBetButtonTextClass(handEl.twentyOneBetButton, handData.side_bet_21_3);
         }
 
-        // Show/hide bet inputs based on phase
+        // Inputs
+        const inputs = [handEl.mainBetInput, handEl.sideTwentyOneBetInput, handEl.sidePPBetInput];
         if (isBettingPhase) {
-            if (handEl.mainBetInput) {
-                handEl.mainBetInput.style.display = 'inline-block';
-                handEl.mainBetInput.value = handData.main_bet || 0;
-            }
-            if (handEl.sideTwentyOneBetInput) {
-                handEl.sideTwentyOneBetInput.style.display = 'inline-block';
-                handEl.sideTwentyOneBetInput.value = handData.side_bet_21_3 || 0;
-            }
-            if (handEl.sidePPBetInput) {
-                handEl.sidePPBetInput.style.display = 'inline-block';
-                handEl.sidePPBetInput.value = handData.side_bet_perfect_pair || 0;
-            }
+            inputs.forEach((input, idx) => {
+                if (input) {
+                    input.style.display = 'inline-block';
+                    input.value = [handData.main_bet, handData.side_bet_21_3, handData.side_bet_perfect_pair][idx] || 0;
+                }
+            });
         } else {
-            if (handEl.mainBetInput) handEl.mainBetInput.style.display = 'none';
-            if (handEl.sideTwentyOneBetInput) handEl.sideTwentyOneBetInput.style.display = 'none';
-            if (handEl.sidePPBetInput) handEl.sidePPBetInput.style.display = 'none';
+            inputs.forEach(input => input && (input.style.display = 'none'));
         }
 
-        // Update active hand highlighting
-        if (handData.is_active && gameState.game_phase === "player_turns") {
+        if (handData.is_active && isPlayerTurn) {
             handEl.area.classList.add('active-hand');
         } else {
             handEl.area.classList.remove('active-hand');
         }
 
         totalCurrentBet += (handData.main_bet || 0) + (handData.side_bet_21_3 || 0) + (handData.side_bet_perfect_pair || 0);
-
-        // Ensure faces updated (for splits etc.)
         updateCardFaces(handEl.cardsDiv, cardsArr);
     });
 
     totalBetDisplaySpan.textContent = `Total Bet: $${totalCurrentBet}`;
 
-    const isPlayerTurn = gameState.game_phase === "player_turns";
-    const isRoundOver = gameState.game_phase === "round_over";
-
-    // Play win/lose/push sounds once per round based on hand messages
+    // Round-end result + sounds + net change
     if (isRoundOver && !resultSoundsPlayed) {
-        let hasBlackjack = false;        // Player got Blackjack or "Win 1.5x"
-        let dealerWinsOverall = false;   // "Dealer wins." message appeared on any hand
-        let playerHasOtherWin = false;   // Player won (not BJ, not vs "Dealer wins")
-        let playerHasOtherLoss = false;  // Player lost (e.g., "Bust!", not "Dealer wins")
-        let playerHasPush = false;       // Player pushed
-        let totalNetChange = 0;          // Track total net change across all hands
-
-        console.log("--- Evaluating round end sounds ---");
-        gameState.player_hands.forEach((handData, index) => {
-            const message = (handData.result_message || "").toLowerCase().trim();
-            console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`);
-
-            // Get the actual bet amounts from the UI elements
-            const mainBetEl = document.getElementById(`main-bet-${index}`);
-            const ppBetEl = document.getElementById(`pp-bet-${index}`);
-            const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
-
-            // Extract numeric values from the bet displays (remove $ and parse)
-            const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
-            const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
-            const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
-
-            let handNetChange = 0;
-
-            // Calculate net change based on result
-            if (message.includes("blackjack")) {
-                if (message.includes("dealer has blackjack")) {
-                    console.log('Dealer Blackjack - Bet Amount:', mainBet);
-                    handNetChange = -mainBet; // Show the actual loss amount
-                    playerHasOtherLoss = true;
-                    hasBlackjack = false; // Make sure we don't trigger blackjack sound
-                    console.log('Dealer Blackjack - Net Change:', handNetChange);
-                } else {
-                    handNetChange = Math.floor(mainBet * 1.5); // Player Blackjack pays 3:2 (1.5x)
-                    hasBlackjack = true;
-                    console.log('Player Blackjack - Net Change:', handNetChange);
-                }
-            } else if (message.includes("dealer wins")) {
-                handNetChange = -mainBet; // Lost the bet
-                playerHasOtherLoss = true;
-                console.log('Dealer Wins - Net Change:', handNetChange);
-            } else if (message.includes("busted")) {
-                handNetChange = -mainBet; // Lost the bet
-                playerHasOtherLoss = true;
-                console.log('Player Bust - Net Change:', handNetChange);
-            } else if (message.includes("you win!")) {
-                handNetChange = mainBet; // Won the bet
-                playerHasOtherWin = true;
-                console.log('Player Wins - Net Change:', handNetChange);
-            } else if (message.includes("push")) {
-                handNetChange = 0;
-                playerHasPush = true;
-                console.log('Push - Net Change:', handNetChange);
+        let blackjackWin = false;
+    
+        // Get actual balance values and use stored previous balance
+        const currentBalance = parseInt(playerChipsSpan.textContent.replace(/[^0-9-]/g, '')) || 0;
+        const storedPrevBalance = localStorage.getItem('previousBalance');
+        // Use stored balance if available, otherwise use current previousBalance variable
+        const prevBalance = storedPrevBalance ? parseInt(storedPrevBalance) : previousBalance;
+        const totalNet = currentBalance - prevBalance;
+        console.log('Net calculation:', { currentBalance, prevBalance, totalNet });
+    
+        // Check for blackjack
+        gameState.player_hands.forEach(handData => {
+            if (handData.blackjack && !handData.result_message.toLowerCase().includes("dealer has blackjack")) {
+                blackjackWin = true;
             }
-
-            // Handle Perfect Pairs results
-            if (message.includes("won $") && message.includes("on perfect pair")) {
-                const match = message.match(/Won \$(\d+)/);
-                if (match) {
-                    handNetChange += parseInt(match[1]);
-                    playerHasOtherWin = true;
-                    console.log('Perfect Pair Win - Additional Change:', parseInt(match[1]));
-                }
-            } else if (message.includes("lost perfect pair")) {
-                handNetChange -= ppBet;
-                playerHasOtherLoss = true;
-                console.log('Perfect Pair Loss - Additional Change:', -ppBet);
-            }
-
-            // Handle 21+3 results
-            if (message.includes("won $") && message.includes("on 21+3")) {
-                const match = message.match(/Won \$(\d+)/);
-                if (match) {
-                    handNetChange += parseInt(match[1]);
-                    playerHasOtherWin = true;
-                    console.log('21+3 Win - Additional Change:', parseInt(match[1]));
-                }
-            } else if (message.includes("lost 21+3")) {
-                handNetChange -= twentyOneBet;
-                playerHasOtherLoss = true;
-                console.log('21+3 Loss - Additional Change:', -twentyOneBet);
-            }
-
-            // Add this hand's net change to total
-            totalNetChange += handNetChange;
-            console.log(`Hand ${index + 1} Final Net Change: ${handNetChange}, Running Total: ${totalNetChange}`);
         });
-
-        // Update game message with total net change
-        const messageType = totalNetChange > 0 ? "success" : totalNetChange < 0 ? "error" : "info";
-        // Format with commas for readability and ensure negative sign shows for losses
-        const formattedChange = totalNetChange < 0 ? 
-            `-$${Math.abs(totalNetChange).toLocaleString('en-US')}` : 
-            `$${totalNetChange.toLocaleString('en-US')}`;
-        displayMessage(`Net ${totalNetChange > 0 ? 'Gain' : totalNetChange < 0 ? 'Loss' : 'Change'}: ${formattedChange}`, messageType);
-
-        // Set sound flags based on total net profit
-        if (hasBlackjack) {
-            console.log("Sound decision: Player Blackjack. Playing blackjack.wav");
-            playSound('blackjack');
-        } else if (totalNetChange > 0) {
-            console.log("Sound decision: Player Has Win. Playing win.wav");
-            playSound('win');
-        } else if (totalNetChange < 0) {
-            console.log("Sound decision: Player Has Loss. Playing lose.wav");
-            playSound('lose');
-        } else if (playerHasPush) {
-            console.log("Sound decision: Player Has Push. Playing push.wav");
-            playSound('push');
-        } else {
-            console.log("Sound decision: No specific conditions met, defaulting to Push. Playing push.wav");
-            playSound('push');
-        }
-
+    
+        const messageType = totalNet > 0 ? "success" : totalNet < 0 ? "loss" : "info";
+        displayMessage(`Net: $${totalNet}`, messageType);
+    
+        // Sound
+        if (blackjackWin) playSound('blackjack');
+        else if (totalNet > 0) playSound('win');
+        else if (totalNet < 0) playSound('lose');
+        else playSound('push');
+    
         resultSoundsPlayed = true;
     }
 
-    // Update button states
+    // Button logic
     setButtonsDisabled([dealBtn], !isBettingPhase);
-    
-    // Check if all hands are effectively completed (stood, busted, or blackjack)
-    const allHandsCompleted = gameState.player_hands.every(hand => 
+
+    const allDone = gameState.player_hands.every(hand =>
         hand.stood || hand.busted || hand.blackjack
     );
-    
-    // New logic for Re-Bet and Clear Bets button visibility
-    // Re-Bet Button: Visible during betting, round_over, or if all hands are completed.
-    const showReBet = isBettingPhase || isRoundOver || allHandsCompleted;
+
+    const showReBet = isBettingPhase || isRoundOver || allDone;
     setButtonsDisabled([reBetBtn], !showReBet);
 
-    // Clear Bets Button: Visible during betting or if all hands are completed, but NOT during round_over.
-    const showClearBets = (isBettingPhase || allHandsCompleted) && !isRoundOver;
+    const showClearBets = (isBettingPhase || allDone) && !isRoundOver;
     setButtonsDisabled([clearBetsBtn], !showClearBets);
 
-    const activeHandData = gameState.player_hands.find(hand => hand.is_active);
-
-    if (isPlayerTurn && activeHandData) {
+    const activeHand = gameState.player_hands.find(hand => hand.is_active);
+    if (isPlayerTurn && activeHand) {
         setButtonsDisabled([hitBtn, standBtn], false);
-        setButtonsDisabled([doubleBtn], !activeHandData.can_double);
-        setButtonsDisabled([splitBtn], !activeHandData.can_split);
+        setButtonsDisabled([doubleBtn], !activeHand.can_double);
+        setButtonsDisabled([splitBtn], !activeHand.can_split);
     } else {
         setButtonsDisabled([hitBtn, standBtn, doubleBtn, splitBtn], true);
     }
 
-    // Show/hide chip buttons based on game phase
     const chipsContainer = document.querySelector('.chips');
-    if (chipsContainer) {
-        chipsContainer.style.display = isBettingPhase ? 'flex' : 'none';
-    }
+    if (chipsContainer) chipsContainer.style.display = isBettingPhase ? 'flex' : 'none';
 
-    // Show/hide Bet-All toggle based on game phase
     const betAllToggleWrap = document.querySelector('.bet-all-toggle-wrap');
-    if (betAllToggleWrap) {
-        betAllToggleWrap.style.display = isBettingPhase ? 'flex' : 'none';
-    }
+    if (betAllToggleWrap) betAllToggleWrap.style.display = isBettingPhase ? 'flex' : 'none';
 
-    // Handle bet button selection
+    // Manage active bet button and input
     if (!isBettingPhase) {
         if (activeBetButton) {
-            activeBetButton.forEach(btn => {
+            const clearStyle = btn => {
                 if (btn) {
                     btn.classList.remove('selected');
+                    btn.style.border = '2px solid transparent';
+                    btn.style.boxShadow = 'none';
                 }
-            });
+            };
+            if (Array.isArray(activeBetButton)) activeBetButton.forEach(clearStyle);
+            else clearStyle(activeBetButton);
         }
         activeBetButton = null;
         activeBetInput = null;
     } else if (!activeBetButton && gameState.player_hands.length > 0) {
-        const firstHandEl = getOrCreatePlayerHandElement(0);
-        if (firstHandEl && firstHandEl.mainBetInput && firstHandEl.mainBetDisplay) {
-            setSelectedBetButton(firstHandEl.mainBetDisplay);
-            activeBetInput = firstHandEl.mainBetInput;
+        const hand = getOrCreatePlayerHandElement(0);
+        if (hand && hand.mainBetDisplay && hand.mainBetInput) {
+            setSelectedBetButton(hand.mainBetDisplay);
+            activeBetInput = hand.mainBetInput;
         }
     }
 
-    // Always update bonus UI with the latest state
-    // This ensures the collect button is properly updated after each round
-    if (gameState.hasOwnProperty('can_collect_bonus') && 
-        gameState.hasOwnProperty('next_bonus_time')) {
+    if (gameState.hasOwnProperty('can_collect_bonus') && gameState.hasOwnProperty('next_bonus_time')) {
         updateBonusUI(
             gameState.can_collect_bonus,
             gameState.next_bonus_time,
@@ -863,106 +752,8 @@ async function fetchGameState(url, options = {}) {
 
         if (data.success) {
             updateUI(data.game_state);
-            
-            // Only calculate and display net change if it's round over
-            if (data.game_state.game_phase === "round_over") {
-                let totalNetChange = 0;
-                let playerHasOtherLoss = false;
-                let playerHasOtherWin = false;
-                let hasBlackjack = false;
-                let playerHasPush = false;
-
-                data.game_state.player_hands.forEach((handData, index) => {
-                    const message = (handData.result_message || "").toLowerCase().trim();
-                    console.log(`Hand ${index + 1} message: "${message}", hand.blackjack_flag: ${handData.blackjack}`);
-
-                    // Get the actual bet amounts from the UI elements
-                    const mainBetEl = document.getElementById(`main-bet-${index}`);
-                    const ppBetEl = document.getElementById(`pp-bet-${index}`);
-                    const twentyOneBetEl = document.getElementById(`twentyone-bet-${index}`);
-
-                    // Extract numeric values from the bet displays
-                    const mainBet = mainBetEl ? parseInt(mainBetEl.textContent.replace('$', '')) || 0 : 0;
-                    const ppBet = ppBetEl && ppBetEl.textContent !== 'PP' ? parseInt(ppBetEl.textContent.replace('$', '')) || 0 : 0;
-                    const twentyOneBet = twentyOneBetEl && twentyOneBetEl.textContent !== '21+3' ? parseInt(twentyOneBetEl.textContent.replace('$', '')) || 0 : 0;
-
-                    let handNetChange = 0;
-
-                    // Calculate net change based on result
-                    if (message.includes("blackjack")) {
-                        if (message.includes("dealer has blackjack")) {
-                            handNetChange = -mainBet;
-                            playerHasOtherLoss = true;
-                        } else {
-                            handNetChange = Math.floor(mainBet * 1.5);
-                            hasBlackjack = true;
-                        }
-                    } else if (message.includes("dealer wins")) {
-                        handNetChange = -mainBet;
-                        playerHasOtherLoss = true;
-                    } else if (message.includes("busted")) {
-                        handNetChange = -mainBet;
-                        playerHasOtherLoss = true;
-                    } else if (message.includes("you win!")) {
-                        handNetChange = mainBet;
-                        playerHasOtherWin = true;
-                    } else if (message.includes("push")) {
-                        handNetChange = 0;
-                        playerHasPush = true;
-                    }
-
-                    // Handle side bets
-                    if (message.includes("won $") && message.includes("on perfect pair")) {
-                        const match = message.match(/Won \$(\d+)/);
-                        if (match) {
-                            handNetChange += parseInt(match[1]);
-                            playerHasOtherWin = true;
-                        }
-                    } else if (message.includes("lost perfect pair")) {
-                        handNetChange -= ppBet;
-                        playerHasOtherLoss = true;
-                    }
-
-                    if (message.includes("won $") && message.includes("on 21+3")) {
-                        const match = message.match(/Won \$(\d+)/);
-                        if (match) {
-                            handNetChange += parseInt(match[1]);
-                            playerHasOtherWin = true;
-                        }
-                    } else if (message.includes("lost 21+3")) {
-                        handNetChange -= twentyOneBet;
-                        playerHasOtherLoss = true;
-                    }
-
-                    totalNetChange += handNetChange;
-                    console.log(`Hand ${index + 1} Net Change: ${handNetChange}, Running Total: ${totalNetChange}`);
-                });
-
-                // Format with commas and ensure negative sign shows for losses
-                const formattedChange = totalNetChange < 0 ? 
-                    `-$${Math.abs(totalNetChange).toLocaleString('en-US')}` : 
-                    `$${totalNetChange.toLocaleString('en-US')}`;
-                
-                // Override the message with our calculated net change
-                displayMessage(`Net ${totalNetChange > 0 ? 'Gain' : totalNetChange < 0 ? 'Loss' : 'Change'}: ${formattedChange}`, 
-                    totalNetChange > 0 ? "success" : totalNetChange < 0 ? "error" : "info");
-
-                // Play appropriate sound
-                if (hasBlackjack) {
-                    playSound('blackjack');
-                } else if (totalNetChange > 0) {
-                    playSound('win');
-                } else if (totalNetChange < 0) {
-                    playSound('lose');
-                } else if (playerHasPush) {
-                    playSound('push');
-                } else {
-                    playSound('push');
-                }
-            } else if (data.message) {
-                // For non-round-over phases, display the original message
-                displayMessage(data.message);
-            }
+            // The redundant result processing block previously here (lines approx 877-948) has been removed.
+            // updateUI now handles all game state updates, including round_over messages and sounds.
         } else {
             displayMessage(data.message || 'An unspecified error occurred.', 'error');
             if (data.game_state) {
@@ -1098,6 +889,22 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchGameState('/api/start_game', { method: 'POST' });
     attachHandEventListeners();
     
+    // Add hover sound to all action buttons
+    addHoverSound(dealBtn);
+    addHoverSound(hitBtn);
+    addHoverSound(standBtn);
+    addHoverSound(doubleBtn);
+    addHoverSound(splitBtn);
+    addHoverSound(clearBetsBtn);
+    addHoverSound(reBetBtn);
+    addHoverSound(collectBtn);
+    addHoverSound(document.getElementById('volumeButton'));
+
+    // Add hover sound to all chip buttons
+    document.querySelectorAll('.chips button').forEach(button => {
+        addHoverSound(button);
+    });
+
     const initialHandEl = getOrCreatePlayerHandElement(0);
     if (initialHandEl && initialHandEl.mainBetInput && initialHandEl.mainBetDisplay) {
         activeBetInput = initialHandEl.mainBetInput;
@@ -1408,6 +1215,12 @@ dealBtn.addEventListener('click', () => {
     let hasValidBet = false;
     const numHandsToCollectBetsFrom = currentGameState ? currentGameState.num_hands : playerHandsContainer.children.length;
 
+    // Store the previous balance right before placing bets
+    previousBalance = parseInt(playerChipsSpan.textContent.replace(/[^0-9-]/g, '')) || 0;
+    // Store in localStorage for persistence
+    localStorage.setItem('previousBalance', previousBalance.toString());
+    console.log('Storing previous balance:', previousBalance);
+
     // Ensure bets array always has length equal to numHandsToCollectBetsFrom
     for (let i = 0; i < numHandsToCollectBetsFrom; i++) {
         const handEl = getOrCreatePlayerHandElement(i);
@@ -1473,7 +1286,7 @@ hitBtn.addEventListener('click', () => {
     }
     hitBtnLastClick = now;
 
-    playSound('button');
+    playSound('carddeal');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
@@ -1511,7 +1324,7 @@ doubleBtn.addEventListener('click', () => {
     }
     doubleBtnLastClick = now;
 
-    playSound('button');
+    playSound('carddeal');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
@@ -1530,7 +1343,7 @@ splitBtn.addEventListener('click', () => {
     }
     splitBtnLastClick = now;
 
-    playSound('button');
+    playSound('carddeal');
     if (currentGameState && currentGameState.current_active_hand_index !== -1) {
         fetchGameState('/api/player_action', {
             method: 'POST',
@@ -1549,7 +1362,7 @@ clearBetsBtn.addEventListener('click', () => {
     }
     clearBetsBtnLastClick = now;
 
-    playSound('button');
+    playSound('chip');
     if (currentGameState && currentGameState.game_phase === "round_over") {
         playSound('deal');
     }
@@ -1578,14 +1391,16 @@ reBetBtn.addEventListener('click', () => {
     }
     reBetBtnLastClick = now;
 
-    playSound('button');
+    // Play appropriate sound based on game phase
     if (currentGameState && currentGameState.game_phase === "round_over") {
         playSound('deal');
+    } else {
+        playSound('chip');
     }
+    
     animateDiscardCards();
     
     // Wait for animation to complete before making the API call
-    // Using a shorter delay for better responsiveness
     setTimeout(() => {
         handleRebet();
     }, 800);
@@ -1726,6 +1541,11 @@ async function handleRebet() {
         if (data.success) {
             updateUI(data.game_state);
             
+            // Play deal sound if we're in round_over phase
+            if (data.game_state && data.game_state.game_phase === "round_over") {
+                playSound('deal');
+            }
+            
             // Apply the last bets to the UI
             if (data.last_bets && Array.isArray(data.last_bets)) {
                 data.last_bets.forEach((bet, index) => {
@@ -1774,4 +1594,14 @@ async function handleRebet() {
     } catch (error) {
         displayMessage("An error occurred during rebet: " + error.message, 'error');
     }
+}
+
+// Add hover sound to all buttons
+function addHoverSound(button) {
+    if (!button) return;
+    button.addEventListener('mouseenter', () => {
+        if (!button.classList.contains('disabled')) {
+            playSound('button_hover');
+        }
+    });
 }

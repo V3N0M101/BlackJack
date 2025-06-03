@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Logged In</title>
+    <link rel="stylesheet" href="/static/StyleSheets/box-display.css">
+    <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #1c1c1c;
+            overflow: hidden;
+        }
+        img {
+            min-width: 100%;
+            min-height: 90%;
+            object-fit: cover;
+            display: block;
+            filter: blur(8px);
+            opacity: 0.3;
+        }
+        #msgBoxContainer {
+            display: block !important;
+        }
+        .msg-box-backdrop {
+            display: block !important;
+        }
+        .custom-msg-box {
+            display: flex !important;
+            min-height: 150px !important;
+        }
+        .msg-inner {
+            padding-top: 10px;
+            padding-bottom: 20px;
+        }
+        .msg-text {
+            margin-bottom: 30px !important;
+        }
+        .ok-btn {
+            margin-top: auto !important;
+        }
+    </style>
+</head>
+<body>
+    <img src="/static/Images/Backgrounds/Logout.png" alt="Not Logged In">
+    
+    <!-- Message box container -->
+    <div id="msgBoxContainer">
+        <!-- Backdrop with blur effect -->
+        <div class="msg-box-backdrop" id="msgBoxBackdrop"></div>
+        
+        <!-- Message box -->
+        <div class="custom-msg-box" id="customMsgBox">
+            <div class="msg-inner">
+                <div class="msg-text">ERROR: NOT LOGGED IN</div>
+                <button class="ok-btn" onclick="window.parent.location.href='/login'">LOGIN</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

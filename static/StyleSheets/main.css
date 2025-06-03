@@ -395,11 +395,4 @@ html, body {
 
 /* Removed redundant @keyframes gradientShift as it was not applied anywhere */
 
-/* Ensure tooltips are visible on hover and focus */
-.bet-area-button:hover > .tooltip-bubble,
-.bet-area-button:focus > .tooltip-bubble,
-.bet-area-button:focus-visible > .tooltip-bubble {
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto;
-}
+

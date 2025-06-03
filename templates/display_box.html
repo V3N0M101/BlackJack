@@ -1,0 +1,47 @@
+<!-- Container for both backdrop and message box -->
+<div id="msgBoxContainer">
+  <!-- Backdrop with blur effect -->
+  <div class="msg-box-backdrop" id="msgBoxBackdrop" onclick="handleBackdropClick(event)"></div>
+  
+  <!-- Message box -->
+  <div class="custom-msg-box" id="customMsgBox">
+    <div class="msg-inner">
+      <div class="msg-text"></div>
+      <button class="ok-btn" onclick="hideMessageBox()"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+function hideMessageBox() {
+  document.getElementById('msgBoxContainer').style.display = 'none';
+  document.getElementById('msgBoxBackdrop').style.display = 'none';
+  document.getElementById('customMsgBox').style.display = 'none';
+  
+  // Execute any stored callback
+  if (window.messageBoxCallback) {
+    window.messageBoxCallback();
+    window.messageBoxCallback = null;
+  }
+}
+
+function showMessageBox() {
+  document.getElementById('msgBoxContainer').style.display = 'block';
+  document.getElementById('msgBoxBackdrop').style.display = 'block';
+  document.getElementById('customMsgBox').style.display = 'flex';
+}
+
+function handleBackdropClick(event) {
+  // Only trigger if clicking the backdrop itself, not the message box
+  if (event.target.id === 'msgBoxBackdrop') {
+    // Get the OK button's onclick handler
+    const okBtn = document.querySelector('.ok-btn');
+    if (okBtn && okBtn.onclick) {
+      okBtn.onclick();
+    } else {
+      hideMessageBox();
+    }
+  }
+}
+</script>
+  

@@ -73,14 +73,11 @@
             <div class="Zone">
               <div class="PP bet-area-button" id="pp-bet-{{ i }}">
                 PP
-                <div class="tooltip-bubble">Perfect Pairs Payouts:<br>Perfect: 25:1<br>Colored: 12:1<br>Mixed: 6:1</div>
               </div>
               <div class="MAIN bet-area bet-area-button" id="main-bet-{{ i }}">
-                <div class="tooltip-bubble">Main Bet Payouts:<br>Blackjack: 3:2<br>Regular Win: 1:1</div>
               </div>
               <div class="TWENTYONE bet-area-button" id="twentyone-bet-{{ i }}">
                 21+3
-                <div class="tooltip-bubble">21+3 Payouts:<br>Suited Trips: 100:1<br>Straight Flush: 40:1<br>Three of a Kind: 30:1<br>Straight: 10:1<br>Flush: 5:1</div>
               </div>
             </div>
             <div class="bet-input-container">
@@ -100,13 +97,7 @@
         <div class="status-item bet" id="total-bet-display">Total Bet: $0</div>
         <div class="status-item game-message" id="game-message" style="display: none;"></div>
       </div>
-      <div class="controls">
-        <div class="bet-all-toggle-wrap">
-          <label class="bet-all-toggle">
-            <input type="checkbox" id="betAllToggle" />
-            <span>Bet-All Mode</span>
-          </label>
-        </div>        
+      <div class="controls">     
         <div class="chips">
           <button data-chip-value="100"><img src="/static/Images/chips/100-Chip.png" alt="100" /></button>
           <button data-chip-value="500"><img src="/static/Images/chips/500-Chip.png" alt="500" /></button>
@@ -115,6 +106,13 @@
           <button data-chip-value="25000"><img src="/static/Images/chips/25000-Chip.png" alt="25000" /></button>
           <button data-chip-value="100000"><img src="/static/Images/chips/100000-Chip.png" alt="100000" /></button>
         </div>
+        <div class="bet-all-toggle-wrap">
+          <label class="bet-all-toggle">
+            <input type="checkbox" id="betAllToggle" />
+            <div class="circle"></div>
+            <span>Bet-All Mode</span>
+          </label>
+        </div>   
         <div class="actions">
           <button class="btn-clear" id="clearBetsBtn">
             <span class="icon-bg clear-bg">

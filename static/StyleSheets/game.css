@@ -176,10 +176,10 @@
 .Draw::after {
   content: "";
   position: absolute;
-  top: -1vh;      /* Adjust glow spread outwards */
-  left: 2vw;
-  right: -0.15vh;
-  bottom: -1vh;
+  top: -0.1vh;      /* Adjust glow spread outwards */
+  left: 3.45vw;
+  right: 0.5vw;
+  bottom: -0.1vh;
   border-radius: inherit; /* Inherit border-radius from .Draw */
   background: conic-gradient(from var(--angle2, 0deg), rgba(156,211,230), rgb(171, 247, 255), rgb(255, 187, 237), rgb(255, 209, 243), rgb(255, 190, 238), rgb(136, 243, 255), rgba(156,211,230,1));
   filter: blur(12px); /* Softness of the glow */
@@ -226,7 +226,7 @@ body {
     margin: 0;
     padding: 0;
     color: #fff;
-    font-family: Arial, sans-serif;
+    font-family: 'Courier New', Courier, monospace;
     height: 100vh;
     overflow: hidden; /* Important for fixed layout */
     background: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.575)),
@@ -254,6 +254,7 @@ body {
     transform-origin: top left; /* Align to screen left when scaled */
     justify-content: flex-start; /* Align children to the left */
     /* You might need to adjust padding or margins if scaling causes layout issues */
+    width: 111%;
 }
 
 .game-windowed-mode .Game-head .Logo {
@@ -289,7 +290,6 @@ body {
 .game-windowed-mode .Game-head .head-center {
     flex: initial; /* Don't expand, take natural width */
     text-align: left; /* Align text to the left */
-    margin-left: 0; /* Ensure no unintended left margin */
     /* Add a small right margin if .head-left and .head-center need some separation */
     /* margin-right: 10px; */ 
 }
@@ -301,6 +301,7 @@ body {
 
 .game-windowed-mode .Game-head .rules-box {
     padding: 10px; /* Adjust as needed */
+    /* margin-left: 10vw; */ /* Removed to allow parent .head-right to position it */
     /* Adjust font sizes within rules-box if necessary */
 }
 
@@ -314,9 +315,9 @@ body {
 
 .game-windowed-mode .Game-head .Dealer_mid {
     transform: scale(0.8); /* Adjust scale factor as needed */
-    transform-origin: top left; /* Adjust origin as needed */
+    transform-origin: top left; /* Adjusted origin for better leftward shift */
+    margin-left: -4vw; /* Added margin to shift more to the left */
     /* You might need to adjust padding or margins if scaling causes layout issues */
-    margin-left: -6vw;
 }
 
 .foot {
@@ -387,15 +388,14 @@ body {
 
 .table-windowed .player {
     position: absolute;
-    bottom: 10%;
     left: 50%;
+    bottom: 30%;
     transform: translateX(-50%);
     display: flex;
     gap: 2px;
     justify-content: center;
     width: 70%;
     z-index: 3;
-    margin-bottom: 4vh;
 }
 
 .table-windowed .Player-Area {
@@ -811,19 +811,23 @@ body {
     padding: 8px 14px;
 }
 
-/* OVERLAP "ZONE" DIVS AS CHIPS */
+/* === OVERLAP "ZONE" DIVS AS CHIPS === */
 .Zone {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     padding: 10px;
     margin-top: 10px;
     z-index: 2;
-    transition: transform 0.5s ease, height 0.5s ease, gap 0.5s ease; /* Added transform to transition */
+    transition: transform 0.5s ease, height 0.5s ease, gap 0.5s ease;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px) saturate(140%);
+    -webkit-backdrop-filter: blur(8px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 14px;
 }
-
 
 /* Style for the bet buttons */
 .Zone .PP,
@@ -837,161 +841,93 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.25em;
-    background: #c3e0d8;
-    border: 2px solid #8cc;
+    font-size: 2em;
+    background: rgba(0, 146, 105, 0.45);
+    border: 2px solid rgba(0, 20, 20, 0.5);
     padding: 8px;
     text-align: center;
-    word-break: break-word;
-}
-
-/* Common styles for all bet buttons */
-.Zone button {
-    flex: 1; /* Allow buttons to grow equally */
-    min-width: 70px; /* Minimum width for buttons */
-    height: 70px; /* Fixed height for consistency */
-    border: 2px solid transparent;
+    word-break: normal;
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
     border-radius: 8px;
-    background: #c3e0d8;
-    color: #000;
-    font-weight: bold;
-    font-size: 1em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.3);
     transition: all 0.2s ease;
-    position: relative; /* For tooltip positioning */
-    margin: 0 2px; /* Small margin between buttons */
-}
-
-/* Specific styles for each button type */
-.Zone .PP,
-.Zone .MAIN,
-.Zone .TWENTYONE {
-    max-width: 100px; /* Maximum width to prevent buttons from getting too large */
-    background: #c3e0d8;
-    border: 2px solid #8cc;
-}
-
-/* Hover effects */
-.Zone button:hover,
-.Zone .PP:hover,
-.Zone .MAIN:hover,
-.Zone .TWENTYONE:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 2; /* Bring hovered button to front */
     cursor: pointer;
+    user-select: none;
 }
 
-/* Fullscreen mode adjustments */
-.table-fullscreen .Zone {
-    height: 120px; /* Slightly larger for fullscreen */
-    gap: 12px; /* Larger gap in fullscreen */
+.Zone .PP:hover:not(.disabled),
+.Zone .MAIN:hover:not(.disabled),
+.Zone .TWENTYONE:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 255, 200, 0.2);
+    border-color: rgba(0, 255, 200, 0.4);
 }
 
-.table-fullscreen .Zone .PP,
-.table-fullscreen .Zone .MAIN,
-.table-fullscreen .Zone .TWENTYONE {
-    min-width: 100px;
-    min-height: 100px;
-    max-width: 120px;
-    max-height: 120px;
-    font-size: 1.25em;
+.Zone .PP:active:not(.disabled),
+.Zone .MAIN:active:not(.disabled),
+.Zone .TWENTYONE:active:not(.disabled) {
+    scale:0.8;
+    box-shadow: 0 0 15px rgba(0, 255, 200, 0.1);
+    border-color: rgba(0, 255, 200, 0.3);
+    background: rgba(0, 146, 105, 0.55);
 }
 
-.table-fullscreen .Zone button {
-    min-width: 80px; /* Larger minimum width */
-    height: 80px; /* Larger height */
-    font-size: 1.2em; /* Larger font */
-}
-
-/* Windowed mode adjustments */
-.table-windowed .Zone {
-    height: calc(90px * 0.85); /* Scaled down from 90px */
-    gap: calc(6px * 0.85);    /* Scaled down from 6px */
-    padding: calc(10px * 0.85); /* Scaled down from base 10px */
-    /* transform: scale(0.85); REMOVED */
-    /* transform-origin: bottom center; REMOVED */
-}
-
-.table-windowed .Zone button {
-    min-width: 60px; /* Smaller minimum width */
-    height: 60px; /* Smaller height */
-    font-size: 0.9em; /* Smaller font */
-}
-
-/* Remove any absolute positioning that might interfere */
-.Zone .TWENTYONE,
-.Zone .PP {
-    position: relative; /* Use relative instead of absolute positioning */
-    left: auto;
-    right: auto;
-}
-
-/* Tooltip adjustments */
+/* Parent container for positioning relative tooltips */
 .bet-area-button {
-    position: relative; /* Needed so the tooltip bubble can position absolutely inside */
-}
-
-.bet-area-button:hover > .tooltip-bubble,
-.bet-area-button:focus > .tooltip-bubble,
-.bet-area-button:focus-visible > .tooltip-bubble {
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto; /* Allow interaction inside tooltip */
-    display: block;
-}
-
-/* Small arrow for tooltip */
-.tooltip-bubble::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
-}
-
-/* The actual tooltip bubble */
-.tooltip-bubble {
-    visibility: hidden;
-    position: absolute;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px;
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
-    border-radius: 6px;
-    font-size: 14px;
-    white-space: nowrap;
-    z-index: 9999;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.2s ease;
-    width: max-content;
-    pointer-events: none;
-}
-
-/* Ensure bet amounts are always visible */
-.Zone .PP,
-.Zone .MAIN,
-.Zone .TWENTYONE {
-    min-width: 85px;
-    min-height: 85px;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.25em;
-    background: #c3e0d8;
-    border: 2px solid #8cc;
-    padding: 8px;
-    text-align: center;
-    word-break: break-word;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(0, 146, 105, 0.45);
+    color: #fff;
+    font-weight: bold;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.bet-area-button button {
+    background: rgba(0, 146, 105, 0.45);
+    color: #fff;
+    font-weight: bold;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    box-sizing: border-box;
+    pointer-events: auto;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Hover effects for bet areas */
+.Zone .PP:hover,
+.Zone .MAIN:hover,
+.Zone .TWENTYONE:hover,
+.bet-area-button:hover {
+    background: rgba(0, 146, 105, 0.6);
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.5), 0 0 18px rgba(185, 124, 255, 0.35);
+    transform: scale(1.05);
+}
+
+/* Selected state for bet areas */
+.bet-area-button.selected {
+    background: rgba(0, 146, 105, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 22px rgba(0, 0, 0, 0.5), 0 0 18px rgba(255, 215, 0, 0.5);
 }
 
 .background-blur {
@@ -1150,6 +1086,8 @@ button.disabled {
 .actions button:hover:not(.disabled) {
     transform: scale(1.05); 
     box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2); /* More pronounced hover shadow */
+    background: linear-gradient(135deg, #5C6BC0, #3F51B5); /* Re-bet hover color for all */
+    opacity: 0.9; /* Added opacity change */
 }
 
 .actions button:active:not(.disabled) {
@@ -1175,45 +1113,45 @@ button.disabled {
 /* Specific background colors for action buttons (retains hover/active scaling) */
 
 .btn-clear:hover:not(.disabled) {
-    background: linear-gradient(135deg, #FF7043, #FF5722);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #FF7043, #FF5722); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(255, 87, 34, 0.5);
 }
 
 
 .btn-re-bet:hover:not(.disabled) {
-    background: linear-gradient(135deg, #5C6BC0, #3F51B5);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #5C6BC0, #3F51B5); */ /* Now in general hover */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(63, 81, 181, 0.5);
 }
 
 
 .btn-deal:hover:not(.disabled) {
-    background: linear-gradient(135deg, #57c75c, #4CAF50);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #57c75c, #4CAF50); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
 }
 
 .btn-hit:hover:not(.disabled) {
-    background: linear-gradient(135deg, #f44336, #e53935);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #f44336, #e53935); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(229, 57, 53, 0.5);
 }
--double:hover:not(.disabled) {
-    background: linear-gradient(135deg, #9C27B0, #7B1FA2);
-    transform: scale(1.05);
+.btn-double:hover:not(.disabled) { /* Corrected typo from -double to .btn-double */
+    /* background: linear-gradient(135deg, #9C27B0, #7B1FA2); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(123, 31, 162, 0.5);
 }
 
 .btn-stand:hover:not(.disabled) {
-    background: linear-gradient(135deg, #FFE57F, #FFD700);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #FFE57F, #FFD700); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
 .btn-split:hover:not(.disabled) {
-    background: linear-gradient(135deg, #26C6DA, #00BCD4);
-    transform: scale(1.05);
+    /* background: linear-gradient(135deg, #26C6DA, #00BCD4); */ /* Removed specific background */
+    /* transform: scale(1.05); */ /* Already in general hover */
     box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
 }
 
@@ -1232,7 +1170,6 @@ button.disabled {
 
 .Game-head .head-center {
     flex: 1; /* Allows it to take available space */
-    margin-left: 0;
     text-align: center;
 }
 
@@ -1241,6 +1178,11 @@ button.disabled {
     display: flex; /* Make children display side-by-side */
     align-items: center; /* Vertically align items in the center */
     gap: 15px; /* Add some space between the Draw and Rules Box */
+}
+
+/* Specific for windowed mode to align items to top right */
+.game-windowed-mode .Game-head .head-right {
+    align-items: flex-start; /* Align children (Draw, rules-box) to the top */
 }
 
 /* Make bet input container completely hidden */
@@ -1295,47 +1237,6 @@ button.disabled {
     pointer-events: auto;
 }
 
-/* The actual tooltip bubble */
-.tooltip-bubble {
-    visibility: hidden;
-    position: absolute;
-    bottom: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 12px;
-    background: rgba(0, 0, 0, 0.95);
-    color: white;
-    border-radius: 6px;
-    font-size: 14px;
-    white-space: nowrap;
-    z-index: 10000;
-    opacity: 0;
-    transition: opacity 0.3s, visibility 0.3s;
-    width: max-content;
-    text-align: left;
-    line-height: 1.6;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-    pointer-events: none;
-}
-
-.tooltip-bubble::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -6px;
-    border-width: 6px;
-    border-style: solid;
-    border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
-}
-
-.bet-area-button:hover > .tooltip-bubble,
-.bet-area-button:focus > .tooltip-bubble,
-.bet-area-button:focus-visible > .tooltip-bubble {
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: auto;
-}
 
 /* Ensure bet amounts are always visible */
 .Zone .PP,
@@ -1362,7 +1263,7 @@ button.disabled {
 }
 
 .chips button {
-    background: none;
+    background: transparent;
     border: none;
     padding: 0;
     width: 60px;
@@ -1472,62 +1373,233 @@ button.disabled {
     font-size: 0.8rem; /* Adjust as needed */
 }
 
-/* === Bet-All Mode Toggle === */
+/* === Modern Toggle Switch Styling === */
 .bet-all-toggle-wrap {
     display: flex;
     align-items: center;
-    margin-bottom: 10px; /* Space below the toggle */
-    /* If you want to push it to one side, use margin-left: auto or margin-right: auto */
-    /* For example, to center it if .controls is a flex container and allows it: */ 
+    margin-bottom: -10px;
+    margin-left: 10px;
 }
 
 .bet-all-toggle {
+    width: 190px;
+    height: 40px;
+    border-radius: 999px;
+    background: #F3F3F3;
+    box-shadow: 10px 10px 30px rgba(0, 0, 0, 0.05) inset;
+    cursor: pointer;
+    position: relative;
     display: flex;
     align-items: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-    color: #fff;
-    padding: 5px 10px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 5px;
-    background-color: rgba(0, 0, 0, 0.3);
-    transition: background-color 0.2s ease;
-}
-
-.bet-all-toggle:hover {
-    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px;
+    transition: all 0.5s ease;
 }
 
 .bet-all-toggle input[type="checkbox"] {
-    margin-right: 8px;
-    cursor: pointer;
-    /* Basic styling for the checkbox, can be enhanced */
-    appearance: none;
-    -webkit-appearance: none;
-    background-color: #ddd;
-    border: 1px solid #aaa;
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    position: relative;
-    outline: none;
+    display: none;
 }
 
-.bet-all-toggle input[type="checkbox"]:checked {
-    background-color: #4CAF50; /* Green when checked */
-    border-color: #4CAF50;
-}
-
-.bet-all-toggle input[type="checkbox"]:checked::before {
-    content: '\2714'; /* Checkmark character */
-    font-size: 12px;
-    color: white;
+.bet-all-toggle .circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 99px;
+    background: white;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.05),
+                -10px -10px 30px rgba(0, 0, 0, 0.05) inset;
     position: absolute;
-    left: 50%;
     top: 50%;
-    transform: translate(-50%, -50%);
+    left: 0%;
+    transform: translate(10%, -50%);
+    transition: all 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.bet-all-toggle span {
-    user-select: none; /* Prevent text selection on click */
+.bet-all-toggle > span {
+    position: absolute;
+    left: 10px;
+    color: #2C2C2F;
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.5s ease;
+    font-size: 0.9em;
+    white-space: nowrap;
 }
+
+/* Checked state with new colors */
+.bet-all-toggle input[type="checkbox"]:checked + .circle {
+    left: 100%;
+    transform: translate(-110%, -50%);
+    background: #00ff88; /* Changed to bright green */
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.5),
+                -10px -10px 30px rgba(0, 255, 136, 0.2) inset;
+}
+
+.bet-all-toggle input[type="checkbox"]:checked ~ span {
+    color: #00ff88; /* Match the circle color */
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); /* Add glow to text */
+}
+
+/* Background color change when checked */
+.bet-all-toggle:has(input[type="checkbox"]:checked) {
+    background: #1F1F21;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3) inset;
+    border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+/* Active state animation */
+.bet-all-toggle:active .circle {
+    width: 38px;
+}
+
+/* Windowed mode adjustments */
+.table-windowed .bet-all-toggle {
+    width: 120px; /* Reduced from 160px */
+    height: 32px; /* Reduced from 80px */
+}
+
+.table-windowed .bet-all-toggle .circle {
+    width: 26px; /* Reduced from 64px */
+    height: 26px; /* Reduced from 64px */
+}
+
+.table-windowed .bet-all-toggle span {
+    margin-left: 35px; /* Reduced from 80px */
+    font-size: 0.8em; /* Made text even smaller for windowed mode */
+}
+
+/* Fullscreen mode adjustments */
+.table-fullscreen .bet-all-toggle {
+    width: 160px; /* Reduced from 240px */
+    height: 48px; /* Reduced from 120px */
+}
+
+.table-fullscreen .bet-all-toggle .circle {
+    width: 40px; /* Reduced from 96px */
+    height: 40px; /* Reduced from 96px */
+}
+
+.table-fullscreen .bet-all-toggle span {
+    margin-left: 55px; /* Reduced from 120px */
+    font-size: 1em; /* Slightly larger than default but still compact */
+}
+
+/* Windowed mode adjustments */
+.table-windowed .Zone {
+    height: calc(110px * 0.85); /* Increased from 80px */
+    gap: calc(16px * 0.85); /* Increased from 6px */
+    padding: calc(12px * 0.85); /* Increased from 8px */
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.table-windowed .Zone .PP,
+.table-windowed .Zone .MAIN,
+.table-windowed .Zone .TWENTYONE {
+    min-width: calc(85px * 0.85);  /* Increased from 70px */
+    min-height: calc(85px * 0.85); /* Increased from 70px */
+    max-width: calc(100px * 0.85); /* Increased from 85px */
+    max-height: calc(100px * 0.85); /* Increased from 85px */
+    font-size: 1.2em; /* Increased from 1em */
+    background: rgba(0, 146, 105, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: calc(8px * 0.85); /* Increased from 6px */
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.2),
+        inset 0 0 15px rgba(255, 255, 255, 0.05);
+}
+
+.table-windowed .bet-area-button {
+    padding: calc(6px * 0.85);
+    font-size: 0.9em;
+}
+
+.table-windowed .Zone .PP:hover,
+.table-windowed .Zone .MAIN:hover,
+.table-windowed .Zone .TWENTYONE:hover,
+.table-windowed .bet-area-button:hover {
+    background: rgba(0, 146, 105, 0.5);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.3),
+        0 0 20px rgba(185, 124, 255, 0.25),
+        inset 0 0 25px rgba(255, 255, 255, 0.1);
+    transform: scale(1.03);
+}
+
+.table-windowed .bet-area-button.selected {
+    background: rgba(0, 146, 105, 0.6);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.3),
+        0 0 25px rgba(255, 215, 0, 0.3),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+
+/* Fullscreen mode adjustments */
+.table-fullscreen .Zone {
+    height: 120px;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.2),
+        inset 0 0 25px rgba(255, 255, 255, 0.05);
+}
+
+.table-fullscreen .Zone .PP,
+.table-fullscreen .Zone .MAIN,
+.table-fullscreen .Zone .TWENTYONE {
+    min-width: 100px;
+    min-height: 100px;
+    max-width: 120px;
+    max-height: 120px;
+    font-size: 1.25em;
+    background: rgba(0, 146, 105, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 10px;
+    backdrop-filter: blur(8px) saturate(150%);
+    -webkit-backdrop-filter: blur(8px) saturate(150%);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.2),
+        inset 0 0 20px rgba(255, 255, 255, 0.05);
+}
+
+.table-fullscreen .bet-area-button {
+    padding: 10px;
+    font-size: 1.2em;
+}
+
+.table-fullscreen .Zone .PP:hover,
+.table-fullscreen .Zone .MAIN:hover,
+.table-fullscreen .Zone .TWENTYONE:hover,
+.table-fullscreen .bet-area-button:hover {
+    background: rgba(0, 146, 105, 0.5);
+    box-shadow: 
+        0 6px 16px rgba(0, 0, 0, 0.3),
+        0 0 25px rgba(185, 124, 255, 0.25),
+        inset 0 0 30px rgba(255, 255, 255, 0.1);
+    transform: scale(1.03);
+}
+
+.table-fullscreen .bet-area-button.selected {
+    background: rgba(0, 146, 105, 0.6);
+    border: 2px solid rgba(255, 215, 0, 0.4);
+    box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.3),
+        0 0 30px rgba(255, 215, 0, 0.3),
+        inset 0 0 25px rgba(255, 255, 255, 0.1);
+}
+
+

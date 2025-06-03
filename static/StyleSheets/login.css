@@ -113,14 +113,20 @@ body {
     color: white;
     border-radius: 10px;
     border: 2px solid rgba(255, 255, 255, 0.2);
-    background: transparent;
-    /* FIX: Correct box-shadow syntax */
-    box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.2); /* Corrected transparency */
-    position: relative; /* Keep if needed for absolute positioning of children */
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.2);
+    position: relative;
     padding: 30px 40px;
-    /* No need for margin: auto or other centering here, as its parent (.center-container) handles it */
+    transition: box-shadow 0.3s ease;
 }
 
+.wrapper:hover {
+    box-shadow: 
+        0 0 20px rgba(255, 0, 157, 0.3),  /* #ff009d with transparency */
+        0 0 40px rgba(185, 124, 255, 0.2); /* #b97cff with transparency */
+}
 
 h1 {
   font-weight: 900;
@@ -148,11 +154,33 @@ h1 {
     border-radius: 40px;
     font-size: 16px;
     color: white;
-    padding: 20px 45px 20px 20px; 
+    padding: 20px 45px 20px 20px;
+    transition: all 0.3s ease;
+}
+
+.Input-here input:hover {
+    border-color: rgba(255, 0, 157, 0.5); /* #ff009d with transparency */
+    box-shadow: 
+        0 0 10px rgba(255, 0, 157, 0.2),
+        0 0 20px rgba(185, 124, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.Input-here input:focus {
+    border-color: rgba(255, 0, 157, 0.8);
+    box-shadow: 
+        0 0 15px rgba(255, 0, 157, 0.3),
+        0 0 30px rgba(185, 124, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .Input-here input::placeholder {
     color: white;
+}
+
+.Input-here:hover img {
+    filter: brightness(0) invert(1) drop-shadow(0 0 2px rgba(255, 0, 157, 0.5));
+    transform: translateY(-50%) scale(1.1);
 }
 
 .Input-here img {
@@ -164,6 +192,7 @@ h1 {
     height: 24px;
     pointer-events: none;
     filter: brightness(0) invert(1);
+    transition: all 0.3s ease;
 }
 
 .remember-forgot {

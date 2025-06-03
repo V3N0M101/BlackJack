@@ -10,9 +10,10 @@
     <link rel="stylesheet" href="/static/StyleSheets/transition.css" />
     <link rel="stylesheet" href="/static/StyleSheets/login.css" />
     <link rel="stylesheet" href="/static/StyleSheets/register.css" />
+    <link rel="stylesheet" href="/static/StyleSheets/box-display.css" />
     <!-- JS Files -->
     <script src="/static/Scripts/transition.js"></script>
-    <script src="/static/Scripts/register.js"></script>
+    
 </head>
 <body>
   <div class="overlay-transition"></div>
@@ -22,20 +23,13 @@
       <span>Home</span>
     </a>
   </div>
+
+  <!-- Message box for notifications -->
+  {% include 'display_box.html' %}
+
   <div class="page-transition">
     <div class="center-container">
       <div class="wrapper">
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <div class="flash-messages">
-              {% for message in messages %}
-                <p style="color: red;">{{ message }}</p>
-              {% endfor %}
-            </div>
-          {% endif %}
-        {% endwith %}
-
         <form id="register-form" method="POST" action="/register">
           <h1> Register </h1>
 
@@ -77,27 +71,9 @@
             <p>Already have an account?<a href="/login"> Login</a></p>
           </div>
         </form>
-        {% if register_alert %}
-          <script>
-            alert("{{ alert_message }}");
-          </script>
-        {% endif %}
       </div>
     </div>
   </div>
-
-  <script>
-    window.addEventListener('pageshow', function (event) {
-      if (event.persisted) {
-        // Page was loaded from back/forward cache — reload it
-        window.location.reload();
-      }
-    });
-  </script>
-{% if alert_message %}
-<script>
-    alert("{{ alert_message }}");
-</script>
-{% endif %}
+  <script src="/static/Scripts/register.js"></script>
 </body>
 </html>

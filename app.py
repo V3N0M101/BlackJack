@@ -13,7 +13,7 @@ from secure import EMAIL_PASS_SECURE
 
 # It's assumed 'Black_logic.py' exists within the 'Back' directory
 from Back.black_logic import BlackjackMultiGame
-BONUS_COOLDOWN_SECONDS = 30
+BONUS_COOLDOWN_SECONDS = 120
 BONUS_AMOUNT = 10000
 
 # so you can `import deck, player, Black_logic` directly
@@ -56,6 +56,16 @@ def send_verification_email(to_email: str, code: str, username: str = "", email_
 
 app = Flask(__name__)
 app.secret_key = 'secretkey123'  # required for sessions, flash, etc.
+
+@app.context_processor
+def inject_custom_message():
+    """Injects custom message variables into template context if they exist in session."""
+    context = {}
+    if 'show_custom_message_on_redirect' in session:
+        context['show_custom_message'] = session.pop('show_custom_message_on_redirect')
+        context['custom_message_content'] = session.pop('custom_message_content_on_redirect', 'Message not found.')
+    # Note: Direct render_template calls will pass these explicitly, not via session for this processor part.
+    return context
 
 # users.db 
 def get_db_connection():
@@ -485,11 +495,15 @@ def home():
     Renders the main home page.
     Displays a login alert if a user just logged in.
     """
+    logged_in_status = "username" in session
     login_in_alert = session.pop("login_alert", False)
+    first_login = session.pop("first_login", False)  # Get and clear first login flag
+    
     return render_template(
         "main.html",
-        logged_in="username" in session,
+        logged_in=logged_in_status,
         login_in_alert=login_in_alert,
+        first_login=first_login
     )
     
 @app.route("/game")
@@ -574,17 +588,24 @@ def send_reset_code():
     user = conn.execute("SELECT username FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
 
-    username = user['username'] if user else ""
+    if not user:
+        return jsonify({
+            'success': False,
+            'message': 'No account found with this email address.'
+        })
 
+    username = user['username']
     code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-    session['reset_email'] = email # Use a distinct session key for reset flow
-    session['reset_code'] = code # Use a distinct session key for reset flow
+    session['reset_email'] = email
+    session['reset_code'] = code
     
     # Send email in background to avoid lag
     threading.Thread(target=send_verification_email, args=(email, code, username, "reset")).start()
     
-    flash('A password reset code has been sent to your email.')
-    return redirect('/forgot?verify=true')
+    return jsonify({
+        'success': True,
+        'message': 'Password reset link sent'
+    })
 
 @app.route('/api/verify-code', methods=['POST'])
 def verify_code():
@@ -611,38 +632,57 @@ def reset_password():
     Handles password reset functionality.
     Allows a user to set a new password after successful code verification.
     """
-    # Ensure they have gone through the verification step for reset
-    if 'reset_email' not in session:
-        flash("Please initiate the password reset process first.")
-        return redirect("/forgot")
+    if request.method == "GET":
+        # Ensure they have gone through the verification step for reset
+        if 'reset_email' not in session:
+            return jsonify({
+                "success": False,
+                "message": "Please initiate the password reset process first."
+            }), 400
+        return render_template("reset.html")
 
-    if request.method == "POST":
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
+    # POST request handling
+    new_password = request.form.get("new_password")
+    confirm_password = request.form.get("confirm_password")
 
-        if new_password != confirm_password:
-            flash("Passwords do not match.")
-            return redirect("/reset-password")
+    if new_password != confirm_password:
+        return jsonify({
+            "success": False,
+            "message": "Passwords do not match."
+        }), 400
 
-        user_email = session.get("reset_email") # Retrieve email from reset session key
-        if not user_email:
-            flash("Session expired. Please restart the password reset process.")
-            return redirect("/forgot")
+    user_email = session.get("reset_email")
+    if not user_email:
+        return jsonify({
+            "success": False,
+            "message": "Session expired. Please restart the password reset process."
+        }), 400
 
+    try:
         hashed_password = generate_password_hash(new_password)
-
         conn = get_db_connection()
         conn.execute("UPDATE users SET password = ? WHERE email = ?", (hashed_password, user_email))
         conn.commit()
         conn.close()
 
-        session.pop('reset_email', None) # Clear reset session keys after successful reset
+        # Clear reset session data
+        session.pop('reset_email', None)
         session.pop('reset_code', None)
 
-        flash("Password reset successful! Please log in.")
-        return redirect("/login")
+        return jsonify({
+            "success": True,
+            "message": "Your password has been reset"
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "An error occurred while resetting your password."
+        }), 500
 
-    return render_template("reset.html")
+@app.route("/logged_out_page") # New route
+def logged_out_page():
+    """Renders the page that displays the 'not logged in' image."""
+    return render_template("logged_out_display.html")
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -672,9 +712,6 @@ def login():
     Handles user login.
     Authenticates users against the database and sets session variables upon successful login.
     """
-    logout_alert = session.pop("logout_alert", False)
-    register_alert = session.pop("register_alert", False)
-
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
@@ -687,6 +724,7 @@ def login():
             session["username"] = user["username"]
             session["chips"] = user["chips"]
             session["login_alert"] = True
+            session["first_login"] = True  # Set first login flag
             
             # Restore game state if it exists
             try:
@@ -696,15 +734,12 @@ def login():
             except Exception as e:
                 print(f"Error restoring game state for {username}: {e}")
                 
-            return redirect("/")
+            return jsonify({"success": True, "message": "Login successful"})
         
-        flash("Invalid username or password.") # Use flash for consistency
-        return render_template(
-            "login.html",
-            logout_alert=logout_alert,
-            register_alert=register_alert
-        )
+        return jsonify({"success": False, "message": "Invalid username or password"})
 
+    logout_alert = session.pop("logout_alert", False)
+    register_alert = session.pop("register_alert", False)
     return render_template("login.html", logout_alert=logout_alert, register_alert=register_alert)
 
 
@@ -718,7 +753,7 @@ def logout():
     """
     Logs out the user by clearing the session.
     Saves the game state to the database before logging out.
-    Redirects to the login page with a logout alert.
+    Redirects to the home page with a custom logout message.
     """
     # Save game state to database if it exists
     if "username" in session and "blackjack_game_state" in session:
@@ -744,8 +779,10 @@ def logout():
             conn.close()
     
     session.clear()
-    session["logout_alert"] = True
-    return redirect("/login")
+    # Set custom message for display on the target page (main.html via home route)
+    session['show_custom_message_on_redirect'] = True
+    session['custom_message_content_on_redirect'] = "Logged out successfully"
+    return redirect("/") # Redirect to home page to display message on main.html
 
 @app.route("/news")
 def news():
@@ -771,27 +808,46 @@ def register():
 
         # Basic validations
         if not email or not username or not password or not confirm_password:
-            flash('Please fill out all fields.')
-            return redirect('/register') # Redirect instead of render to clear form data
+            return jsonify({
+                'success': False,
+                'message': 'Please fill out all fields.'
+            })
 
         if password != confirm_password:
-            flash('Passwords do not match.')
-            return redirect('/register')
+            return jsonify({
+                'success': False,
+                'message': 'Passwords do not match.'
+            })
 
         if len(username) > 16:
-            flash('Please pick a username with 16 or fewer characters.')
-            return redirect('/register')
+            return jsonify({
+                'success': False,
+                'message': 'Please pick a username with 16 or fewer characters.'
+            })
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM users WHERE username = ? OR email = ?", (username, email))
-        existing_user = cursor.fetchone()
+        # Check username and email separately to give specific error messages
+        cursor.execute("SELECT username FROM users WHERE username = ?", (username,))
+        existing_username = cursor.fetchone()
+        
+        cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+        existing_email = cursor.fetchone()
+        
         conn.close()
 
-        if existing_user:
-            flash('Username or email already exists.')
-            return redirect('/register')
+        if existing_username:
+            return jsonify({
+                'success': False,
+                'message': 'Username/Email already exists'
+            })
+            
+        if existing_email:
+            return jsonify({
+                'success': False,
+                'message': 'Email already registered'
+            })
 
         session['pending_user'] = {
             'email': email,
@@ -800,13 +856,16 @@ def register():
         }
 
         code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
-        session['verify_code'] = code # This is for registration verification
+        session['verify_code'] = code
         
         # Pass username to send_verification_email for personalization and specify type
         threading.Thread(target=send_verification_email, args=(email, code, username, "verification")).start()
 
-        flash('Registration successful! A verification code has been sent to your email.')
-        return redirect('/verify')
+        return jsonify({
+            'success': True,
+            'message': 'Registration initiated. Please check your email for verification.',
+            'redirect_url': '/verify'
+        })
 
     return render_template('register.html')
 
@@ -817,37 +876,26 @@ def verify():
     If successful, the user's account is created in the database.
     """
     if request.method == 'POST':
-        # --- MODIFIED: Get JSON data instead of form data ---
-        data = request.get_json() # Get the JSON payload
+        data = request.get_json()
         if not data:
-            # If no JSON data is sent, this could be a malformed request or a non-JS form submit attempt.
-            # Handle as an error or fallback.
-            flash("Invalid request. Please ensure JavaScript is enabled.")
-            return jsonify({"success": False, "message": "Invalid request data."}), 400
+            return jsonify({
+                "success": False,
+                "message": "Invalid request data."
+            }), 400
 
-        # Extract the 'code' directly from the JSON payload
         code_input = data.get('code', '')
-
-        # --- IMPORTANT: The /verify route also needs to return JSON now for consistency with fetch ---
-        # The frontend's verify.js is expecting a JSON response, not a redirect directly.
-        # So, we'll return JSON, and the JS will handle the redirection.
-
         actual_code = session.get('verify_code')
         user_data = session.get('pending_user')
 
-        print(f"DEBUG: Submitted code: {code_input}")
-        print(f"DEBUG: Stored code: {actual_code}")
-        print(f"DEBUG: Pending user: {user_data}")
+        if not actual_code or not user_data:
+            return jsonify({
+                "success": False,
+                "message": "Verification session expired. Please register again."
+            }), 400
 
         if code_input == actual_code:
             user = session.pop('pending_user', None)
-            session.pop('verify_code', None) # Clear verification code after use
-
-            if not user:
-                message = "No pending registration. Please register again."
-                # Flask's flash is for redirects. For JSON, send message in JSON.
-                # flash(message) # No longer redirecting, so flash won't show
-                return jsonify({"success": False, "message": message, "type": "registration"}), 400
+            session.pop('verify_code', None)
 
             hashed_password = generate_password_hash(user['password'])
             conn = get_db_connection()
@@ -860,40 +908,36 @@ def verify():
                 conn.commit()
                 conn.close()
 
-                message = "Account verified and registered successfully! You can now log in."
-                session["register_alert"] = True # Still set alert for login page
-                # Return JSON with success and redirect URL
                 return jsonify({
                     "success": True,
-                    "message": message,
-                    "type": "registration",
+                    "message": "Account verified successfully! You can now log in.",
                     "redirect_url": "/login"
                 })
             except sqlite3.IntegrityError as e:
                 conn.close()
                 if "UNIQUE constraint failed" in str(e):
-                    message = "Registration failed: Username or email already in use. Please try logging in or registering with different details."
-                    print(f"ERROR: IntegrityError during user insert: {e} for user {user.get('username')}")
-                else:
-                    message = "An unexpected database error occurred during account creation. Please try again."
-                    print(f"ERROR: SQLite error during user insert: {e} for user {user.get('username')}")
-                # Return JSON with failure message
-                return jsonify({"success": False, "message": message, "type": "registration"}), 400
+                    return jsonify({
+                        "success": False,
+                        "message": "Registration failed: Username or email already exists."
+                    }), 400
+                return jsonify({
+                    "success": False,
+                    "message": "An unexpected database error occurred."
+                }), 500
             except Exception as e:
                 conn.close()
-                message = "An unexpected error occurred during account creation. Please try again later."
-                print(f"ERROR: An unexpected error occurred during account creation for user {user.get('username')}: {e}")
-                # Return JSON with failure message
-                return jsonify({"success": False, "message": message, "type": "registration"}), 500
-
+                return jsonify({
+                    "success": False,
+                    "message": "An unexpected error occurred."
+                }), 500
         else:
-            message = "Incorrect verification code. Please try again."
-            # Return JSON with failure message
-            return jsonify({"success": False, "message": message, "type": "registration"}), 400
+            return jsonify({
+                "success": False,
+                "message": "Wrong verification code entered"
+            }), 400
 
     # For GET request to /verify
     if 'pending_user' not in session:
-        flash("No pending registration. Please register first.")
         return redirect('/register')
 
     return render_template('verify.html')

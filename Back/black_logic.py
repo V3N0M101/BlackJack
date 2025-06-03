@@ -392,13 +392,13 @@ class BlackjackMultiGame:
                 self.player.chips += payout_21_3
                 hand_state["result_message"] += f"Won ${payout_21_3} on 21+3 ({hand_state['side_bets_results']['21+3']['hand']}). "
             elif hand_state["side_bet_21_3"] > 0:
-                hand_state["result_message"] += "Lost 21+3. "
+                hand_state["result_message"] += f"Lost ${hand_state['side_bet_21_3']} on 21+3. "
 
             if payout_pp > 0:
                 self.player.chips += payout_pp
                 hand_state["result_message"] += f"Won ${payout_pp} on Perfect Pair ({hand_state['side_bets_results']['Perfect Pair']['type']}). "
             elif hand_state["side_bet_perfect_pair"] > 0:
-                hand_state["result_message"] += "Lost Perfect Pair. "
+                hand_state["result_message"] += f"Lost ${hand_state['side_bet_perfect_pair']} on Perfect Pair. "
             
             # Check for initial blackjack
             if hand_state["blackjack"]:

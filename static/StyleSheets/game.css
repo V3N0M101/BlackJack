@@ -72,7 +72,7 @@
 
 /* === LOGO === */
 .Logo {
-    font: bold 2rem Arial, sans-serif;
+    font: bold 3rem 'Courier New', Courier, monospace;
     color: #fff;
     text-shadow: 0 0 10px #b97cff;
 }

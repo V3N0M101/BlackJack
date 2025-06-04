@@ -203,8 +203,94 @@ h1 {
     color: white;
 }
 
-.remember-forgot label input{
-    text-decoration: none;
+.remember-forgot label {
+    display: flex;
+    align-items: center;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Modern Toggle Switch Styling */
+.remember-forgot .toggle-wrap {
+    width: 155px;
+    height: 30px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) inset;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    transition: all 0.5s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remember-forgot input[type="checkbox"] {
+    display: none;
+}
+
+.remember-forgot .circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    top: 50%;
+    left: 0%;
+    transform: translate(10%, -50%);
+    transition: all 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remember-forgot .toggle-wrap > span {
+    position: absolute;
+    left: 25px;
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.5s ease;
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+/* Checked state with new colors */
+.remember-forgot input[type="checkbox"]:checked + .circle {
+    left: 100%;
+    transform: translate(-110%, -50%);
+    background: #b97cff;
+    box-shadow: 0 0 15px rgba(185, 124, 255, 0.5),
+                0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.remember-forgot input[type="checkbox"]:checked ~ span {
+    color: #b97cff;
+    text-shadow: 0 0 10px rgba(185, 124, 255, 0.5);
+}
+
+/* Background color change when checked */
+.remember-forgot input[type="checkbox"]:checked ~ .toggle-wrap {
+    background: rgba(31, 31, 33, 0.8);
+    box-shadow: 0 0 15px rgba(185, 124, 255, 0.2) inset;
+    border: 1px solid rgba(185, 124, 255, 0.3);
+}
+
+/* Active state animation */
+.remember-forgot .toggle-wrap:active .circle {
+    width: 25px;
+}
+
+/* Hover effects */
+.remember-forgot .toggle-wrap:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.remember-forgot .toggle-wrap:hover .circle {
+    box-shadow: 0 0 10px rgba(185, 124, 255, 0.3);
 }
 
 .remember-forgot a {

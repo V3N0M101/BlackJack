@@ -903,7 +903,7 @@ def verify():
                 initial_bonus_time = '1970-01-01 00:00:00'
                 conn.execute(
                     "INSERT INTO users (email, username, password, chips, last_bonus_collection) VALUES (?, ?, ?, ?, ?)",
-                    (user['email'], user['username'], hashed_password, 1000000000, initial_bonus_time)
+                    (user['email'], user['username'], hashed_password, 10000, initial_bonus_time)
                 )
                 conn.commit()
                 conn.close()

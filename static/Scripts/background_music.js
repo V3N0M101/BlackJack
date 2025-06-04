@@ -1,9 +1,9 @@
 // Background Music Controller
 (function() {
-    // Only run on main, learn, or news pages
-    const allowedPaths = ['/', '/main', '/learn', '/news'];
+    // Only run on main page
+    const allowedPaths = ['/', '/main'];
     if (!allowedPaths.includes(window.location.pathname)) {
-        console.log('Not on main/learn/news page, current path:', window.location.pathname);
+        console.log('Not on main page, current path:', window.location.pathname);
         return;
     }
 
@@ -15,54 +15,63 @@
 
     console.log('Initializing background music...');
 
-    // Create audio element
-    const bgMusic = new Audio('/static/Audio/background_music.mp3');
-    bgMusic.loop = true;
-    bgMusic.volume = 0.1; // 10% volume (0.1 = 10%)
-
-    // Add event listeners for debugging
-    bgMusic.addEventListener('canplay', () => {
-        console.log('Audio can play now');
-    });
-
-    bgMusic.addEventListener('error', (e) => {
-        console.error('Audio error:', e);
-    });
-
-    bgMusic.addEventListener('playing', () => {
-        console.log('Audio started playing');
-    });
-
-    // Get stored timestamp
-    const storedTime = localStorage.getItem('bgMusicTime');
-    if (storedTime) {
-        bgMusic.currentTime = parseFloat(storedTime);
-        console.log('Resuming from time:', storedTime);
+    // Register service worker for music control
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/static/Scripts/music-worker.js')
+            .then(registration => {
+                console.log('Music Service Worker registered:', registration);
+                initializeAudio();
+            })
+            .catch(error => {
+                console.error('Music Service Worker registration failed:', error);
+            });
+    } else {
+        console.log('Service Workers not supported, falling back to regular audio');
+        initializeAudio();
     }
 
-    // Save timestamp periodically (every 5 seconds)
-    setInterval(() => {
-        if (!bgMusic.paused) {
-            localStorage.setItem('bgMusicTime', bgMusic.currentTime.toString());
-        }
-    }, 5000);
+    function initializeAudio() {
+        // Create audio element
+        const bgMusic = new Audio('/static/Audio/background_music.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.1; // 10% volume
 
-    // Handle page visibility changes
-    document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            bgMusic.pause();
-            console.log('Page hidden, pausing music');
-        } else {
-            console.log('Page visible, attempting to play music');
-            bgMusic.play().catch(err => console.log('Playback prevented:', err));
-        }
-    });
+        // Add event listeners for debugging
+        bgMusic.addEventListener('canplay', () => {
+            console.log('Audio can play now');
+        });
 
-    // Start playback
-    console.log('Attempting to start playback...');
-    bgMusic.play().catch(err => {
-        console.log('Autoplay prevented:', err);
-        // Add a play button as fallback if autoplay is blocked
+        bgMusic.addEventListener('error', (e) => {
+            console.error('Audio error:', e);
+        });
+
+        // Handle service worker messages
+        if (navigator.serviceWorker) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'MUSIC_STATE') {
+                    if (event.data.isPlaying && bgMusic.paused) {
+                        bgMusic.play().catch(err => console.log('Playback prevented:', err));
+                    } else if (!event.data.isPlaying && !bgMusic.paused) {
+                        bgMusic.pause();
+                    }
+                }
+            });
+
+            // Get initial state
+            navigator.serviceWorker.controller?.postMessage({ type: 'GET_STATE' });
+        }
+
+        // Handle page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                bgMusic.pause();
+            } else if (navigator.serviceWorker.controller) {
+                // Check state with service worker when page becomes visible
+                navigator.serviceWorker.controller.postMessage({ type: 'GET_STATE' });
+            }
+        });
+
+        // Create play button
         const playButton = document.createElement('button');
         playButton.textContent = '🎵 Play Music';
         playButton.style.position = 'fixed';
@@ -76,13 +85,30 @@
         playButton.style.border = 'none';
         playButton.style.cursor = 'pointer';
         playButton.style.fontFamily = "'Courier New', Courier, monospace";
-        playButton.onclick = () => {
-            bgMusic.play();
-            playButton.remove();
-        };
-        document.body.appendChild(playButton);
-    });
 
-    // Add to window object for debugging
-    window.bgMusic = bgMusic;
+        let isPlaying = false;
+        playButton.onclick = () => {
+            if (!isPlaying) {
+                bgMusic.play().then(() => {
+                    isPlaying = true;
+                    playButton.textContent = '🎵 Pause Music';
+                    if (navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({ type: 'PLAY_MUSIC' });
+                    }
+                }).catch(err => console.log('Playback prevented:', err));
+            } else {
+                bgMusic.pause();
+                isPlaying = false;
+                playButton.textContent = '🎵 Play Music';
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage({ type: 'PAUSE_MUSIC' });
+                }
+            }
+        };
+
+        document.body.appendChild(playButton);
+
+        // Add to window object for debugging
+        window.bgMusic = bgMusic;
+    }
 })(); 

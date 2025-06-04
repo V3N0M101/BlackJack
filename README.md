@@ -26,7 +26,10 @@ Ready to play?
     python3 app.py
     ```
 
-OR just go to this website: ```bashblackhub.pythonanywhere.com```
+OR just go to this website: 
+```bash 
+blackhub.pythonanywhere.com
+```
    
 Enjoy!
     

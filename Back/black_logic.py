@@ -47,9 +47,51 @@ class Card:
         suit_str = suit_map[self.suit]
         return f"{rank_str}-{suit_str}.png" # e.g., 'A-S.png', '10-H.png'
 
+    @staticmethod
+    def merge_sort_cards(cards):
+        """
+        A recursive merge sort implementation to sort cards by rank.
+        """
+        if len(cards) <= 1:
+            return cards
+            
+        mid = len(cards) // 2
+        left = cards[:mid]
+        right = cards[mid:]
+        
+        # Recursive calls
+        left = Card.merge_sort_cards(left)
+        right = Card.merge_sort_cards(right)
+        
+        # Merge step
+        return Card._merge(left, right)
+    
+    @staticmethod
+    def _merge(left, right):
+        """Helper method for merge sort to combine two sorted lists."""
+        result = []
+        i = j = 0
+        
+        while i < len(left) and j < len(right):
+            # Compare cards by rank_idx
+            if left[i].rank_idx <= right[j].rank_idx:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+        
+        # Add remaining elements
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result
+
 
 # --- Deck Class ---
 class Deck:
+    '''
+    Deck class for blackjack game.
+    '''
     def __init__(self, num_decks=4, cards_data=None):
         self.num_decks = num_decks
         if cards_data is None:
@@ -160,9 +202,10 @@ def evaluate_side_bets(player_hand, dealer_upcard):
         else:
             result["Perfect Pair"] = {"type": "Mixed Pair", "payout": 6, "won": True}
 
-    combo = player_hand + [dealer_upcard]
+    # Use merge sort to sort the cards for evaluating three-card poker hands
+    combo = Card.merge_sort_cards(player_hand + [dealer_upcard])
     suits = [card.suit for card in combo]
-    ranks_idx = sorted([card.rank_idx for card in combo])
+    ranks_idx = [card.rank_idx for card in combo]
 
     def is_flush_check():
         return suits[0] == suits[1] == suits[2]
@@ -197,7 +240,6 @@ def evaluate_side_bets(player_hand, dealer_upcard):
     elif is_flush_check():
         result["21+3"] = {"hand": "Flush", "payout": 5, "won": True}
 
-    
     return result
 
 

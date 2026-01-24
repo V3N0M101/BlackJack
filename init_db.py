@@ -1,3 +1,4 @@
+
 import sqlite3
 
 conn = sqlite3.connect('users.db')  # Creates the database file
